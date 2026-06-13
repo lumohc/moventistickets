@@ -1,0 +1,312 @@
+{
+  "$schema": "lumo-tickets/venue/v1",
+  "venue": {
+    "id": "teatro-pedro-ivo",
+    "name": "Teatro Pedro Ivo",
+    "city": "Florianópolis/SC",
+    "total_seats": 605,
+    "salable_seats": 567,
+    "notes": "Bloqueios: Fila F (28 ass.) cortesia FCC. Camarotes U e V (10 ass.) sempre bloqueados."
+  },
+
+  "render": {
+    "seat_size": 18,
+    "seat_gap": 2,
+    "row_gap": 4,
+    "block_gap": 28,
+    "area_gap": 70,
+    "row_label_offset": 14,
+    "shape": "rounded",
+    "background": "#020617",
+    "text_color": "#cbd5e1"
+  },
+
+  "areas": [
+    {
+      "id": "mezanino",
+      "name": "Mezanino",
+      "color": "#5b8def",
+      "layout": "rows_with_blocks",
+      "rows": [
+        {
+          "label": "Y",
+          "blocks": [
+            { "from": 1, "to": 4 },
+            { "from": 6, "to": 14 },
+            { "from": 15, "to": 23 },
+            { "from": 25, "to": 28 }
+          ],
+          "overrides": [
+            { "num": 13, "kind": "ac" },
+            { "num": 14, "kind": "ac" },
+            { "num": 15, "kind": "pmr" },
+            { "num": 16, "kind": "ac" }
+          ]
+        },
+        {
+          "label": "X",
+          "blocks": [
+            { "from": 1, "to": 16 },
+            { "from": 17, "to": 31 }
+          ]
+        },
+        {
+          "label": "W",
+          "blocks": [
+            { "from": 1, "to": 16 },
+            { "from": 17, "to": 31 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "plateia",
+      "name": "Plateia",
+      "color": "#94a3b8",
+      "layout": "rows_with_blocks",
+      "rows": [
+        {
+          "label": "R",
+          "blocks": [
+            { "from": 1, "to": 5,  "align_to": { "row": "Q", "from": 2,  "to": 6  } },
+            { "from": 6, "to": 10, "align_to": { "row": "Q", "from": 20, "to": 24 } }
+          ],
+          "overrides": [
+            { "num": 1,  "kind": "pcr" },
+            { "num": 10, "kind": "pcr" }
+          ]
+        },
+        {
+          "label": "Q",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 17 },
+            { "from": 18, "to": 25 }
+          ]
+        },
+        {
+          "label": "P",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 19 },
+            { "from": 20, "to": 27 }
+          ],
+          "overrides": [
+            { "num": 9, "kind": "pmr" },
+            { "num": 10, "kind": "ac" },
+            { "num": 19, "kind": "ac" }
+          ]
+        },
+        {
+          "label": "O",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 19 },
+            { "from": 20, "to": 27 }
+          ],
+          "overrides": [
+            { "num": 9, "kind": "pmr" },
+            { "num": 10, "kind": "ac" },
+            { "num": 19, "kind": "ac" }
+          ]
+        },
+        {
+          "label": "N",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "M",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "L",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "K",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "J",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 19 },
+            { "from": 20, "to": 27 }
+          ],
+          "overrides": [
+            { "num": 9, "kind": "pmr" },
+            { "num": 10, "kind": "ac" },
+            { "num": 19, "kind": "ac" },
+            { "num": 20, "kind": "po" }
+          ]
+        },
+        {
+          "label": "I",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "H",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "G",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "F",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ],
+          "blocked": true,
+          "blocked_reason": "Cortesia FCC"
+        },
+        {
+          "label": "E",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "D",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 20 },
+            { "from": 21, "to": 28 }
+          ]
+        },
+        {
+          "label": "C",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 19 },
+            { "from": 20, "to": 27 }
+          ],
+          "overrides": [
+            { "num": 9, "kind": "pmr" },
+            { "num": 10, "kind": "ac" },
+            { "num": 19, "kind": "ac" }
+          ]
+        },
+        {
+          "label": "B",
+          "blocks": [
+            { "from": 1, "to": 8 },
+            { "from": 9, "to": 19 },
+            { "from": 20, "to": 27 }
+          ],
+          "overrides": [
+            { "num": 9, "kind": "pmr" },
+            { "num": 10, "kind": "ac" },
+            { "num": 19, "kind": "ac" }
+          ]
+        },
+        {
+          "label": "A",
+          "blocks": [
+            { "from": 1, "to": 7 },
+            { "from": 8, "to": 18 },
+            { "from": 19, "to": 25 }
+          ],
+          "overrides": [
+            { "num": 1, "kind": "pcr" },
+            { "num": 6, "kind": "ac" },
+            { "num": 7, "kind": "pcr" },
+            { "num": 8, "kind": "ac" },
+            { "num": 17, "kind": "ac" },
+            { "num": 18, "kind": "pcr" },
+            { "num": 19, "kind": "pcr" },
+            { "num": 24, "kind": "ac" },
+            { "num": 25, "kind": "pcr" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "frisa_s",
+      "name": "Frisa S",
+      "color": "#94a3b8",
+      "layout": "single_column",
+      "anchor": { "side": "left",  "follow_area": "plateia", "y_align": "middle" },
+      "seats": [
+        { "num": 1 }, { "num": 2 }, { "num": 3 }, { "num": 4 }, { "num": 5 }
+      ]
+    },
+
+    {
+      "id": "frisa_t",
+      "name": "Frisa T",
+      "color": "#94a3b8",
+      "layout": "single_column",
+      "anchor": { "side": "right", "follow_area": "plateia", "y_align": "middle" },
+      "seats": [
+        { "num": 1 }, { "num": 2 }, { "num": 3 }, { "num": 4 }, { "num": 5 }
+      ]
+    },
+
+    {
+      "id": "frisa_u",
+      "name": "Frisa U / Camarote U",
+      "color": "#64748b",
+      "layout": "single_column",
+      "anchor": { "side": "left",  "follow_area": "mezanino", "y_align": "middle" },
+      "seats": [
+        { "num": 1 }, { "num": 2 }, { "num": 3 }, { "num": 4 }, { "num": 5 }
+      ],
+      "blocked": true,
+      "blocked_reason": "Camarote U bloqueado"
+    },
+
+    {
+      "id": "frisa_v",
+      "name": "Frisa V / Camarote V",
+      "color": "#64748b",
+      "layout": "single_column",
+      "anchor": { "side": "right", "follow_area": "mezanino", "y_align": "middle" },
+      "seats": [
+        { "num": 1 }, { "num": 2 }, { "num": 3 }, { "num": 4 }, { "num": 5 }
+      ],
+      "blocked": true,
+      "blocked_reason": "Camarote V bloqueado"
+    }
+  ],
+
+  "stage": {
+    "label": "PALCO",
+    "position": "bottom",
+    "follow_area": "plateia"
+  }
+}

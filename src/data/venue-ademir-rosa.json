@@ -1,0 +1,86 @@
+{
+  "$schema": "lumo-tickets/venue/v1",
+  "venue": {
+    "id": "teatro-ademir-rosa",
+    "name": "Teatro Ademir Rosa",
+    "city": "Florianópolis/SC",
+    "total_seats": 906,
+    "salable_seats": 843,
+    "notes": "CIC — Centro Integrado de Cultura. Numeração: poltrona 1 à direita (vista de cima, palco no topo). Cortesia FCC fixa (hold, emissível pela ticketeira, não vendável): Fila F inteira (26) + Fila G central 9–19 (11) = 37. Fila T = acessibilidade/PCD, fora da venda geral: tem 13 poltronas reais + espaços de cadeirante; modelada como 26 posições bloqueadas (refinar render cadeirante depois). Público vendável = 843. Filas U–ZA: 4 blocos / 3 corredores. Corredor lateral sempre entre poltronas 7 e 8. Corredores centrais: U,V = 19/20 e 31/32; W,X,Y,Z = 20/21 e 33/34; ZA = 21/22 e 35/36. Totais por fila: U,V=39; W,X,Y,Z=41; ZA=43. Fila ZB = bloco único 1–51, SEM corredor, é a fila mais larga (atrás da ZA) — na renderização pode ser preciso reduzir um pouco o tamanho das poltronas das filas de trás para caberem. Conferir na planta antes de publicar."
+  },
+
+  "render": {
+    "seat_size": 18,
+    "seat_gap": 2,
+    "row_gap": 4,
+    "block_gap": 28,
+    "area_gap": 70,
+    "row_label_offset": 14,
+    "shape": "rounded",
+    "background": "#020617",
+    "text_color": "#cbd5e1",
+    "numbering": "rtl"
+  },
+
+  "areas": [
+    {
+      "id": "plateia",
+      "name": "Plateia",
+      "color": "#94a3b8",
+      "layout": "rows_with_blocks",
+      "rows": [
+        { "label": "A", "blocks": [ { "from": 17, "to": 24 }, { "from": 9, "to": 16 }, { "from": 1, "to": 8 } ] },
+        { "label": "B", "blocks": [ { "from": 17, "to": 24 }, { "from": 9, "to": 16 }, { "from": 1, "to": 8 } ] },
+        { "label": "C", "blocks": [ { "from": 18, "to": 25 }, { "from": 9, "to": 17 }, { "from": 1, "to": 8 } ] },
+        { "label": "D", "blocks": [ { "from": 18, "to": 25 }, { "from": 9, "to": 17 }, { "from": 1, "to": 8 } ] },
+        { "label": "E", "blocks": [ { "from": 19, "to": 26 }, { "from": 9, "to": 18 }, { "from": 1, "to": 8 } ] },
+        {
+          "label": "F",
+          "blocks": [ { "from": 19, "to": 26 }, { "from": 9, "to": 18 }, { "from": 1, "to": 8 } ],
+          "hold": "cortesia",
+          "hold_reason": "Cortesia FCC"
+        },
+        {
+          "label": "G",
+          "blocks": [
+            { "from": 20, "to": 27 },
+            { "from": 9, "to": 19, "hold": "cortesia", "hold_reason": "Cortesia FCC" },
+            { "from": 1, "to": 8 }
+          ]
+        },
+        { "label": "H", "blocks": [ { "from": 20, "to": 27 }, { "from": 9, "to": 19 }, { "from": 1, "to": 8 } ] },
+        { "label": "I", "blocks": [ { "from": 20, "to": 27 }, { "from": 9, "to": 19 }, { "from": 1, "to": 8 } ] },
+        { "label": "J", "blocks": [ { "from": 21, "to": 28 }, { "from": 9, "to": 20 }, { "from": 1, "to": 8 } ] },
+        { "label": "K", "blocks": [ { "from": 21, "to": 28 }, { "from": 9, "to": 20 }, { "from": 1, "to": 8 } ] },
+        { "label": "L", "blocks": [ { "from": 22, "to": 29 }, { "from": 9, "to": 21 }, { "from": 1, "to": 8 } ] },
+        { "label": "M", "blocks": [ { "from": 23, "to": 31 }, { "from": 10, "to": 22 }, { "from": 1, "to": 9 } ] },
+        { "label": "N", "blocks": [ { "from": 24, "to": 32 }, { "from": 10, "to": 23 }, { "from": 1, "to": 9 } ] },
+        { "label": "O", "blocks": [ { "from": 24, "to": 32 }, { "from": 10, "to": 23 }, { "from": 1, "to": 9 } ] },
+        { "label": "P", "blocks": [ { "from": 25, "to": 33 }, { "from": 10, "to": 24 }, { "from": 1, "to": 9 } ] },
+        { "label": "Q", "blocks": [ { "from": 25, "to": 33 }, { "from": 10, "to": 24 }, { "from": 1, "to": 9 } ] },
+        { "label": "R", "blocks": [ { "from": 25, "to": 33 }, { "from": 10, "to": 24 }, { "from": 1, "to": 9 } ] },
+        { "label": "S", "blocks": [ { "from": 26, "to": 34 }, { "from": 10, "to": 25 }, { "from": 1, "to": 9 } ] },
+        {
+          "label": "T",
+          "blocks": [ { "from": 1, "to": 26 } ],
+          "blocked": true,
+          "blocked_reason": "Acessibilidade / PCD (cadeirante, obeso, assento fixo)"
+        },
+        { "label": "U",  "blocks": [ { "from": 32, "to": 39 }, { "from": 20, "to": 31 }, { "from": 8, "to": 19 }, { "from": 1, "to": 7 } ] },
+        { "label": "V",  "blocks": [ { "from": 32, "to": 39 }, { "from": 20, "to": 31 }, { "from": 8, "to": 19 }, { "from": 1, "to": 7 } ] },
+        { "label": "W",  "blocks": [ { "from": 34, "to": 41 }, { "from": 21, "to": 33 }, { "from": 8, "to": 20 }, { "from": 1, "to": 7 } ] },
+        { "label": "X",  "blocks": [ { "from": 34, "to": 41 }, { "from": 21, "to": 33 }, { "from": 8, "to": 20 }, { "from": 1, "to": 7 } ] },
+        { "label": "Y",  "blocks": [ { "from": 34, "to": 41 }, { "from": 21, "to": 33 }, { "from": 8, "to": 20 }, { "from": 1, "to": 7 } ] },
+        { "label": "Z",  "blocks": [ { "from": 34, "to": 41 }, { "from": 21, "to": 33 }, { "from": 8, "to": 20 }, { "from": 1, "to": 7 } ] },
+        { "label": "ZA", "blocks": [ { "from": 36, "to": 43 }, { "from": 22, "to": 35 }, { "from": 8, "to": 21 }, { "from": 1, "to": 7 } ] },
+        { "label": "ZB", "blocks": [ { "from": 1, "to": 51 } ] }
+      ]
+    }
+  ],
+
+  "stage": {
+    "label": "PALCO",
+    "position": "top",
+    "follow_area": "plateia"
+  }
+}
