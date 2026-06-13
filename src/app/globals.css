@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paleta Lumo — tema claro (off-white) */
+  --lumo-bg:       #F4F1EB;
+  --lumo-surface:  #FFFFFF;
+  --lumo-border:   #DDD9D0;
+  --lumo-text:     #1A1D22;
+  --lumo-muted:    rgba(26,29,34,0.50);
+  --lumo-green:    #4F6654;
+  --lumo-green-lt: #3d5041;
+  --lumo-cream:    #F4F1EB;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg:       var(--lumo-bg);
+  --color-surface:  var(--lumo-surface);
+  --color-border:   var(--lumo-border);
+  --color-text:     var(--lumo-text);
+  --color-green:    var(--lumo-green);
+  --color-green-lt: var(--lumo-green-lt);
+  --color-cream:    var(--lumo-cream);
+  --color-muted:    var(--lumo-muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--lumo-bg);
+  color: var(--lumo-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Seat picker trigger ── */
+.lumo-seat-picker-trigger {
+  background: #4F6654;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.lumo-seat-picker-trigger:hover:not(:disabled) { background: #3d5041; }
+.lumo-seat-picker-trigger:disabled { opacity: 0.45; cursor: not-allowed; }
+.lumo-seat-picker-summary {
+  font-size: 0.8rem;
+  color: var(--lumo-muted);
+  margin-top: 8px;
 }

@@ -1,0 +1,110 @@
+{
+  "$schema": "lumo-tickets/venue/v1",
+  "venue": {
+    "id": "teatro-alvaro-de-carvalho",
+    "name": "Teatro Álvaro de Carvalho",
+    "city": "Florianópolis/SC",
+    "total_seats": 446,
+    "salable_seats": 413,
+    "notes": "TAC. Reconstruído a partir do MAPA OFICIAL 'Teatro Alvaro de Carvalho 2025' (PDF FCC) — substitui a versão anterior baseada no Tickera. Numeração: poltrona 1 à direita (vista de cima, palco no topo), numbering=rtl; cada fila tem corredor central que a divide em dois blocos (faixa alta à esquerda, faixa baixa à direita), listados faixa-alta-primeiro. Plateia (térreo): 14 filas A–N (302 poltronas) — COM as filas K e N, SEM fila O. Balcão (3º piso): 5 filas O,P,Q,R,S (92 poltronas) — rótulos reais O–S, não colidem com a plateia A–M nem precisam do prefixo BA–BE. Camarotes: 28 lugares = CORTESIA DA FCC, modelados com hold=cortesia (podem ficar ocultos no mapa público, mas as cortesias precisam ser enviadas). Frisas FE/FD: 12 lugares cada (texto oficial 'FRISA ESQUERDA 12 lugares' / 'FRISA DIREITA 12 lugares'), modeladas como coluna simples. Totais oficiais confirmados no PDF: plateia 302 (A–N), balcão 92, camarote 28, frisa esq 12, frisa dir 12 = 446. Salable público = 413 (exclui 28 de cortesia + 5 espaços de cadeirante bloqueados: A1/A10/A20/N1/N14). ACESSIBILIDADE MODELADA: cadeirante (kind=PCR, blocked) em A1/A10/A20 e N1/N14; PMR (mobilidade reduzida) em A11/B12; PO (obeso) em K10/K11 e L9/L10. PILARES: 8 pilares (campo 'pillars' top-level) entre poltronas nas filas D, H, K, L — vista prejudicada. PONTOS A REFINAR DEPOIS: (1) AC (acompanhante de cadeirante) ainda NÃO posicionado como poltrona — definir poltrona ao lado de cada PCR se necessário; (2) layout interno real das frisas (boxes pares à esq / ímpares à dir) — hoje coluna simples 1–12; (3) divisão dos camarotes em boxes individuais, se necessário."
+  },
+
+  "render": {
+    "seat_size": 18,
+    "seat_gap": 2,
+    "row_gap": 4,
+    "block_gap": 28,
+    "area_gap": 70,
+    "row_label_offset": 14,
+    "shape": "rounded",
+    "background": "#020617",
+    "text_color": "#cbd5e1",
+    "numbering": "rtl"
+  },
+
+  "areas": [
+    {
+      "id": "plateia",
+      "name": "Plateia (Térreo)",
+      "color": "#94a3b8",
+      "layout": "rows_with_blocks",
+      "rows": [
+        { "label": "A", "blocks": [ { "from": 11, "to": 20 }, { "from": 1, "to": 10 } ], "overrides": [ { "num": 1, "kind": "PCR", "blocked": true, "blocked_reason": "Espaço para cadeirante" }, { "num": 10, "kind": "PCR", "blocked": true, "blocked_reason": "Espaço para cadeirante" }, { "num": 20, "kind": "PCR", "blocked": true, "blocked_reason": "Espaço para cadeirante" }, { "num": 11, "kind": "PMR" } ] },
+        { "label": "B", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ], "overrides": [ { "num": 12, "kind": "PMR" } ] },
+        { "label": "C", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "D", "blocks": [ { "from": 12, "to": 22 }, { "from": 1, "to": 11 } ] },
+        { "label": "E", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "F", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "G", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "H", "blocks": [ { "from": 12, "to": 22 }, { "from": 1, "to": 11 } ] },
+        { "label": "I", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "J", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "K", "blocks": [ { "from": 11, "to": 20 }, { "from": 1, "to": 10 } ], "overrides": [ { "num": 10, "kind": "PO" }, { "num": 11, "kind": "PO" } ] },
+        { "label": "L", "blocks": [ { "from": 10, "to": 18 }, { "from": 1, "to": 9 } ], "overrides": [ { "num": 9, "kind": "PO" }, { "num": 10, "kind": "PO" } ] },
+        { "label": "M", "blocks": [ { "from": 10, "to": 18 }, { "from": 1, "to": 9 } ] },
+        { "label": "N", "blocks": [ { "from": 8, "to": 14 }, { "from": 1, "to": 7 } ], "overrides": [ { "num": 1, "kind": "PCR", "blocked": true, "blocked_reason": "Espaço para cadeirante" }, { "num": 14, "kind": "PCR", "blocked": true, "blocked_reason": "Espaço para cadeirante" } ] }
+      ]
+    },
+    {
+      "id": "frisa_fe",
+      "name": "Frisa Esquerda (2º Piso)",
+      "color": "#22c55e",
+      "layout": "single_column",
+      "anchor": { "side": "left", "follow_area": "plateia" },
+      "seats": [
+        { "num": 1 }, { "num": 2 }, { "num": 3 }, { "num": 4 }, { "num": 5 }, { "num": 6 },
+        { "num": 7 }, { "num": 8 }, { "num": 9 }, { "num": 10 }, { "num": 11 }, { "num": 12 }
+      ]
+    },
+    {
+      "id": "frisa_fd",
+      "name": "Frisa Direita (2º Piso)",
+      "color": "#22c55e",
+      "layout": "single_column",
+      "anchor": { "side": "right", "follow_area": "plateia" },
+      "seats": [
+        { "num": 1 }, { "num": 2 }, { "num": 3 }, { "num": 4 }, { "num": 5 }, { "num": 6 },
+        { "num": 7 }, { "num": 8 }, { "num": 9 }, { "num": 10 }, { "num": 11 }, { "num": 12 }
+      ]
+    },
+    {
+      "id": "balcao",
+      "name": "Balcão (3º Piso)",
+      "color": "#60a5fa",
+      "layout": "rows_with_blocks",
+      "rows": [
+        { "label": "O", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "P", "blocks": [ { "from": 13, "to": 24 }, { "from": 1, "to": 12 } ] },
+        { "label": "Q", "blocks": [ { "from": 12, "to": 22 }, { "from": 1, "to": 11 } ] },
+        { "label": "R", "blocks": [ { "from": 9, "to": 16 }, { "from": 1, "to": 8 } ] },
+        { "label": "S", "blocks": [ { "from": 4, "to": 6 }, { "from": 1, "to": 3 } ] }
+      ]
+    },
+    {
+      "id": "camarotes",
+      "name": "Camarotes (Cortesia FCC)",
+      "color": "#ef4444",
+      "layout": "rows_with_blocks",
+      "rows": [
+        { "label": "CAM", "hold": "cortesia", "hold_reason": "Cortesia FCC", "blocks": [ { "from": 1, "to": 28 } ] }
+      ]
+    }
+  ],
+
+  "pillars": [
+    { "area": "plateia", "row": "D", "between": [1, 2] },
+    { "area": "plateia", "row": "D", "between": [21, 22] },
+    { "area": "plateia", "row": "H", "between": [1, 2] },
+    { "area": "plateia", "row": "H", "between": [21, 22] },
+    { "area": "plateia", "row": "K", "between": [3, 4] },
+    { "area": "plateia", "row": "K", "between": [17, 18] },
+    { "area": "plateia", "row": "L", "between": [8, 9] },
+    { "area": "plateia", "row": "L", "between": [10, 11] }
+  ],
+
+  "stage": {
+    "label": "PALCO",
+    "position": "top",
+    "follow_area": "plateia"
+  }
+}
