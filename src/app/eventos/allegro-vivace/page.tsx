@@ -73,10 +73,8 @@ export default function AllegroVivacePage() {
       <main style={S.page}>
         <header style={S.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={S.logoMark}>L</div>
-            <span style={S.logoTxt}>
-              Lumo<span style={S.logoSpan}>Tickets</span>
-            </span>
+            <div style={S.logoMark}>M</div>
+            <span style={S.logoTxt}>Moventis</span>
           </div>
         </header>
 
