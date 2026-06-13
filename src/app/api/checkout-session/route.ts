@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cartSessions } from '../seat-add-to-cart/route'
+import { createServerClient } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get('session')
@@ -8,15 +8,39 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 'error', message: 'session obrigatório' }, { status: 400 })
   }
 
-  const session = cartSessions.get(sessionId)
-  if (!session) {
-    return NextResponse.json({ status: 'error', message: 'Sessão não encontrada ou expirada' }, { status: 404 })
+  const db = createServerClient()
+
+  const { data: order, error } = await db
+    .from('orders')
+    .select('id, event_id, status, seats, face_total, service_fee_total, payment_method, payment_fee, total, expires_at, created_at, asaas_pix_copy_paste, asaas_pix_qr_image, asaas_pix_expires_at')
+    .eq('id', sessionId)
+    .single()
+
+  if (error || !order) {
+    return NextResponse.json({ status: 'error', message: 'Sessão não encontrada' }, { status: 404 })
   }
 
-  if (new Date(session.expires_at) < new Date()) {
-    cartSessions.delete(sessionId)
+  if (order.status === 'expired' || order.status === 'cancelled') {
+    return NextResponse.json({ status: 'error', message: 'Sessão expirada ou cancelada' }, { status: 410 })
+  }
+
+  if (new Date(order.expires_at) < new Date() && order.status === 'pending_payment') {
+    // Marca como expirado (best-effort, não bloqueia resposta)
+    db.from('orders').update({ status: 'expired' }).eq('id', sessionId)
     return NextResponse.json({ status: 'error', message: 'Sessão expirada' }, { status: 410 })
   }
 
-  return NextResponse.json({ status: 'success', data: session })
+  // Retorna no mesmo formato que o checkout espera
+  return NextResponse.json({
+    status: 'success',
+    data: {
+      session_id:        order.id,
+      product_id:        1,
+      reservation_token: '',
+      seats:             order.seats,
+      total:             order.total,
+      created_at:        order.created_at,
+      expires_at:        order.expires_at,
+    },
+  })
 }

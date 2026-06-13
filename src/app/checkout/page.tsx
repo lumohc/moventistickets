@@ -2,8 +2,15 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import type { CartSession } from '../api/seat-add-to-cart/route'
+import type { CartItem } from '@/lib/supabase'
 import { serviceFee, paymentFee, fmt, type PaymentMethod } from '@/lib/fees'
+
+interface CartSession {
+  session_id: string
+  seats: CartItem[]
+  total: number
+  expires_at: string
+}
 
 const C = {
   bg:      '#F4F1EB',
