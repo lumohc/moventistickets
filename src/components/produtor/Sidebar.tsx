@@ -44,9 +44,9 @@ export default function Sidebar() {
             width: 32, height: 32, background: C.green, borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 15, color: '#fff', fontWeight: 700,
-          }}>L</div>
+          }}>M</div>
           <div>
-            <p style={{ fontSize: '0.9rem', fontWeight: 700, color: C.text, lineHeight: 1 }}>Lumo</p>
+            <p style={{ fontSize: '0.9rem', fontWeight: 700, color: C.text, lineHeight: 1 }}>Moventis</p>
             <p style={{ fontSize: '0.7rem', color: C.muted, letterSpacing: '0.08em' }}>PRODUTOR</p>
           </div>
         </div>

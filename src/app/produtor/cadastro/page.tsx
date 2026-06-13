@@ -91,9 +91,9 @@ export default function CadastroPage() {
             width: 48, height: 48, background: C.green, borderRadius: 12,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 22, color: '#fff', fontWeight: 700, marginBottom: 12,
-          }}>L</div>
+          }}>M</div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
-            Lumo<span style={{ color: C.green }}>Tickets</span>
+            Moventis
           </h1>
           <p style={{ fontSize: '0.85rem', color: C.muted, marginTop: 4 }}>Cadastro de Produtor</p>
         </div>

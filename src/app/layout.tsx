@@ -4,7 +4,7 @@ import './globals.css'
 import './seat-picker.css'
 
 export const metadata: Metadata = {
-  title: 'Lumo Tickets',
+  title: 'Moventis',
   description: 'Compra de ingressos online',
 }
 

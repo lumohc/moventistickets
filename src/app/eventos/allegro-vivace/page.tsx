@@ -2,7 +2,7 @@ import SeatPickerWidget from '@/components/mapa/SeatPickerWidget'
 import venueData from '@/data/venue-tac.json'
 
 export const metadata = {
-  title: 'Allegro Vivace — Lumo Tickets',
+  title: 'Allegro Vivace — Moventis',
   description: 'Show de música clássica no Teatro Álvaro de Carvalho, Florianópolis.',
 }
 
