@@ -18,8 +18,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
+        {/* svg-pan-zoom: necessário pro zoom (+/−), pinch no celular e arrastar o mapa.
+            Servido local; carrega antes do seat-picker (defer roda em ordem). */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script src="/seat-picker-lumo.js?v=11" defer />
+        <script src="/svg-pan-zoom.min.js" defer />
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/seat-picker-lumo.js?v=12" defer />
       </body>
     </html>
   )
