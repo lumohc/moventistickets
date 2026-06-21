@@ -16,6 +16,8 @@ const event = {
   prices: [
     { label: 'Plateia — Inteira',      value: 'R$ 80' },
     { label: 'Plateia — Meia-entrada', value: 'R$ 40' },
+    { label: 'Frisa — Inteira',        value: 'R$ 90' },
+    { label: 'Frisa — Meia-entrada',   value: 'R$ 45' },
     { label: 'Balcão — Inteira',       value: 'R$ 60' },
     { label: 'Balcão — Meia-entrada',  value: 'R$ 30' },
   ],

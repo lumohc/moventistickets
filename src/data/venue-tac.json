@@ -79,15 +79,6 @@
         { "label": "R", "blocks": [ { "from": 9, "to": 16 }, { "from": 1, "to": 8 } ] },
         { "label": "S", "blocks": [ { "from": 4, "to": 6 }, { "from": 1, "to": 3 } ] }
       ]
-    },
-    {
-      "id": "camarotes",
-      "name": "Camarotes (Cortesia FCC)",
-      "color": "#ef4444",
-      "layout": "rows_with_blocks",
-      "rows": [
-        { "label": "CAM", "hold": "cortesia", "hold_reason": "Cortesia FCC", "blocks": [ { "from": 1, "to": 28 } ] }
-      ]
     }
   ],
 
