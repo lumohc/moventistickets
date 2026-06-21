@@ -1,0 +1,152 @@
+import nodemailer from 'nodemailer'
+
+interface TicketEmailParams {
+  to: string
+  buyerName: string
+  eventName: string
+  eventDate: string
+  venueName: string
+  tickets: Array<{
+    seatName: string
+    groupName: string
+    ticketType: string
+    qrDataUrl: string  // base64
+    qrCode: string     // texto do QR
+  }>
+  orderId: string
+}
+
+export async function sendTicketEmail(params: TicketEmailParams): Promise<void> {
+  const html = buildEmailHtml(params)
+
+  // 1. Resend (provider primário — configure RESEND_API_KEY)
+  const resendKey = process.env.RESEND_API_KEY
+  if (resendKey && resendKey !== 'PREENCHER') {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Moventis Tickets <noreply@moventistickets.com.br>',
+        to:      [params.to],
+        subject: `Seus ingressos — ${params.eventName}`,
+        html,
+      }),
+    })
+    if (!res.ok) {
+      const msg = await res.text()
+      throw new Error(`[email:resend] ${res.status} — ${msg}`)
+    }
+    console.log(`[email:resend] Enviado para ${params.to}`)
+    return
+  }
+
+  // 2. SMTP (fallback — configure SMTP_HOST, SMTP_USER, SMTP_PASS)
+  const smtpHost = process.env.SMTP_HOST
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+
+  if (smtpHost && smtpUser && smtpPass) {
+    const port   = Number(process.env.SMTP_PORT ?? 465)
+    const secure = port === 465
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port,
+      secure,
+      auth: { user: smtpUser, pass: smtpPass },
+    })
+    await transporter.sendMail({
+      from:    `"Moventis Tickets" <${smtpUser}>`,
+      to:      params.to,
+      subject: `Seus ingressos — ${params.eventName}`,
+      html,
+    })
+    console.log(`[email:smtp] Enviado para ${params.to}`)
+    return
+  }
+
+  // 3. Nenhum provider configurado — log para desenvolvimento
+  console.log(`[email:mock] Ingresso para ${params.to} — ${params.eventName} (${params.tickets.length} ingresso(s))`)
+  console.log(`[email:mock] Configure RESEND_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASS no .env.local`)
+}
+
+function buildEmailHtml(params: TicketEmailParams): string {
+  const ticketsHtml = params.tickets.map((t, i) => `
+    <div style="border:1px solid #DDD9D0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#4F6654;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:#F4F1EB;">Ingresso ${i + 1}</span>
+        <span style="font-size:11px;color:rgba(244,241,235,0.7);letter-spacing:0.05em;text-transform:uppercase;">${capitalize(t.ticketType)}</span>
+      </div>
+      <div style="background:#F4F1EB;padding:18px 20px;">
+        <p style="font-size:15px;font-weight:700;color:#1A1D22;margin:0 0 2px;">${t.seatName}</p>
+        <p style="font-size:13px;color:rgba(26,29,34,0.6);margin:0 0 16px;">${t.groupName}</p>
+        <div style="text-align:center;background:#ffffff;border-radius:10px;padding:16px;border:1px solid #DDD9D0;">
+          <img src="${t.qrDataUrl}" alt="QR Code" width="160" height="160" style="display:block;margin:0 auto;" />
+          <p style="font-size:10px;color:#999;margin:10px 0 0;font-family:'Courier New',monospace;word-break:break-all;">${t.qrCode}</p>
+        </div>
+      </div>
+    </div>
+  `).join('')
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F4F1EB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1EB;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+        <tr>
+          <td style="background:#4F6654;border-radius:16px 16px 0 0;padding:28px 32px;text-align:center;">
+            <p style="margin:0;font-size:22px;font-weight:800;color:#F4F1EB;letter-spacing:-0.03em;">MOVENTIS</p>
+            <p style="margin:4px 0 0;font-size:11px;font-weight:600;color:rgba(244,241,235,0.6);letter-spacing:0.12em;text-transform:uppercase;">Ingressos &amp; Eventos</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#ffffff;padding:32px 32px 24px;border-left:1px solid #DDD9D0;border-right:1px solid #DDD9D0;">
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1A1D22;letter-spacing:-0.02em;">Seus ingressos chegaram! 🎭</h1>
+            <p style="margin:0;font-size:15px;color:rgba(26,29,34,0.6);line-height:1.6;">
+              Olá, <strong style="color:#1A1D22;">${params.buyerName}</strong>. Seus ingressos estão confirmados. Apresente o QR code na entrada do evento.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#ffffff;padding:0 32px 24px;border-left:1px solid #DDD9D0;border-right:1px solid #DDD9D0;">
+            <div style="background:#F4F1EB;border:1px solid #DDD9D0;border-radius:12px;padding:18px 20px;">
+              <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#1A1D22;">${params.eventName}</p>
+              <p style="margin:0 0 3px;font-size:13px;color:rgba(26,29,34,0.6);">📅 ${params.eventDate}</p>
+              <p style="margin:0;font-size:13px;color:rgba(26,29,34,0.6);">📍 ${params.venueName}</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#ffffff;padding:0 32px 32px;border-left:1px solid #DDD9D0;border-right:1px solid #DDD9D0;">
+            ${ticketsHtml}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#1A1D22;border-radius:0 0 16px 16px;padding:20px 32px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:12px;color:rgba(244,241,235,0.5);">Pedido <strong style="color:rgba(244,241,235,0.8);">#${params.orderId}</strong></p>
+            <p style="margin:0;font-size:11px;color:rgba(244,241,235,0.35);">
+              Moventis Tickets · Florianópolis/SC · <a href="https://moventistickets.com.br" style="color:rgba(79,102,84,0.8);text-decoration:none;">moventistickets.com.br</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+
+</body></html>`
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}

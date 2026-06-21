@@ -38,8 +38,10 @@ body.lumo-seat-picker-active .product .summary span.price {
   width: 100%;
   max-width: 480px;
 }
-.lumo-seat-picker-trigger:hover { filter: brightness(1.08); }
-.lumo-seat-picker-trigger:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
+.lumo-seat-picker-trigger:hover:not(:disabled) { filter: brightness(1.08); }
+.lumo-seat-picker-trigger:disabled { cursor: not-allowed; }
+.lumo-seat-picker-trigger--loading { animation: lumo-trigger-pulse 1.4s ease-in-out infinite; opacity: 0.85; }
+@keyframes lumo-trigger-pulse { 0%,100%{opacity:0.85} 50%{opacity:0.55} }
 .lumo-seat-picker-trigger:active:not(:disabled) { transform: scale(0.98); }
 
 .lumo-seat-picker-trigger-arrow { font-size: 16px; }
@@ -47,7 +49,26 @@ body.lumo-seat-picker-active .product .summary span.price {
 .lumo-seat-picker-summary {
   margin: 8px 0 16px;
   font-size: 13px;
-  color: #cbd5e1;
+  color: rgba(26, 29, 34, 0.55);
+}
+
+/* Fallback visual quando JS ainda não rodou (div vazio) */
+.lumo-seat-picker:empty::before {
+  content: 'Carregando mapa…';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  padding: 14px 22px;
+  background: #0f5e5e;
+  color: #f1f5f9;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  box-sizing: border-box;
+  animation: lumo-trigger-pulse 1.4s ease-in-out infinite;
+  opacity: 0.85;
 }
 
 /* ---------- Modal cheio que abre quando clica no trigger -------------------- */

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
+import { generateQRDataURL } from '@/lib/generate-qr'
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
@@ -10,14 +11,18 @@ const C = {
 function fmt(n: number) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
+function capitalize(s: string) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
+}
 
-export default async function PedidoPage({ params }: { params: { id: string } }) {
+export default async function PedidoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const admin = createSupabaseAdmin()
 
   const { data: order } = await admin
     .from('orders')
-    .select('*, events(name, event_date, event_time, venue_name, city)')
-    .eq('id', params.id)
+    .select('*, events(name, event_date, event_time, venue_name, city, venues(name))')
+    .eq('id', id)
     .single()
 
   if (!order) notFound()
@@ -28,6 +33,21 @@ export default async function PedidoPage({ params }: { params: { id: string } })
   const seats      = (order.seats as any[]) ?? []
   const event      = order.events as any
 
+  // Busca tickets com QR code quando pedido está pago
+  const tickets: any[] = []
+  if (isPaid) {
+    const { data: tks } = await admin
+      .from('tickets')
+      .select('id, seat_name, group_name, ticket_type, price, qr_code')
+      .eq('order_id', id)
+      .order('seat_name')
+    if (tks) {
+      for (const t of tks) {
+        tickets.push({ ...t, qr_image: await generateQRDataURL(t.qr_code) })
+      }
+    }
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       {/* Header */}
@@ -35,14 +55,7 @@ export default async function PedidoPage({ params }: { params: { id: string } })
         background: C.surface, borderBottom: `1px solid ${C.border}`,
         padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10,
       }}>
-        <div style={{
-          width: 32, height: 32, background: C.green, borderRadius: 8,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 15, color: '#fff', fontWeight: 700,
-        }}>M</div>
-        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
-          Moventis
-        </span>
+        <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
       </header>
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px' }}>
@@ -115,6 +128,45 @@ export default async function PedidoPage({ params }: { params: { id: string } })
             >
               Tentar novamente
             </a>
+          </div>
+        )}
+
+        {/* Ingressos digitais (apenas quando pago) */}
+        {isPaid && tickets.length > 0 && (
+          <div style={{
+            background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 16, padding: 28, marginBottom: 20,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+          }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 4 }}>
+              🎟️ Seus ingressos
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 20 }}>
+              Apresente o QR code na entrada do evento. Um por poltrona.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+              {tickets.map((t: any) => (
+                <div key={t.id} style={{
+                  background: C.bg, border: `1px solid ${C.border}`,
+                  borderRadius: 12, padding: 16, textAlign: 'center',
+                }}>
+                  <p style={{ fontSize: '0.85rem', fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                    {t.seat_name}
+                  </p>
+                  <p style={{ fontSize: '0.72rem', color: C.muted, marginBottom: 12 }}>
+                    {t.group_name} — {capitalize(t.ticket_type)}
+                  </p>
+                  <img
+                    src={t.qr_image}
+                    alt={`QR ${t.seat_name}`}
+                    style={{ width: 160, height: 160, borderRadius: 8 }}
+                  />
+                  <p style={{ marginTop: 8, fontSize: '0.62rem', color: C.muted, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                    {t.qr_code}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -211,7 +263,7 @@ export default async function PedidoPage({ params }: { params: { id: string } })
 
         {/* Número do pedido */}
         <p style={{ textAlign: 'center', fontSize: '0.75rem', color: C.muted }}>
-          Pedido # <code style={{ userSelect: 'all' }}>{params.id}</code>
+          Pedido # <code style={{ userSelect: 'all' }}>{id}</code>
         </p>
 
       </div>

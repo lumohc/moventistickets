@@ -23,12 +23,6 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-
   function LumoSeatPicker(rootEl) {
     var self = this;
     self.root = rootEl;
@@ -66,9 +60,9 @@
     if (!trigger) {
       trigger = document.createElement('button');
       trigger.type = 'button';
-      trigger.className = 'lumo-seat-picker-trigger';
+      trigger.className = 'lumo-seat-picker-trigger lumo-seat-picker-trigger--loading';
       trigger.disabled = true;
-      trigger.innerHTML = '<span>' + self.config.triggerLabel + '</span><span class="lumo-seat-picker-trigger-arrow">›</span>';
+      trigger.innerHTML = '<span>Carregando mapa…</span>';
       root.appendChild(trigger);
     }
     self.dom.trigger = trigger;
@@ -166,37 +160,62 @@
   LumoSeatPicker.prototype._loadData = function () {
     var self = this;
 
+    // Tenta carregar venue do DOM como prefetch (opcional — a API também retorna)
     var venueScript = document.getElementById('lumo-venue-data');
-    if (!venueScript) {
-      self.dom.summary.textContent = 'Mapa não disponível pra este evento.';
-      return;
+    if (venueScript) {
+      try { self.state.venue = JSON.parse(venueScript.textContent); } catch (e) {}
     }
-    try {
-      self.state.venue = JSON.parse(venueScript.textContent);
-    } catch (e) {
-      self.dom.summary.textContent = 'Erro ao ler venue JSON.';
-      return;
-    }
+
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var fetchTimer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
 
     fetch(self.config.restBase + '/seat-map?product_id=' + self.config.productId, {
       credentials: 'same-origin',
       headers: { 'Accept': 'application/json' },
+      signal: ctrl ? ctrl.signal : undefined,
     })
       .then(function (r) {
+        if (fetchTimer) clearTimeout(fetchTimer);
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
       .then(function (json) {
         if (json.status !== 'success') throw new Error('API status');
         self.state.seatMap = json.data;
+
+        // Venue: prefer embedded in API response, fallback to DOM script tag
+        if (json.data.venue) {
+          self.state.venue = json.data.venue;
+        } else if (!self.state.venue) {
+          var venueScript = document.getElementById('lumo-venue-data');
+          if (!venueScript) {
+            self.dom.summary.textContent = 'Mapa não disponível pra este evento.';
+            return;
+          }
+          self.state.venue = JSON.parse(venueScript.textContent);
+        }
+
         self._indexBackendData();
         self.state.layout = computeLayout(self.state.venue);
-        self.dom.summary.textContent = self.state.venue.venue.salable_seats + ' poltronas · '
-          + Object.keys(self.state.seatStatus).filter(function (k) { return self.state.seatStatus[k] === 'sold'; }).length + ' vendidas';
+        var sold = Object.keys(self.state.seatStatus).filter(function (k) { return self.state.seatStatus[k] === 'sold'; }).length;
+        self.dom.summary.textContent = self.state.venue.venue.salable_seats + ' poltronas disponíveis'
+          + (sold > 0 ? ' · ' + sold + ' vendidas' : '');
+        self.dom.trigger.classList.remove('lumo-seat-picker-trigger--loading');
+        self.dom.trigger.innerHTML = '<span>' + self.config.triggerLabel + '</span><span class="lumo-seat-picker-trigger-arrow">›</span>';
         self.dom.trigger.disabled = false;
       })
       .catch(function (e) {
-        self.dom.summary.textContent = 'Erro ao carregar mapa: ' + e.message;
+        self.dom.trigger.classList.remove('lumo-seat-picker-trigger--loading');
+        self.dom.trigger.innerHTML = '<span>Tente novamente</span>';
+        self.dom.trigger.disabled = false;
+        self.dom.trigger.addEventListener('click', function retry() {
+          self.dom.trigger.removeEventListener('click', retry);
+          self.dom.trigger.disabled = true;
+          self.dom.trigger.innerHTML = '<span>Carregando mapa…</span>';
+          self.dom.trigger.classList.add('lumo-seat-picker-trigger--loading');
+          self._loadData();
+        }, { once: true });
+        self.dom.summary.textContent = 'Erro ao carregar mapa. Clique pra tentar de novo.';
       });
   };
 
@@ -1060,4 +1079,10 @@
   // Expõe para uso externo (React SeatPickerWidget)
   window.LumoSeatPicker = LumoSeatPicker;
   window.LumoSeatPickerBoot = boot;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 })();

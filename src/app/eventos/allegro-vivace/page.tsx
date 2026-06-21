@@ -1,5 +1,4 @@
 import SeatPickerWidget from '@/components/mapa/SeatPickerWidget'
-import venueData from '@/data/venue-tac.json'
 
 export const metadata = {
   title: 'Allegro Vivace — Moventis',
@@ -37,8 +36,7 @@ const C = {
 const S = {
   page:     { minHeight: '100vh', background: C.bg } as React.CSSProperties,
   header:   { background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties,
-  logoMark: { width: 32, height: 32, background: C.green, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, color: '#fff', fontWeight: 700 } as React.CSSProperties,
-  logoTxt:  { fontSize: '1.1rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' } as React.CSSProperties,
+    logoTxt:  { fontSize: '1.1rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' } as React.CSSProperties,
   logoSpan: { color: C.green } as React.CSSProperties,
   wrap:     { maxWidth: 960, margin: '0 auto', padding: '40px 24px' } as React.CSSProperties,
   card:     { background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px', marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' } as React.CSSProperties,
@@ -63,18 +61,10 @@ const S = {
 
 export default function AllegroVivacePage() {
   return (
-    <>
-      <script
-        id="lumo-venue-data"
-        type="application/json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(venueData) }}
-      />
-
-      <main style={S.page}>
+    <main style={S.page}>
         <header style={S.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={S.logoMark}>M</div>
-            <span style={S.logoTxt}>Moventis</span>
+            <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
           </div>
         </header>
 
@@ -107,7 +97,7 @@ export default function AllegroVivacePage() {
             <div style={S.pickerCard}>
               <h2 style={S.h2}>Escolher poltronas</h2>
               <p style={S.pickerSub}>
-                Teatro Álvaro de Carvalho · {venueData.venue.salable_seats} poltronas disponíveis
+                Teatro Álvaro de Carvalho · 413 poltronas disponíveis
               </p>
               <SeatPickerWidget productId={event.productId} />
             </div>
@@ -129,7 +119,6 @@ export default function AllegroVivacePage() {
             </div>
           </div>
         </div>
-      </main>
-    </>
+    </main>
   )
 }

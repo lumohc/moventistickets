@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { getVenueData } from '@/lib/venue-map'
 import SeatPickerWidget from '@/components/mapa/SeatPickerWidget'
+import TicketGeralWidget from '@/components/evento/TicketGeralWidget'
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
@@ -29,12 +30,13 @@ function fmtDatetime(date?: string | null, time?: string | null) {
 }
 
 // Gera metadata dinâmica para SEO
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
   const admin = createSupabaseAdmin()
   const { data } = await admin
     .from('events')
     .select('name, description, venues(name, city)')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .single()
 
@@ -47,13 +49,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default async function EventoPage({ params }: { params: { slug: string } }) {
+export default async function EventoPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const admin = createSupabaseAdmin()
 
   const { data: event } = await admin
     .from('events')
     .select('*, venues(id, slug, name, city, address, salable_seats, venue_data), producers(name)')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .single()
 
@@ -105,8 +108,7 @@ export default async function EventoPage({ params }: { params: { slug: string } 
         {/* Header */}
         <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a href="/eventos" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <div style={{ width: 32, height: 32, background: C.green, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, color: '#fff', fontWeight: 700 }}>M</div>
-            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>Moventis</span>
+            <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
           </a>
           <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>← Todos os eventos</a>
         </header>
@@ -131,7 +133,7 @@ export default async function EventoPage({ params }: { params: { slug: string } 
             )}
 
             {/* Info boxes */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: event.description ? 28 : 0 }}>
+            <div className="resp-info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: event.description ? 28 : 0 }}>
               {[
                 { label: 'Data',    value: dateLong },
                 { label: 'Horário', value: `${time}h` },
@@ -152,8 +154,8 @@ export default async function EventoPage({ params }: { params: { slug: string } 
           </div>
 
           {/* Layout: mapa + preços */}
-          <div style={{ display: 'grid', gridTemplateColumns: hasMap ? '1fr 300px' : '1fr', gap: 24, alignItems: 'start' }}>
-            {/* Mapa de assentos */}
+          <div className={hasMap || priceFace ? 'resp-cols-2' : ''} style={{ display: 'grid', gridTemplateColumns: hasMap ? '1fr 300px' : '1fr', gap: 24, alignItems: 'start' }}>
+            {/* Mapa de assentos ou ingresso geral */}
             {hasMap ? (
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '32px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: C.text, marginBottom: 6 }}>Escolher poltronas</h2>
@@ -162,12 +164,22 @@ export default async function EventoPage({ params }: { params: { slug: string } 
                 </p>
                 <SeatPickerWidget productId={event.product_id} />
               </div>
+            ) : priceFace ? (
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '32px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: C.text, marginBottom: 6 }}>Comprar ingressos</h2>
+                <p style={{ fontSize: '0.85rem', color: C.muted, marginBottom: 24 }}>Entrada geral — sem escolha de assento.</p>
+                <TicketGeralWidget
+                  eventId={event.id}
+                  priceFace={priceFace}
+                  halfPrice={!!event.half_price}
+                />
+              </div>
             ) : (
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 32px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <p style={{ fontSize: '2rem', marginBottom: 12 }}>🎭</p>
-                <p style={{ fontSize: '1rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>Mapa de assentos em breve</p>
+                <p style={{ fontSize: '1rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>Ingressos em breve</p>
                 <p style={{ fontSize: '0.875rem', color: C.muted }}>
-                  A equipe Moventis está configurando o mapa para este evento.
+                  A venda de ingressos será aberta em breve. Fique de olho!
                 </p>
               </div>
             )}

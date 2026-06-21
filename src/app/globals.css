@@ -54,3 +54,75 @@ body {
   color: var(--lumo-muted);
   margin-top: 8px;
 }
+
+/* ── Responsividade ── */
+
+/* Layout de duas colunas → empilha no mobile */
+.resp-cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .resp-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Grid de cards → coluna única no mobile */
+.resp-grid-events {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+@media (max-width: 500px) {
+  .resp-grid-events {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Hero h1 menor no mobile */
+@media (max-width: 600px) {
+  .resp-hero-h1 { font-size: 2rem !important; }
+  .resp-hero-sub { font-size: 0.95rem !important; }
+  .resp-hero-btn { padding: 13px 24px !important; font-size: 0.95rem !important; }
+  .resp-section-pad { padding: 40px 16px !important; }
+  .resp-card-pad { padding: 24px 16px !important; }
+  .resp-header { padding: 14px 16px !important; }
+}
+
+/* Sidebar do portal → esconde no mobile (toggle futuro) */
+@media (max-width: 768px) {
+  .portal-sidebar { display: none !important; }
+  .portal-main    { margin-left: 0 !important; padding: 20px 16px !important; }
+}
+
+/* Tabelas admin → scroll horizontal */
+.resp-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Info boxes do evento → 2 colunas no mobile */
+.resp-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 480px) {
+  .resp-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Checkout steps label → esconde texto no mobile */
+@media (max-width: 420px) {
+  .resp-step-label { display: none; }
+}
+
+/* PIX copia-cola wrap no mobile */
+@media (max-width: 480px) {
+  .resp-pix-row { flex-direction: column !important; }
+  .resp-pix-row button { width: 100% !important; }
+}

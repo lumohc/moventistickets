@@ -55,26 +55,44 @@ export default function CadastroPage() {
 
     // 1. Cria o usuário no Supabase Auth
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password })
+
+    // Se usuário já existe, tenta fazer login
+    if (authErr?.message?.toLowerCase().includes('already registered') ||
+        authErr?.message?.toLowerCase().includes('user already')) {
+      const { data: loginData, error: loginErr } = await sb.auth.signInWithPassword({ email, password })
+      if (loginErr || !loginData.user) {
+        setError('E-mail já cadastrado. Tente fazer login ou use "Esqueci minha senha".')
+        setLoading(false)
+        return
+      }
+      router.push('/produtor/dashboard')
+      return
+    }
+
     if (authErr || !authData.user) {
       setError(authErr?.message || 'Erro ao criar conta.')
       setLoading(false)
       return
     }
 
-    // 2. Cria o perfil do produtor
-    const { error: prodErr } = await sb.from('producers').insert({
-      user_id:    authData.user.id,
-      name,
-      legal_name: legalName || null,
-      document,
-      email,
-      phone:      phone || null,
-      payment_pref: payPref,
-      status:     'pending',
+    // 2. Cria o perfil do produtor via API (service role, ignora RLS)
+    const res = await fetch('/api/produtor/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id:      authData.user.id,
+        name,
+        legal_name:   legalName || null,
+        document,
+        email,
+        phone:        phone || null,
+        payment_pref: payPref,
+      }),
     })
 
-    if (prodErr) {
-      setError('Conta criada, mas houve um erro ao salvar o perfil. Entre em contato.')
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      setError(json.error || 'Houve um erro ao salvar o perfil. Entre em contato.')
       setLoading(false)
       return
     }

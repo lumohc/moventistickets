@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   const { data: order, error } = await db
     .from('orders')
-    .select('id, event_id, status, seats, face_total, service_fee_total, payment_method, payment_fee, total, expires_at, created_at, asaas_pix_copy_paste, asaas_pix_qr_image, asaas_pix_expires_at')
+    .select('id, event_id, status, seats, face_total, service_fee_total, payment_method, payment_fee, total, expires_at, created_at, asaas_pix_copy_paste, asaas_pix_qr_image, asaas_pix_expires_at, events(name, event_date, event_time, venues(name))')
     .eq('id', sessionId)
     .single()
 
@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 'error', message: 'Sessão expirada' }, { status: 410 })
   }
 
+  const ev    = (order as any).events as any
+  const venue = ev?.venues as any
+
   // Retorna no mesmo formato que o checkout espera
   return NextResponse.json({
     status: 'success',
@@ -41,6 +44,10 @@ export async function GET(request: NextRequest) {
       total:             order.total,
       created_at:        order.created_at,
       expires_at:        order.expires_at,
+      event_name:        ev?.name ?? null,
+      event_date:        ev?.event_date ?? null,
+      event_time:        ev?.event_time ?? null,
+      venue_name:        venue?.name ?? null,
     },
   })
 }

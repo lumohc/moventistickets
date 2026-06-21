@@ -1,40 +1,38 @@
 'use client'
-
 import { useEffect, useRef } from 'react'
+
+declare global {
+  interface Window { LumoSeatPicker: new (el: HTMLElement) => unknown }
+}
 
 interface Props {
   productId: number
   label?: string
 }
 
-export default function SeatPickerWidget({ productId, label = 'Abrir mapa de poltronas' }: Props) {
+export default function SeatPickerWidget({ productId, label = 'Escolher poltronas' }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!ref.current) return
     const el = ref.current
-    let cancelled = false
+    if (!el) return
 
-    function doInit() {
-      if (cancelled) return
-      delete (el as any).dataset.lumoInitialized
-      el.innerHTML = ''
-      new (window as any).LumoSeatPicker(el)
+    function tryInit(): boolean {
+      if (typeof window.LumoSeatPicker !== 'function') return false
+      // Se boot() já rodou E React não limpou os filhos, está pronto
+      if (el!.children.length > 0) return true
+      // Inicializa diretamente (previne boot() de duplicar)
+      el!.dataset.lumoInitialized = '1'
+      new window.LumoSeatPicker(el!)
+      return true
     }
 
-    // Espera LumoSeatPicker ficar disponível (carregado pelo layout)
-    function waitAndInit() {
-      if (typeof (window as any).LumoSeatPicker === 'function') {
-        doInit()
-        return
-      }
-      const timer = setTimeout(waitAndInit, 50)
-      return () => clearTimeout(timer)
-    }
+    if (tryInit()) return
 
-    waitAndInit()
-    return () => { cancelled = true }
-  }, [productId])
+    const timer = setInterval(() => { if (tryInit()) clearInterval(timer) }, 50)
+    const timeout = setTimeout(() => clearInterval(timer), 10_000)
+    return () => { clearInterval(timer); clearTimeout(timeout) }
+  }, [])
 
   return (
     <div

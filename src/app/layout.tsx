@@ -1,11 +1,16 @@
-import type { Metadata } from 'next'
-import Script from 'next/script'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import './seat-picker.css'
 
 export const metadata: Metadata = {
   title: 'Moventis',
-  description: 'Compra de ingressos online',
+  description: 'Compra de ingressos online com escolha de assento. Teatro, dança, música e mais em Santa Catarina.',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#4F6654',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -13,7 +18,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
-        <Script src="/seat-picker-lumo.js?v=2" strategy="afterInteractive" />
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/seat-picker-lumo.js?v=11" defer />
       </body>
     </html>
   )

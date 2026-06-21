@@ -42,24 +42,24 @@ export default async function HomePage() {
       {/* Header */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, background: C.green, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, color: '#fff', fontWeight: 700 }}>M</div>
-          <span style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>Moventis</span>
+          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <a href="/eventos" style={{ fontSize: '0.875rem', color: C.muted, textDecoration: 'none', fontWeight: 500 }}>Eventos</a>
+          <a href="/ingressos" style={{ fontSize: '0.875rem', color: C.muted, textDecoration: 'none', fontWeight: 500 }}>Meus ingressos</a>
           <a href="/produtor/login" style={{ fontSize: '0.875rem', color: C.text, textDecoration: 'none', padding: '8px 18px', border: `1px solid ${C.border}`, borderRadius: 8, fontWeight: 500 }}>Portal do Produtor</a>
         </div>
       </header>
 
       {/* Hero */}
-      <section style={{ padding: '80px 24px 60px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
+      <section className="resp-section-pad" style={{ padding: '80px 24px 60px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
         <div style={{ display: 'inline-block', background: 'rgba(79,102,84,0.10)', border: '1px solid rgba(79,102,84,0.25)', color: C.green, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '5px 16px', borderRadius: 100, marginBottom: 24 }}>
           Florianópolis & Santa Catarina
         </div>
-        <h1 style={{ fontSize: '3rem', fontWeight: 700, color: C.text, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 20 }}>
+        <h1 className="resp-hero-h1" style={{ fontSize: '3rem', fontWeight: 700, color: C.text, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 20 }}>
           Seu ingresso com<br />o assento que você escolheu
         </h1>
-        <p style={{ fontSize: '1.1rem', color: C.muted, lineHeight: 1.6, marginBottom: 36, maxWidth: 520, margin: '0 auto 36px' }}>
+        <p className="resp-hero-sub" style={{ fontSize: '1.1rem', color: C.muted, lineHeight: 1.6, marginBottom: 36, maxWidth: 520, margin: '0 auto 36px' }}>
           Teatro, dança, música e muito mais. Escolha seu lugar no mapa, pague via PIX ou cartão e receba o ingresso digital.
         </p>
         <a
@@ -187,7 +187,13 @@ export default async function HomePage() {
       <footer style={{ borderTop: `1px solid ${C.border}`, padding: '24px', textAlign: 'center' }}>
         <p style={{ fontSize: '0.8rem', color: C.muted }}>
           © 2026 Moventis · Florianópolis/SC ·{' '}
+          <a href="/ingressos" style={{ color: C.green, textDecoration: 'none' }}>Meus ingressos</a>
+          {' · '}
           <a href="/produtor/login" style={{ color: C.green, textDecoration: 'none' }}>Portal do Produtor</a>
+          {' · '}
+          <a href="/termos" style={{ color: C.muted, textDecoration: 'none' }}>Termos de Uso</a>
+          {' · '}
+          <a href="/privacidade" style={{ color: C.muted, textDecoration: 'none' }}>Privacidade</a>
         </p>
       </footer>
     </div>

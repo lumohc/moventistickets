@@ -195,6 +195,19 @@ export default async function EventosPage() {
                     >
                       Vendas
                     </a>
+                    {(ev.status === 'published' || ev.status === 'approved') && (
+                      <a
+                        href={`/produtor/eventos/${ev.id}/checkin`}
+                        style={{
+                          padding: '6px 14px', background: C.green,
+                          border: 'none', borderRadius: 8,
+                          color: '#fff', fontSize: '0.8rem', fontWeight: 600,
+                          textDecoration: 'none', cursor: 'pointer',
+                        }}
+                      >
+                        📱 Check-in
+                      </a>
+                    )}
                   </div>
                 </div>
               )

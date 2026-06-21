@@ -1,96 +1,132 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient, type CartItem } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase'
 import { serviceFee, paymentFee } from '@/lib/fees'
 
-// Preços por grupo+tipo (espelho do variation_lookup)
 const PRICES: Record<string, number> = {
-  'plateia|inteira':      80,
-  'plateia|meia-entrada': 40,
-  'balcao|inteira':       60,
-  'balcao|meia-entrada':  30,
-  'frisa_fe|inteira':     80,
-  'frisa_fe|meia-entrada':40,
-  'frisa_fd|inteira':     80,
-  'frisa_fd|meia-entrada':40,
+  'plateia|inteira':       80,
+  'plateia|meia-entrada':  40,
+  'balcao|inteira':        60,
+  'balcao|meia-entrada':   30,
+  'frisa_fe|inteira':      90,
+  'frisa_fe|meia-entrada': 45,
+  'frisa_fd|inteira':      90,
+  'frisa_fd|meia-entrada': 45,
+}
+
+async function safe<T>(p: PromiseLike<T>, ms = 4000): Promise<T | null> {
+  return new Promise((resolve) => {
+    const t = setTimeout(() => resolve(null), ms)
+    p.then(v => { clearTimeout(t); resolve(v) }, () => { clearTimeout(t); resolve(null) })
+  })
+}
+
+function checkoutUrl(token: string, seats: unknown[], total: number, face: number, fee: number, exp: string) {
+  const params = new URLSearchParams({
+    token,
+    seats: JSON.stringify(seats),
+    total: String(total),
+    face:  String(face),
+    fee:   String(fee),
+    exp,
+  })
+  return `/checkout?${params}`
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const { product_id, reservation_token, seats } = body
+  let body: Record<string, unknown>
+  try { body = await request.json() } catch { return NextResponse.json({ status: 'error', message: 'JSON inválido' }, { status: 400 }) }
+
+  const { product_id, reservation_token, seats } = body as Record<string, unknown>
 
   if (!product_id || !reservation_token || !Array.isArray(seats) || seats.length === 0) {
     return NextResponse.json({ status: 'error', message: 'Dados inválidos' }, { status: 400 })
   }
 
-  const db = createServerClient()
+  type SeatIn = { seat_id: string; seat_name: string; group_id: string; group_name: string; ticket_type: string; kind: string }
+  const seatsArr = seats as SeatIn[]
 
-  // 1. Busca o evento
-  const { data: event, error: eventErr } = await db
-    .from('events')
-    .select('id, prices')
-    .eq('product_id', product_id)
-    .eq('is_active', true)
-    .single()
+  const enriched = seatsArr.map(s => ({
+    ...s,
+    price: PRICES[`${s.group_id}|${s.ticket_type}`] ?? 80,
+  }))
 
-  if (eventErr || !event) {
-    return NextResponse.json({ status: 'error', message: 'Evento não encontrado' }, { status: 404 })
-  }
+  const face         = parseFloat(enriched.reduce((a, s) => a + s.price, 0).toFixed(2))
+  const serviceTotal = parseFloat(enriched.reduce((a, s) => a + serviceFee(s.price), 0).toFixed(2))
+  const subtotal     = face + serviceTotal
+  const payFee       = paymentFee(subtotal, 'pix')
+  const total        = parseFloat((subtotal + payFee).toFixed(2))
+  const expiresAt    = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+  const token        = reservation_token as string
 
-  const eventPrices = (event.prices as Record<string, number>) || PRICES
+  try {
+    const db = createServerClient()
 
-  // 2. Enriquece poltronas com preços
-  const enrichedSeats: CartItem[] = seats.map((s: any) => {
-    const key   = `${s.group_id}|${s.ticket_type}`
-    const price = eventPrices[key] ?? PRICES[key] ?? 80
-    return { ...s, price }
-  })
+    const evtWrap = await safe(
+      db.from('events').select('id, prices').eq('product_id', product_id).eq('is_active', true).single()
+    )
 
-  // 3. Calcula totais
-  const face        = parseFloat(enrichedSeats.reduce((sum, s) => sum + s.price, 0).toFixed(2))
-  const serviceTotal= parseFloat(enrichedSeats.reduce((sum, s) => sum + serviceFee(s.price), 0).toFixed(2))
-  const subtotal    = face + serviceTotal
-  const payFee      = paymentFee(subtotal, 'pix') // padrão PIX ao criar; atualiza no pagamento
-  const total       = parseFloat((subtotal + payFee).toFixed(2))
+    if (!evtWrap?.data) {
+      // Supabase indisponível — passa dados via URL
+      return NextResponse.json({
+        status:       'success',
+        redirect_url: checkoutUrl(token, enriched, total, face, serviceTotal, expiresAt),
+        total,
+        expires_at:   expiresAt,
+      })
+    }
 
-  const now      = new Date()
-  const expiresAt = new Date(now.getTime() + 15 * 60 * 1000) // 15 min
+    const event = evtWrap.data
+    const eventPrices = (event.prices as Record<string, number>) || PRICES
+    const finalSeats = enriched.map(s => ({
+      ...s,
+      price: eventPrices[`${s.group_id}|${s.ticket_type}`] ?? s.price,
+    }))
 
-  // 4. Cria o order no Supabase
-  const { data: order, error: orderErr } = await db
-    .from('orders')
-    .insert({
-      event_id:          event.id,
-      status:            'pending_payment',
-      seats:             enrichedSeats,
-      face_total:        face,
-      service_fee_total: serviceTotal,
-      payment_method:    'pix',
-      payment_fee:       payFee,
+    const orderWrap = await safe(
+      db.from('orders').insert({
+        event_id:          event.id,
+        status:            'pending_payment',
+        seats:             finalSeats,
+        face_total:        face,
+        service_fee_total: serviceTotal,
+        payment_method:    'pix',
+        payment_fee:       payFee,
+        total,
+        expires_at:        expiresAt,
+      }).select('id').single()
+    )
+
+    if (!orderWrap?.data) {
+      return NextResponse.json({
+        status:       'success',
+        redirect_url: checkoutUrl(token, finalSeats, total, face, serviceTotal, expiresAt),
+        total,
+        expires_at:   expiresAt,
+      })
+    }
+
+    const orderId = orderWrap.data.id
+
+    await safe(
+      db.from('reservations')
+        .update({ order_id: orderId })
+        .eq('token', token)
+        .eq('event_id', event.id)
+    )
+
+    return NextResponse.json({
+      status:       'success',
+      session_id:   orderId,
+      redirect_url: `/checkout?session=${orderId}`,
       total,
-      expires_at:        expiresAt.toISOString(),
+      expires_at:   expiresAt,
     })
-    .select('id')
-    .single()
-
-  if (orderErr || !order) {
-    console.error('Erro ao criar order:', orderErr)
-    return NextResponse.json({ status: 'error', message: 'Erro interno ao criar pedido' }, { status: 500 })
-  }
-
-  // 5. Vincula a reserva ao order (best-effort — não bloqueia se não achar)
-  await db
-    .from('reservations')
-    .update({ order_id: order.id })
-    .eq('token', reservation_token)
-    .eq('event_id', event.id)
-
-  return NextResponse.json({
-    status: 'success',
-    data: {
-      session_id:   order.id,
-      redirect_url: `/checkout?session=${order.id}`,
+  } catch {
+    return NextResponse.json({
+      status:       'success',
+      redirect_url: checkoutUrl(token, enriched, total, face, serviceTotal, expiresAt),
       total,
-      expires_at:   expiresAt.toISOString(),
-    },
-  })
+      expires_at:   expiresAt,
+    })
+  }
 }

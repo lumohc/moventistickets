@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import Sidebar from '@/components/produtor/Sidebar'
+import PosterUpload from '@/components/produtor/PosterUpload'
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
@@ -87,6 +88,7 @@ export default function EditarEventoPage() {
   const [priceFace, setPriceFace]     = useState('')
   const [halfPrice, setHalfPrice]     = useState(true)
   const [producerNotes, setProducerNotes] = useState('')
+  const [posterUrl, setPosterUrl]         = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -128,6 +130,7 @@ export default function EditarEventoPage() {
       setPriceFace(ev.price_face ? String(ev.price_face) : '')
       setHalfPrice(ev.half_price ?? true)
       setProducerNotes(ev.producer_notes ?? '')
+      setPosterUrl(ev.poster_url ?? null)
       setLoading(false)
     }
     load()
@@ -220,13 +223,28 @@ export default function EditarEventoPage() {
             <span>›</span>
             <span style={{ color: C.text, fontWeight: 600 }}>Editar evento</span>
           </div>
-          <span style={{
-            display: 'inline-block', padding: '4px 12px', borderRadius: 100,
-            fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.04em',
-            color: statusInfo.color, background: statusInfo.bg,
-          }}>
-            {statusInfo.label}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {(eventStatus === 'published' || eventStatus === 'approved') && (
+              <a
+                href={`/produtor/eventos/${id}/checkin`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 16px', background: C.green, color: '#fff',
+                  borderRadius: 8, textDecoration: 'none',
+                  fontSize: '0.8rem', fontWeight: 600,
+                }}
+              >
+                📱 Check-in
+              </a>
+            )}
+            <span style={{
+              display: 'inline-block', padding: '4px 12px', borderRadius: 100,
+              fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.04em',
+              color: statusInfo.color, background: statusInfo.bg,
+            }}>
+              {statusInfo.label}
+            </span>
+          </div>
         </div>
 
         <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 8 }}>
@@ -251,6 +269,16 @@ export default function EditarEventoPage() {
             ✅ Evento salvo com sucesso.
           </div>
         )}
+
+        {/* Poster — sempre visível, fora do form */}
+        <section style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 16 }}>Poster / Foto do evento</h2>
+          <PosterUpload
+            eventId={id}
+            currentUrl={posterUrl}
+            onUploaded={url => setPosterUrl(url)}
+          />
+        </section>
 
         <form onSubmit={handleSave} style={readonlyStyle}>
           {/* 1. Identificação */}

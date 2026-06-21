@@ -112,7 +112,10 @@ function LoginForm() {
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.85rem', color: C.muted }}>
+          <p style={{ textAlign: 'center', marginTop: 16, fontSize: '0.85rem' }}>
+            <a href="/produtor/esqueci-senha" style={{ color: C.muted, textDecoration: 'none' }}>Esqueci minha senha</a>
+          </p>
+          <p style={{ textAlign: 'center', marginTop: 8, fontSize: '0.85rem', color: C.muted }}>
             Não tem conta?{' '}
             <a href="/produtor/cadastro" style={{ color: C.green, fontWeight: 600 }}>Cadastrar-se</a>
           </p>

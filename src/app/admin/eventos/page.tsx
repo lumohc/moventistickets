@@ -52,7 +52,7 @@ export default function AdminEventosPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res  = await fetch('/api/admin/events')
+    const res  = await fetch('/api/painel/events')
     const json = await res.json()
     setEventos(json.data ?? [])
     setLoading(false)
@@ -68,7 +68,7 @@ export default function AdminEventosPage() {
 
   async function updateStatus(id: string, status: string) {
     setSaving(true)
-    const res  = await fetch('/api/admin/events', {
+    const res  = await fetch('/api/painel/events', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status, admin_notes: notes }),
@@ -86,7 +86,7 @@ export default function AdminEventosPage() {
 
   async function saveNotes(id: string) {
     setSaving(true)
-    await fetch('/api/admin/events', {
+    await fetch('/api/painel/events', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, admin_notes: notes }),

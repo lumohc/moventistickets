@@ -40,14 +40,9 @@ export default function Sidebar() {
       {/* Logo */}
       <div style={{ padding: '24px 20px 20px', borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, background: C.green, borderRadius: 8,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 15, color: '#fff', fontWeight: 700,
-          }}>M</div>
           <div>
-            <p style={{ fontSize: '0.9rem', fontWeight: 700, color: C.text, lineHeight: 1 }}>Moventis</p>
-            <p style={{ fontSize: '0.7rem', color: C.muted, letterSpacing: '0.08em' }}>PRODUTOR</p>
+            <img src="/logo-reversed-transparent.svg" alt="Moventis" style={{ height: 48 }} />
+            <p style={{ fontSize: '0.65rem', color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Portal do Produtor</p>
           </div>
         </div>
       </div>

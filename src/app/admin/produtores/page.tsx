@@ -48,7 +48,7 @@ export default function AdminProdutoresPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res  = await fetch('/api/admin/producers')
+    const res  = await fetch('/api/painel/producers')
     const json = await res.json()
     setProducers(json.data ?? [])
     setLoading(false)
@@ -64,7 +64,7 @@ export default function AdminProdutoresPage() {
 
   async function updateStatus(id: string, status: string) {
     setSaving(true)
-    const res = await fetch('/api/admin/producers', {
+    const res = await fetch('/api/painel/producers', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status, admin_notes: notes }),
@@ -82,7 +82,7 @@ export default function AdminProdutoresPage() {
 
   async function saveNotes(id: string) {
     setSaving(true)
-    await fetch('/api/admin/producers', {
+    await fetch('/api/painel/producers', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, admin_notes: notes }),
