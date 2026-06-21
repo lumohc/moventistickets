@@ -86,7 +86,30 @@ function CheckoutContent() {
   const [paying, setPaying] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  // Confirmação automática (polling do status do pedido após gerar o PIX)
+  const [confirmed, setConfirmed] = useState(false)
+  const [expired, setExpired]     = useState(false)
+
   const countdown = useCountdown(session?.expires_at)
+
+  // Enquanto o PIX estiver na tela, verifica o status do pedido a cada 4s.
+  // Quando o webhook do Asaas confirmar, a tela avança sozinha pro sucesso.
+  useEffect(() => {
+    if (step !== 'pix' || !sessionId || confirmed) return
+    let active = true
+    async function check() {
+      try {
+        const r = await fetch(`/api/payment/status?order=${sessionId}`)
+        const j = await r.json()
+        if (!active) return
+        if (j.status === 'paid') setConfirmed(true)
+        else if (j.status === 'expired' || j.status === 'cancelled') setExpired(true)
+      } catch { /* ignora; tenta de novo no próximo tick */ }
+    }
+    check()
+    const id = setInterval(check, 4000)
+    return () => { active = false; clearInterval(id) }
+  }, [step, sessionId, confirmed])
 
   useEffect(() => {
     // Fallback: seats direto na URL (Supabase indisponível)
@@ -183,15 +206,17 @@ function CheckoutContent() {
   }
 
   // DEV: confirma o pedido sem pagamento real (testar emissão sem Asaas/webhook).
+  // Não redireciona — o polling acima detecta o 'paid' e mostra o sucesso.
   const isDev = process.env.NODE_ENV !== 'production'
   async function simulatePayment() {
     if (!sessionId) return
-    await fetch('/api/payment/simulate', {
+    const r = await fetch('/api/payment/simulate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order_id: sessionId }),
     })
-    window.location.href = `/pedido/${sessionId}`
+    const j = await r.json().catch(() => null)
+    if (j?.ok) setConfirmed(true)
   }
 
   const card: React.CSSProperties = {
@@ -355,9 +380,36 @@ function CheckoutContent() {
               </form>
             )}
 
-            {/* ── STEP 3: PIX ── */}
-            {step === 'pix' && pix && (
+            {/* ── STEP 3: Pagamento confirmado (polling detectou 'paid') ── */}
+            {step === 'pix' && confirmed && (
               <div style={card}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: C.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 16px' }}>✓</div>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: C.text, marginBottom: 6 }}>
+                    Pagamento confirmado!
+                  </h2>
+                  <p style={{ fontSize: '0.88rem', color: C.muted, lineHeight: 1.6 }}>
+                    Enviamos seus ingressos para <strong style={{ color: C.text }}>{email || 'seu e-mail'}</strong>.
+                    Você também pode acessá-los na página do pedido.
+                  </p>
+                  <a
+                    href={`/pedido/${sessionId}`}
+                    style={{ display: 'inline-block', marginTop: 20, padding: '12px 22px', background: C.green, color: '#fff', borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    Ver meus ingressos →
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 3: PIX ── */}
+            {step === 'pix' && !confirmed && pix && (
+              <div style={card}>
+                {expired && (
+                  <div style={{ background: '#fdf2f2', border: '1px solid #f5c6cb', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: '0.82rem', color: C.error, textAlign: 'center' }}>
+                    Esta reserva expirou e os assentos foram liberados. Se já pagou, aguarde alguns instantes; senão, refaça a seleção.
+                  </div>
+                )}
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
                   <p style={{ fontSize: '1.8rem', marginBottom: 8 }}>⚡</p>
                   <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text, marginBottom: 4 }}>
