@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const event = body.event as string | undefined
-    const payment = body.payment as { id?: string } | undefined
+    const payment = body.payment as { id?: string; value?: number } | undefined
 
     // Payload desconhecido (ex.: teste do Asaas) — aceita com 200.
     if (!event || !payment) {
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const admin = createSupabaseAdmin()
     const { data: order } = await admin
       .from('orders')
-      .select('id')
+      .select('id, total')
       .eq('asaas_payment_id', asaasPaymentId)
       .single()
 
@@ -51,7 +51,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, not_found: true })
     }
 
+    // Confere o valor pago contra o total do pedido. Diferença relevante =
+    // não confirma (loga pra resolução manual), pra não emitir ingresso por
+    // pagamento parcial/divergente.
+    const paidValue = Number(payment.value)
+    if (
+      Number.isFinite(paidValue) &&
+      typeof order.total === 'number' &&
+      Math.abs(paidValue - order.total) > 0.01
+    ) {
+      console.error(
+        `[webhook] valor divergente no pedido ${order.id}: pago ${paidValue} != total ${order.total} (asaas ${asaasPaymentId})`,
+      )
+      return NextResponse.json({ ok: true, value_mismatch: true })
+    }
+
     const result = await confirmOrderAndIssueTickets(order.id)
+
+    // Falha ao emitir ingresso → 5xx pro Asaas reenviar (não deixa pago sem ticket).
+    if (!result.ok && result.status === 'error') {
+      console.error(`[webhook] falha ao emitir ingressos do pedido ${order.id}`)
+      return NextResponse.json({ error: 'Falha ao emitir ingressos' }, { status: 500 })
+    }
+
     console.log(`[webhook] pedido ${order.id}: ${result.status} (asaas ${asaasPaymentId})`)
     return NextResponse.json({ ok: true, status: result.status })
   } catch (err) {
