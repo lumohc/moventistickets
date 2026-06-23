@@ -8,10 +8,10 @@ const GROUP_META: Record<string, {
   group_name: string; variation_full_id: number; variation_half_id: number
   price_full: number; price_half: number
 }> = {
-  plateia:  { group_name: 'Plateia (Térreo)',         variation_full_id: 1, variation_half_id: 2, price_full: 80, price_half: 40 },
-  frisa_fe: { group_name: 'Frisa Esquerda (2º Piso)', variation_full_id: 5, variation_half_id: 6, price_full: 90, price_half: 45 },
-  frisa_fd: { group_name: 'Frisa Direita (2º Piso)',  variation_full_id: 7, variation_half_id: 8, price_full: 90, price_half: 45 },
-  balcao:   { group_name: 'Balcão (3º Piso)',         variation_full_id: 3, variation_half_id: 4, price_full: 60, price_half: 30 },
+  plateia:  { group_name: 'Plateia (Térreo)',         variation_full_id: 1, variation_half_id: 2, price_full: 50, price_half: 25 },
+  frisa_fe: { group_name: 'Frisa Esquerda (2º Piso)', variation_full_id: 5, variation_half_id: 6, price_full: 50, price_half: 25 },
+  frisa_fd: { group_name: 'Frisa Direita (2º Piso)',  variation_full_id: 7, variation_half_id: 8, price_full: 50, price_half: 25 },
+  balcao:   { group_name: 'Balcão (3º Piso)',         variation_full_id: 3, variation_half_id: 4, price_full: 50, price_half: 25 },
 }
 
 // Supabase free-tier pode estar pausado — nunca bloqueie a resposta por mais de 3s
@@ -79,10 +79,10 @@ export async function GET(request: NextRequest) {
   } catch { /* continua com fallback vazio */ }
 
   const prices: Record<string, number> = event?.prices ?? {
-    'plateia|inteira': 80, 'plateia|meia-entrada': 40,
-    'balcao|inteira':  60, 'balcao|meia-entrada':  30,
-    'frisa_fe|inteira': 90, 'frisa_fe|meia-entrada': 45,
-    'frisa_fd|inteira': 90, 'frisa_fd|meia-entrada': 45,
+    'plateia|inteira': 50, 'plateia|meia-entrada': 25,
+    'balcao|inteira':  50, 'balcao|meia-entrada':  25,
+    'frisa_fe|inteira': 50, 'frisa_fe|meia-entrada': 25,
+    'frisa_fd|inteira': 50, 'frisa_fd|meia-entrada': 25,
   }
   const eventName = event?.name ?? 'Allegro Vivace'
 

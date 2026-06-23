@@ -14,12 +14,8 @@ const event = {
   city: 'Florianópolis / SC',
   description: 'Uma noite especial com as mais belas obras da música clássica europeia, interpretadas pela Orquestra Sinfônica de Santa Catarina.',
   prices: [
-    { label: 'Plateia — Inteira',      value: 'R$ 80' },
-    { label: 'Plateia — Meia-entrada', value: 'R$ 40' },
-    { label: 'Frisa — Inteira',        value: 'R$ 90' },
-    { label: 'Frisa — Meia-entrada',   value: 'R$ 45' },
-    { label: 'Balcão — Inteira',       value: 'R$ 60' },
-    { label: 'Balcão — Meia-entrada',  value: 'R$ 30' },
+    { label: 'Inteira',      value: 'R$ 50' },
+    { label: 'Meia-entrada', value: 'R$ 25' },
   ],
   productId: 1,
 }

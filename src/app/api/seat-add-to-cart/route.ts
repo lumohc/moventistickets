@@ -3,14 +3,14 @@ import { createServerClient } from '@/lib/supabase'
 import { serviceFee, paymentFee } from '@/lib/fees'
 
 const PRICES: Record<string, number> = {
-  'plateia|inteira':       80,
-  'plateia|meia-entrada':  40,
-  'balcao|inteira':        60,
-  'balcao|meia-entrada':   30,
-  'frisa_fe|inteira':      90,
-  'frisa_fe|meia-entrada': 45,
-  'frisa_fd|inteira':      90,
-  'frisa_fd|meia-entrada': 45,
+  'plateia|inteira':       50,
+  'plateia|meia-entrada':  25,
+  'balcao|inteira':        50,
+  'balcao|meia-entrada':   25,
+  'frisa_fe|inteira':      50,
+  'frisa_fe|meia-entrada': 25,
+  'frisa_fd|inteira':      50,
+  'frisa_fd|meia-entrada': 25,
 }
 
 async function safe<T>(p: PromiseLike<T>, ms = 4000): Promise<T | null> {
@@ -47,7 +47,9 @@ export async function POST(request: NextRequest) {
 
   const enriched = seatsArr.map(s => ({
     ...s,
-    price: PRICES[`${s.group_id}|${s.ticket_type}`] ?? 80,
+    // Preço uniforme: R$50 inteira / R$25 meia. Fallback por tipo cobre
+    // qualquer setor (antes caía em R$80 fixo, que cobrava errado).
+    price: PRICES[`${s.group_id}|${s.ticket_type}`] ?? (s.ticket_type === 'meia-entrada' ? 25 : 50),
   }))
 
   const face         = parseFloat(enriched.reduce((a, s) => a + s.price, 0).toFixed(2))
