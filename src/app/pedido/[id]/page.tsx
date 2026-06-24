@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { generateQRDataURL } from '@/lib/generate-qr'
+import PixPaymentCard from '@/components/PixPaymentCard'
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
@@ -79,28 +80,23 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
         {isPending && (
           <div style={{
             background: 'rgba(255,193,7,0.08)', border: '1px solid rgba(255,193,7,0.35)',
-            borderRadius: 16, padding: '24px 28px', marginBottom: 24, textAlign: 'center',
+            borderRadius: 16, padding: '24px 28px', marginBottom: 24,
           }}>
-            <p style={{ fontSize: '3rem', marginBottom: 8 }}>⏳</p>
-            <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#92610a', letterSpacing: '-0.02em', marginBottom: 6 }}>
-              Aguardando pagamento
-            </h1>
-            <p style={{ fontSize: '0.9rem', color: C.muted }}>
-              Complete o pagamento para garantir seus ingressos.
-            </p>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '3rem', marginBottom: 8 }}>⏳</p>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#92610a', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                Aguardando pagamento
+              </h1>
+              <p style={{ fontSize: '0.9rem', color: C.muted }}>
+                Complete o pagamento via PIX para garantir seus ingressos.
+              </p>
+            </div>
             {order.asaas_pix_copy_paste && (
-              <div style={{ marginTop: 20 }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>
-                  Chave PIX (copia e cola):
-                </p>
-                <code style={{
-                  display: 'block', background: C.surface, border: `1px solid ${C.border}`,
-                  borderRadius: 8, padding: '10px 14px', fontSize: '0.78rem', wordBreak: 'break-all',
-                  color: C.text, userSelect: 'text',
-                }}>
-                  {order.asaas_pix_copy_paste}
-                </code>
-              </div>
+              <PixPaymentCard
+                pixCopyPaste={order.asaas_pix_copy_paste as string}
+                pixQrImage={order.asaas_pix_qr_image as string | null}
+                total={Number(order.total)}
+              />
             )}
           </div>
         )}
