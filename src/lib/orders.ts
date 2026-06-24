@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { sendTicketEmail } from '@/lib/email'
 import { generateQRDataURL } from '@/lib/generate-qr'
+import { signTicket } from '@/lib/ticket-signing'
 
 interface OrderSeat {
   seat_id: string
@@ -66,7 +67,7 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
         group_name: seat.group_name,
         ticket_type: seat.ticket_type,
         price: seat.price,
-        qr_code: `MVT:${ticketId}`,
+        qr_code: signTicket(ticketId),
       }
     })
 
