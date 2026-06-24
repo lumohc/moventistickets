@@ -1,46 +1,51 @@
 /**
- * Lumo Tickets — Cálculo de taxas
+ * Compatibilidade — este módulo agora DELEGA tudo para o motor financeiro único
+ * (`src/lib/pricing.ts`). Mantido apenas pelos imports já existentes
+ * (checkout, seat-add-to-cart, ticket-geral).
  *
- * Taxa de serviço (por ingresso):
- *   - ingresso >= R$50 → 10% do valor de face
- *   - ingresso < R$50  → R$5,00 fixo
- *   - Fórmula: Math.max(5, ticket_price * 0.10)
+ * ⚠️ Em código novo, importe direto de `@/lib/pricing`. Aqui não há mais conta
+ * própria — só repasse — pra garantir uma ÚNICA fonte da verdade do dinheiro.
  *
- * Taxa de pagamento (por pedido):
- *   - PIX:    R$2,00 fixo
- *   - Cartão: 4,98% sobre o total (face + taxa de serviço)
+ * Mudança de comportamento: `paymentFee` no cartão agora aplica GROSS-UP
+ * (4,98% sobre o total), via pricing. PIX segue R$2 fixo.
  */
+import {
+  serviceFeeForTicket,
+  processingFee,
+  priceOrder,
+  formatBRL,
+  round2,
+  type PaymentMethod,
+} from './pricing';
 
-export type PaymentMethod = 'pix' | 'card'
+export type { PaymentMethod };
 
-/** Taxa de serviço Lumo por ingresso */
+/** @deprecated use `serviceFeeForTicket` de `@/lib/pricing`. */
 export function serviceFee(ticketPrice: number): number {
-  return Math.max(5.00, ticketPrice * 0.10)
+  return serviceFeeForTicket(ticketPrice);
 }
 
-/** Taxa de pagamento por pedido */
+/**
+ * @deprecated use `processingFee`/`priceOrder` de `@/lib/pricing`.
+ * `subtotal` = face + taxa de serviço. Cartão agora com gross-up correto.
+ */
 export function paymentFee(subtotal: number, method: PaymentMethod): number {
-  if (method === 'pix') return 2.00
-  return parseFloat((subtotal * 0.0498).toFixed(2))
+  return processingFee(subtotal, method);
 }
 
-/** Resumo financeiro completo de um pedido */
+/** @deprecated use `priceOrder` de `@/lib/pricing`. */
 export function orderSummary(tickets: { price: number }[], method: PaymentMethod) {
-  const face     = tickets.reduce((s, t) => s + t.price, 0)
-  const service  = tickets.reduce((s, t) => s + serviceFee(t.price), 0)
-  const subtotal = face + service
-  const payment  = paymentFee(subtotal, method)
-  const total    = subtotal + payment
-
+  const r = priceOrder({ ticketFaces: tickets.map((t) => t.price), method });
   return {
-    face:     parseFloat(face.toFixed(2)),
-    service:  parseFloat(service.toFixed(2)),
-    subtotal: parseFloat(subtotal.toFixed(2)),
-    payment:  parseFloat(payment.toFixed(2)),
-    total:    parseFloat(total.toFixed(2)),
-  }
+    face: r.faceTotal,
+    service: r.serviceFeeTotal,
+    subtotal: round2(r.faceTotal + r.serviceFeeTotal),
+    payment: r.processingFee,
+    total: r.buyerTotal,
+  };
 }
 
+/** @deprecated use `formatBRL` de `@/lib/pricing`. */
 export function fmt(n: number): string {
-  return 'R$ ' + n.toFixed(2).replace('.', ',')
+  return formatBRL(n);
 }
