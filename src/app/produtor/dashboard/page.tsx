@@ -9,6 +9,10 @@ const C = {
   green: '#4F6654',
 }
 
+function fmt(n: number) {
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 export default async function DashboardPage() {
   const sb   = await createSupabaseServerClient()
   const { data: { user } } = await sb.auth.getUser()
@@ -31,13 +35,21 @@ export default async function DashboardPage() {
     .select('id', { count: 'exact', head: true })
     .eq('producer_id', producer.id)
 
+  const producerEventIds = (
+    await admin.from('events').select('id').eq('producer_id', producer.id)
+  ).data?.map((e: any) => e.id) ?? []
+
   const { count: totalOrders } = await admin
     .from('orders')
     .select('id', { count: 'exact', head: true })
-    .in('event_id',
-      (await admin.from('events').select('id').eq('producer_id', producer.id)).data?.map((e: any) => e.id) || []
-    )
+    .in('event_id', producerEventIds)
     .eq('status', 'paid')
+
+  const { data: revenueRows } = producerEventIds.length > 0
+    ? await admin.from('orders').select('face_total').in('event_id', producerEventIds).eq('status', 'paid')
+    : { data: [] }
+
+  const totalReceita = (revenueRows ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -80,7 +92,7 @@ export default async function DashboardPage() {
           {[
             { label: 'Eventos criados',  value: totalEvents  ?? 0, icon: '🎭' },
             { label: 'Vendas confirmadas', value: totalOrders ?? 0, icon: '✅' },
-            { label: 'Receita total',    value: 'R$ 0,00',         icon: '💰' },
+            { label: 'A receber (face)',  value: fmt(totalReceita),  icon: '💰' },
           ].map(stat => (
             <div key={stat.label} style={{
               background: C.surface, border: `1px solid ${C.border}`,

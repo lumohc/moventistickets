@@ -36,14 +36,14 @@ export default async function FinanceiroPage() {
   const { data: paidOrders } = ids.length > 0
     ? await admin
         .from('orders')
-        .select('face_total, service_fee_total, total, created_at, event_id, events(name)')
+        .select('face_total, service_fee_total, payment_fee, total, created_at, event_id, events(name)')
         .in('event_id', ids)
         .eq('status', 'paid')
         .order('created_at', { ascending: false })
     : { data: [] }
 
-  const totalFace    = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
-  const totalService = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.service_fee_total), 0)
+  const totalRepasse = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
+  const totalTaxas   = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.service_fee_total) + Number(o.payment_fee ?? 0), 0)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -60,18 +60,19 @@ export default async function FinanceiroPage() {
         {/* Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
-            { icon: '💰', label: 'Receita face total',      value: fmt(totalFace) },
-            { icon: '🧾', label: 'Taxa de serviço gerada',  value: fmt(totalService) },
-            { icon: '✅', label: 'Pedidos pagos',           value: paidOrders?.length ?? 0 },
+            { icon: '💰', label: 'Você vai receber',   value: fmt(totalRepasse), highlight: true  },
+            { icon: '🧾', label: 'Taxas Moventis',     value: fmt(totalTaxas),   highlight: false },
+            { icon: '✅', label: 'Pedidos pagos',      value: paidOrders?.length ?? 0, highlight: false },
           ].map(card => (
             <div key={card.label} style={{
-              background: C.surface, border: `1px solid ${C.border}`,
+              background: card.highlight ? C.green : C.surface,
+              border: `1px solid ${card.highlight ? C.green : C.border}`,
               borderRadius: 14, padding: '22px 24px',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
               <p style={{ fontSize: '1.5rem', marginBottom: 6 }}>{card.icon}</p>
-              <p style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
-              <p style={{ fontSize: '0.78rem', color: C.muted, marginTop: 2 }}>{card.label}</p>
+              <p style={{ fontSize: '1.6rem', fontWeight: 700, color: card.highlight ? '#fff' : C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
+              <p style={{ fontSize: '0.78rem', color: card.highlight ? 'rgba(255,255,255,0.75)' : C.muted, marginTop: 2 }}>{card.label}</p>
             </div>
           ))}
         </div>
@@ -115,7 +116,10 @@ export default async function FinanceiroPage() {
                     {new Date(o.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
-                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: C.green }}>{fmt(Number(o.face_total))}</p>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: C.green }}>{fmt(Number(o.face_total))}</p>
+                  <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 1 }}>seu repasse</p>
+                </div>
               </div>
             ))}
           </div>

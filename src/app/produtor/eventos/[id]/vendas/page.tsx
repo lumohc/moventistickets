@@ -54,13 +54,14 @@ export default async function VendasPage({ params }: { params: { id: string } })
   // Pedidos do evento
   const { data: orders } = await admin
     .from('orders')
-    .select('id, status, buyer_name, buyer_email, face_total, service_fee_total, total, payment_method, created_at, seats')
+    .select('id, status, buyer_name, buyer_email, face_total, service_fee_total, payment_fee, total, payment_method, created_at, seats')
     .eq('event_id', params.id)
     .order('created_at', { ascending: false })
 
-  const paid   = (orders ?? []).filter((o: any) => o.status === 'paid')
-  const totalArrecadado = paid.reduce((s: number, o: any) => s + Number(o.face_total), 0)
+  const paid            = (orders ?? []).filter((o: any) => o.status === 'paid')
+  const totalRepasse    = paid.reduce((s: number, o: any) => s + Number(o.face_total), 0)
   const totalIngressos  = paid.reduce((s: number, o: any) => s + (o.seats as any[]).length, 0)
+  const totalTaxas      = paid.reduce((s: number, o: any) => s + Number(o.service_fee_total) + Number(o.payment_fee ?? 0), 0)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -86,19 +87,20 @@ export default async function VendasPage({ params }: { params: { id: string } })
         {/* Cards de resumo */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
-            { icon: '🎟️', value: totalIngressos, label: 'Ingressos vendidos' },
-            { icon: '💰', value: fmt(totalArrecadado), label: 'Receita face (R$)' },
-            { icon: '📦', value: paid.length, label: 'Pedidos pagos' },
-            { icon: '⏳', value: (orders ?? []).filter((o: any) => o.status === 'pending_payment').length, label: 'Aguardando pagto' },
+            { icon: '🎟️', value: totalIngressos,          label: 'Ingressos vendidos',   highlight: false },
+            { icon: '💰', value: fmt(totalRepasse),        label: 'Você vai receber',      highlight: true  },
+            { icon: '🧾', value: fmt(totalTaxas),          label: 'Taxas Moventis',        highlight: false },
+            { icon: '⏳', value: (orders ?? []).filter((o: any) => o.status === 'pending_payment').length, label: 'Aguardando pagto', highlight: false },
           ].map(card => (
             <div key={card.label} style={{
-              background: C.surface, border: `1px solid ${C.border}`,
+              background: card.highlight ? C.green : C.surface,
+              border: `1px solid ${card.highlight ? C.green : C.border}`,
               borderRadius: 14, padding: '20px 22px',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
               <p style={{ fontSize: '1.4rem', marginBottom: 6 }}>{card.icon}</p>
-              <p style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
-              <p style={{ fontSize: '0.78rem', color: C.muted, marginTop: 2 }}>{card.label}</p>
+              <p style={{ fontSize: '1.6rem', fontWeight: 700, color: card.highlight ? '#fff' : C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
+              <p style={{ fontSize: '0.78rem', color: card.highlight ? 'rgba(255,255,255,0.75)' : C.muted, marginTop: 2 }}>{card.label}</p>
             </div>
           ))}
         </div>
@@ -123,11 +125,11 @@ export default async function VendasPage({ params }: { params: { id: string } })
             <>
               {/* Header */}
               <div style={{
-                display: 'grid', gridTemplateColumns: '1fr 140px 100px 110px 90px',
+                display: 'grid', gridTemplateColumns: '1fr 130px 90px 120px 120px 90px',
                 padding: '10px 24px', background: '#f8f7f4',
                 borderBottom: `1px solid ${C.border}`,
               }}>
-                {['Comprador', 'Data', 'Ingressos', 'Total', 'Status'].map(h => (
+                {['Comprador', 'Data', 'Ingressos', 'Pago pelo cliente', 'Seu repasse', 'Status'].map(h => (
                   <span key={h} style={{ fontSize: '0.72rem', fontWeight: 700, color: C.muted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</span>
                 ))}
               </div>
@@ -137,7 +139,7 @@ export default async function VendasPage({ params }: { params: { id: string } })
                 const nSeats = (o.seats as any[]).length
                 return (
                   <div key={o.id} style={{
-                    display: 'grid', gridTemplateColumns: '1fr 140px 100px 110px 90px',
+                    display: 'grid', gridTemplateColumns: '1fr 130px 90px 120px 120px 90px',
                     padding: '14px 24px', alignItems: 'center',
                     borderBottom: i < orders.length - 1 ? `1px solid ${C.border}` : 'none',
                   }}>
@@ -147,7 +149,13 @@ export default async function VendasPage({ params }: { params: { id: string } })
                     </div>
                     <p style={{ fontSize: '0.8rem', color: C.muted }}>{fmtDate(o.created_at)}</p>
                     <p style={{ fontSize: '0.875rem', color: C.text }}>{nSeats} ingresso{nSeats !== 1 ? 's' : ''}</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text }}>{fmt(Number(o.total))}</p>
+                    <div>
+                      <p style={{ fontSize: '0.875rem', color: C.text }}>{fmt(Number(o.total))}</p>
+                      <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 1 }}>
+                        taxa {fmt(Number(o.service_fee_total) + Number(o.payment_fee ?? 0))}
+                      </p>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 700, color: C.green }}>{fmt(Number(o.face_total))}</p>
                     <span style={{
                       display: 'inline-block', padding: '3px 10px', borderRadius: 100,
                       fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.04em',
