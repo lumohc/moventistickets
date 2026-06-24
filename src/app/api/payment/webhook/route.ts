@@ -8,16 +8,26 @@
  *
  * Eventos tratados: PAYMENT_RECEIVED, PAYMENT_CONFIRMED.
  */
+import { timingSafeEqual } from 'crypto'
+
 import { NextRequest, NextResponse } from 'next/server'
 
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { confirmOrderAndIssueTickets } from '@/lib/orders'
 
+/** Comparação de token em tempo constante (timing-safe). */
+function tokenMatches(received: string, expected: string): boolean {
+  const a = Buffer.from(received)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // Valida a origem do webhook.
+    // Valida a origem do webhook (fail-closed + comparação timing-safe).
+    const expected = process.env.ASAAS_WEBHOOK_TOKEN
     const token = req.headers.get('asaas-access-token')
-    if (!process.env.ASAAS_WEBHOOK_TOKEN || token !== process.env.ASAAS_WEBHOOK_TOKEN) {
+    if (!expected || !token || !tokenMatches(token, expected)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

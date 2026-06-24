@@ -78,6 +78,27 @@ export async function POST(request: NextRequest) {
     }
 
     const event = evtWrap.data
+
+    // Idempotência: se este token já gerou um pedido (clique duplo / reenvio do
+    // formulário), devolve o MESMO pedido em vez de criar outro.
+    const dupWrap = await safe(
+      db.from('reservations').select('order_id').eq('token', token).not('order_id', 'is', null).limit(1),
+    )
+    const existingOrderId = (dupWrap?.data as { order_id: string }[] | null)?.[0]?.order_id
+    if (existingOrderId) {
+      const ordWrap = await safe(
+        db.from('orders').select('total, expires_at').eq('id', existingOrderId).single(),
+      )
+      const ord = ordWrap?.data as { total: number; expires_at: string } | null
+      return NextResponse.json({
+        status: 'success',
+        session_id: existingOrderId,
+        redirect_url: `/checkout?session=${existingOrderId}`,
+        total: ord?.total ?? total,
+        expires_at: ord?.expires_at ?? expiresAt,
+      })
+    }
+
     const eventPrices = (event.prices as Record<string, number>) || PRICES
     const finalSeats = enriched.map(s => ({
       ...s,
