@@ -370,19 +370,27 @@
       drawPillar(root, p);
     });
 
-    setTimeout(function () {
-      if (self.state.panZoom) { try { self.state.panZoom.destroy(); } catch (e) {} }
-      if (typeof svgPanZoom === 'undefined') return;
-      self.state.panZoom = svgPanZoom(svg, {
-        zoomEnabled: true, controlIconsEnabled: false,
-        fit: true, center: true,
-        minZoom: 0.5, maxZoom: 8,
-        zoomScaleSensitivity: 0.35,
-        mouseWheelZoomEnabled: true,
-        preventMouseEventsDefault: false,
-        customEventsHandler: touchGestureHandler(svg),
+    // Duplo rAF: garante que o modal já foi pintado pelo browser antes de inicializar
+    // o svg-pan-zoom (que precisa ler dimensões reais do SVG via getBoundingClientRect).
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (self.state.panZoom) { try { self.state.panZoom.destroy(); } catch (e) {} }
+        if (typeof svgPanZoom === 'undefined') return;
+        try {
+          self.state.panZoom = svgPanZoom(svg, {
+            zoomEnabled: true, controlIconsEnabled: false,
+            fit: true, center: true,
+            minZoom: 0.5, maxZoom: 8,
+            zoomScaleSensitivity: 0.35,
+            mouseWheelZoomEnabled: true,
+            preventMouseEventsDefault: false,
+            customEventsHandler: touchGestureHandler(svg),
+          });
+        } catch (e) {
+          console.warn('[SeatPicker] svgPanZoom init failed:', e);
+        }
       });
-    }, 50);
+    });
   };
 
   LumoSeatPicker.prototype._toggleSeat = function (seat, gEl) {
@@ -660,7 +668,10 @@
     var colAreasL = venue.areas.filter(function (a) { return a.layout === 'single_column' && a.anchor && a.anchor.side === 'left'; }).length;
     var colAreasR = venue.areas.filter(function (a) { return a.layout === 'single_column' && a.anchor && a.anchor.side === 'right'; }).length;
     var maxRowsWidth = Math.max.apply(null, [0].concat(Object.keys(areas).filter(function (k) { return areas[k].area.layout === 'rows_with_blocks'; }).map(function (k) { return areas[k].width; })));
-    var canvasWidth = maxRowsWidth + PAD_X * 2 + (colAreasL + colAreasR) * (r.seat_size + r.block_gap + 14);
+    // frisa_gap: espaço entre borda da plateia e coluna da frisa (configurável no render.frisa_gap).
+    // Default seguro: block_gap × 3 para não grudar.
+    var frisa_gap = r.frisa_gap !== undefined ? r.frisa_gap : (r.block_gap * 3);
+    var canvasWidth = maxRowsWidth + PAD_X * 2 + (colAreasL + colAreasR) * (frisa_gap + r.seat_size + 14);
 
     var yCursor = PAD_TOP;
     var centerX = canvasWidth / 2;
@@ -673,7 +684,6 @@
       yCursor += info.height + r.area_gap;
     });
 
-    var FRISA_OFFSET = r.seat_size + r.block_gap + 6;
     var lc = { c: 0 }, rc = { c: 0 };
     venue.areas.forEach(function (area) {
       if (area.layout !== 'single_column') return;
@@ -684,11 +694,12 @@
       else info.y = PAD_TOP;
       if (anchor.side === 'left') {
         var baseX = followArea ? followArea.x : (centerX - maxRowsWidth / 2);
-        info.x = baseX - FRISA_OFFSET - (lc.c * (r.seat_size + 14));
+        // frisa_gap é o vão entre a borda da área-âncora e a BORDA DA FRISA mais próxima.
+        info.x = baseX - frisa_gap - r.seat_size - (lc.c * (r.seat_size + 14));
         lc.c++;
       } else {
         var baseX2 = followArea ? (followArea.x + followArea.width) : (centerX + maxRowsWidth / 2);
-        info.x = baseX2 + r.block_gap + (rc.c * (r.seat_size + 14));
+        info.x = baseX2 + frisa_gap + (rc.c * (r.seat_size + 14));
         rc.c++;
       }
     });

@@ -15,6 +15,7 @@
     "row_gap": 4,
     "block_gap": 28,
     "area_gap": 70,
+    "frisa_gap": 80,
     "row_label_offset": 14,
     "shape": "rounded",
     "background": "#020617",
