@@ -218,8 +218,14 @@ export default function AdminEventosPage() {
                 ))}
               </div>
 
-              {/* Link para ver o evento */}
-              <div style={{ marginBottom: 18 }}>
+              {/* Links do evento */}
+              <div style={{ marginBottom: 18, display: 'flex', gap: 14, flexDirection: 'column' }}>
+                <a
+                  href={`/admin/eventos/${selected.id}`}
+                  style={{ fontSize: '0.875rem', color: '#fff', background: C.green, textDecoration: 'none', fontWeight: 600, padding: '9px 14px', borderRadius: 8, display: 'inline-block' }}
+                >
+                  Gerir evento (preco, bloqueios, cortesia)
+                </a>
                 <a
                   href={`/produtor/eventos/${selected.id}`}
                   target="_blank"
