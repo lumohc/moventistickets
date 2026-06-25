@@ -33,6 +33,17 @@ export async function GET(request: NextRequest) {
   const ev    = (order as any).events as any
   const venue = ev?.venues as any
 
+  // Busca fee_exempt separadamente — coluna pode não existir ainda (migração pendente)
+  let feeExempt = false
+  if (order.event_id) {
+    const { data: evtEx } = await db
+      .from('events')
+      .select('fee_exempt')
+      .eq('id', order.event_id)
+      .single()
+    feeExempt = (evtEx as any)?.fee_exempt === true
+  }
+
   // Retorna no mesmo formato que o checkout espera
   return NextResponse.json({
     status: 'success',
@@ -48,6 +59,7 @@ export async function GET(request: NextRequest) {
       event_date:        ev?.event_date ?? null,
       event_time:        ev?.event_time ?? null,
       venue_name:        venue?.name ?? null,
+      fee_exempt:        feeExempt,
     },
   })
 }

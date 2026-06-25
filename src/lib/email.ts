@@ -16,30 +16,56 @@ interface TicketEmailParams {
   orderId: string
 }
 
+/** Tenta `fn` até `maxAttempts` vezes com backoff linear de 500ms entre tentativas. */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxAttempts = 3,
+): Promise<T> {
+  let lastErr: unknown
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+      if (attempt < maxAttempts) {
+        console.warn(
+          `[email:retry] ${label} tentativa ${attempt}/${maxAttempts} falhou — ` +
+            `aguardando ${attempt * 500}ms. Erro: ${err}`,
+        )
+        await new Promise((r) => setTimeout(r, attempt * 500))
+      }
+    }
+  }
+  throw lastErr
+}
+
 export async function sendTicketEmail(params: TicketEmailParams): Promise<void> {
   const html = buildEmailHtml(params)
 
   // 1. Resend (provider primário — configure RESEND_API_KEY)
   const resendKey = process.env.RESEND_API_KEY
   if (resendKey && resendKey !== 'PREENCHER') {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Moventis Tickets <noreply@moventistickets.com.br>',
-        to:      [params.to],
-        subject: `Seus ingressos — ${params.eventName}`,
-        html,
-      }),
-    })
-    if (!res.ok) {
-      const msg = await res.text()
-      throw new Error(`[email:resend] ${res.status} — ${msg}`)
-    }
-    console.log(`[email:resend] Enviado para ${params.to}`)
+    await withRetry(async () => {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Moventis Tickets <noreply@moventistickets.com.br>',
+          to: [params.to],
+          subject: `Seus ingressos — ${params.eventName}`,
+          html,
+        }),
+      })
+      if (!res.ok) {
+        const msg = await res.text()
+        throw new Error(`HTTP ${res.status} — ${msg}`)
+      }
+    }, `resend order=${params.orderId} to=${params.to}`)
+    console.log(`[email:resend] ✓ enviado order=${params.orderId} to=${params.to}`)
     return
   }
 
@@ -49,31 +75,37 @@ export async function sendTicketEmail(params: TicketEmailParams): Promise<void> 
   const smtpPass = process.env.SMTP_PASS
 
   if (smtpHost && smtpUser && smtpPass) {
-    const port   = Number(process.env.SMTP_PORT ?? 465)
+    const port = Number(process.env.SMTP_PORT ?? 465)
     const secure = port === 465
     const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port,
-      secure,
+      host: smtpHost, port, secure,
       auth: { user: smtpUser, pass: smtpPass },
     })
-    await transporter.sendMail({
-      from:    `"Moventis Tickets" <${smtpUser}>`,
-      to:      params.to,
-      subject: `Seus ingressos — ${params.eventName}`,
-      html,
-    })
-    console.log(`[email:smtp] Enviado para ${params.to}`)
+    await withRetry(
+      () =>
+        transporter.sendMail({
+          from: `"Moventis Tickets" <${smtpUser}>`,
+          to: params.to,
+          subject: `Seus ingressos — ${params.eventName}`,
+          html,
+        }),
+      `smtp order=${params.orderId} to=${params.to}`,
+    )
+    console.log(`[email:smtp] ✓ enviado order=${params.orderId} to=${params.to}`)
     return
   }
 
-  // 3. Nenhum provider configurado — log para desenvolvimento
-  console.log(`[email:mock] Ingresso para ${params.to} — ${params.eventName} (${params.tickets.length} ingresso(s))`)
-  console.log(`[email:mock] Configure RESEND_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASS no .env.local`)
+  // 3. Nenhum provider configurado
+  console.log(
+    `[email:mock] order=${params.orderId} to=${params.to} event="${params.eventName}" ` +
+      `(${params.tickets.length} ingresso(s)) — configure RESEND_API_KEY ou SMTP_* no .env`,
+  )
 }
 
 function buildEmailHtml(params: TicketEmailParams): string {
-  const ticketsHtml = params.tickets.map((t, i) => `
+  const ticketsHtml = params.tickets
+    .map(
+      (t, i) => `
     <div style="border:1px solid #DDD9D0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
       <div style="background:#4F6654;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:13px;font-weight:700;color:#F4F1EB;">Ingresso ${i + 1}</span>
@@ -88,7 +120,9 @@ function buildEmailHtml(params: TicketEmailParams): string {
         </div>
       </div>
     </div>
-  `).join('')
+  `,
+    )
+    .join('')
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">

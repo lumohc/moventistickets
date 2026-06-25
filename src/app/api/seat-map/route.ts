@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import venueTac from '@/data/venue-tac.json'
-
-const VENUE_MAP: Record<number, unknown> = { 1: venueTac }
+import { getVenueData } from '@/lib/venue-map'
 
 const GROUP_META: Record<string, {
   group_name: string; variation_full_id: number; variation_half_id: number
@@ -14,7 +12,13 @@ const GROUP_META: Record<string, {
   balcao:   { group_name: 'Balcão (3º Piso)',         variation_full_id: 3, variation_half_id: 4, price_full: 50, price_half: 25 },
 }
 
-// Supabase free-tier pode estar pausado — nunca bloqueie a resposta por mais de 3s
+const FALLBACK_PRICES: Record<string, number> = {
+  'plateia|inteira': 50, 'plateia|meia-entrada': 25,
+  'balcao|inteira':  50, 'balcao|meia-entrada':  25,
+  'frisa_fe|inteira': 50, 'frisa_fe|meia-entrada': 25,
+  'frisa_fd|inteira': 50, 'frisa_fd|meia-entrada': 25,
+}
+
 async function safe<T>(thenable: PromiseLike<T>, fallback: T, ms = 3000): Promise<T> {
   return new Promise((resolve) => {
     const timer = setTimeout(() => resolve(fallback), ms)
@@ -24,7 +28,13 @@ async function safe<T>(thenable: PromiseLike<T>, fallback: T, ms = 3000): Promis
   })
 }
 
-type EventRow = { id: string; name: string; prices: Record<string, number> }
+type EventRow = {
+  id: string; name: string
+  prices: Record<string, number> | null
+  price_face: number | null; half_price: boolean | null
+  venue_id: string | null
+  venues: { slug: string } | null
+}
 type Reserved  = { seat_id: string; ticket_type: string }
 type Sold      = { seat_id: string; ticket_type: string; group_id: string; group_name: string }
 type Pending   = { seats: { seat_id: string }[] | null }
@@ -44,10 +54,9 @@ export async function GET(request: NextRequest) {
     const db  = createServerClient()
     const now = new Date().toISOString()
 
-    // Timeout 3s — se Supabase não responder, usa fallback sem dados de ocupação
     const evtWrap = await safe<{ data: EventRow | null }>(
       db.from('events')
-        .select('id, name, prices')
+        .select('id, name, prices, price_face, half_price, venue_id, venues(slug)')
         .eq('product_id', parseInt(productId))
         .single() as unknown as PromiseLike<{ data: EventRow | null }>,
       { data: null }
@@ -63,7 +72,6 @@ export async function GET(request: NextRequest) {
             .eq('event_id', event.id).gt('expires_at', now) as unknown as PromiseLike<{ data: Reserved[] | null }>,
           db.from('tickets').select('seat_id, ticket_type, group_id, group_name')
             .eq('event_id', event.id) as unknown as PromiseLike<{ data: Sold[] | null }>,
-          // Pedidos aguardando pagamento (PIX gerado, ainda no prazo) seguram o assento.
           db.from('orders').select('seats')
             .eq('event_id', event.id).eq('status', 'pending_payment')
             .gt('expires_at', now) as unknown as PromiseLike<{ data: Pending[] | null }>,
@@ -78,13 +86,28 @@ export async function GET(request: NextRequest) {
     }
   } catch { /* continua com fallback vazio */ }
 
-  const prices: Record<string, number> = event?.prices ?? {
-    'plateia|inteira': 50, 'plateia|meia-entrada': 25,
-    'balcao|inteira':  50, 'balcao|meia-entrada':  25,
-    'frisa_fe|inteira': 50, 'frisa_fe|meia-entrada': 25,
-    'frisa_fd|inteira': 50, 'frisa_fd|meia-entrada': 25,
-  }
-  const eventName = event?.name ?? 'Allegro Vivace'
+  // Venue data: busca pelo slug do venue associado ao evento
+  const venueSlug = (event?.venues as any)?.slug ?? null
+  const venueData = venueSlug ? getVenueData(venueSlug) : null
+
+  // Preços: prioridade prices JSON > price_face > fallback hardcoded
+  const hasPricesMap = event?.prices != null && Object.keys(event.prices).length > 0
+  const prices: Record<string, number> = hasPricesMap
+    ? event!.prices!
+    : event?.price_face
+      ? (() => {
+          const full = Number(event!.price_face)
+          const half = event!.half_price ? full / 2 : full
+          return {
+            'plateia|inteira': full,   'plateia|meia-entrada': half,
+            'balcao|inteira':  full,   'balcao|meia-entrada':  half,
+            'frisa_fe|inteira': full,  'frisa_fe|meia-entrada': half,
+            'frisa_fd|inteira': full,  'frisa_fd|meia-entrada': half,
+          }
+        })()
+      : FALLBACK_PRICES
+
+  const eventName = event?.name ?? 'Evento'
 
   const variation_lookup: Record<string, { variation_id: number; price: number }> = {}
   let vid = 1
@@ -105,7 +128,6 @@ export async function GET(request: NextRequest) {
     status: 'reserved', reserved_by: 'lumo',
   }))
 
-  // Assentos presos por pedidos aguardando pagamento (hold pós-PIX).
   const pendingSeats = pending.flatMap(o => (o.seats ?? []).map(s => ({
     id: s.seat_id, group_id: '', group_name: '',
     price_full: 0, price_half: 0, variation_full_id: 0, variation_half_id: 0,
@@ -121,14 +143,17 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     status: 'success',
     data: {
-      product_id: parseInt(productId), event_id: parseInt(productId),
-      event_name: eventName, product_name: eventName,
-      currency_symbol: 'R$', ttl_seconds: 600,
-      venue_id: 'teatro-alvaro-de-carvalho',
-      seat_model: { id: 1, name: 'Teatro Álvaro de Carvalho' },
+      product_id:      parseInt(productId),
+      event_id:        parseInt(productId),
+      event_name:      eventName,
+      product_name:    eventName,
+      currency_symbol: 'R$',
+      ttl_seconds:     600,
+      venue_id:        venueSlug ?? 'teatro-alvaro-de-carvalho',
+      seat_model:      { id: 1, name: venueSlug ?? 'teatro-alvaro-de-carvalho' },
       variation_lookup,
-      seats: [...groupSeats, ...reservedSeats, ...pendingSeats, ...soldSeats],
-      venue: VENUE_MAP[parseInt(productId)] ?? null,
+      seats:           [...groupSeats, ...reservedSeats, ...pendingSeats, ...soldSeats],
+      venue:           venueData ?? null,
     }
   })
 }

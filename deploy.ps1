@@ -3,7 +3,7 @@
 # Requer: Node.js, 7-Zip (7z no PATH) ou usa Compress-Archive do PowerShell
 
 $ErrorActionPreference = "Stop"
-$VERSION = "v20"
+$VERSION = "v23"
 $ZIP_NAME = "deploy-$VERSION.zip"
 $DOMAIN   = "moventistickets.com.br"
 

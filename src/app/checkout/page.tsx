@@ -13,6 +13,7 @@ interface CartSession {
   total:       number
   expires_at:  string
   event_name?: string
+  fee_exempt?: boolean
 }
 
 interface PixResult {
@@ -171,8 +172,9 @@ function CheckoutContent() {
   const effectiveMethod: PaymentMethod = method === 'pix' ? 'pix' : cardType
   const pricing = priceOrder({
     ticketFaces,
-    method:  effectiveMethod,
-    coupon:  couponApplied?.discount,
+    method:     effectiveMethod,
+    coupon:     couponApplied?.discount,
+    feeExempt:  session?.fee_exempt,
   })
 
   // ── Aplicar cupom ─────────────────────────────────────────────────────────

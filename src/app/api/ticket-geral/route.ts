@@ -4,7 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { serviceFee, paymentFee } from '@/lib/fees'
+import { priceOrder } from '@/lib/pricing'
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,12 +49,20 @@ export async function POST(req: NextRequest) {
       price:       unitPrice,
     }))
 
-    const face        = parseFloat((unitPrice * qty).toFixed(2))
-    const serviceTotal= parseFloat(seats.reduce((s, t) => s + serviceFee(t.price), 0).toFixed(2))
-    const subtotal    = face + serviceTotal
-    const payFee      = paymentFee(subtotal, 'pix')
-    const total       = parseFloat((subtotal + payFee).toFixed(2))
-    const expiresAt   = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+    // Busca fee_exempt separado — coluna pode não existir ainda (migração pendente)
+    let feeExempt = false
+    {
+      const { data: evEx } = await db.from('events').select('fee_exempt').eq('id', event.id).single()
+      feeExempt = (evEx as any)?.fee_exempt === true
+    }
+
+    const ticketFaces = seats.map(s => s.price)
+    const pricing   = priceOrder({ ticketFaces, method: 'pix', feeExempt })
+    const face      = pricing.faceTotal
+    const serviceTotal = pricing.serviceFeeTotal
+    const payFee    = pricing.processingFee
+    const total     = pricing.buyerTotal
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
 
     // Cria o pedido
     const { data: order, error: orderErr } = await db

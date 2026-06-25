@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
+import { verifyTicketQr } from '@/lib/ticket-signing'
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,6 +8,19 @@ export async function POST(req: NextRequest) {
 
     if (!qr_code || !event_id) {
       return NextResponse.json({ error: 'qr_code e event_id são obrigatórios.' }, { status: 400 })
+    }
+
+    // Verifica assinatura HMAC antes de tocar no banco.
+    // Se TICKET_SIGNING_SECRET não estiver configurado, `unsigned: true` — passa
+    // com aviso (legado / dev sem segredo). Em produção com segredo configurado,
+    // um QR adulterado ou forjado é rejeitado aqui, antes de qualquer query.
+    const sigCheck = verifyTicketQr(qr_code)
+    if (!sigCheck.valid && !sigCheck.unsigned) {
+      console.warn(`[checkin] QR com assinatura inválida: ${qr_code}`)
+      return NextResponse.json({ valid: false, message: 'QR code inválido ou adulterado.' }, { status: 400 })
+    }
+    if (sigCheck.unsigned) {
+      console.warn(`[checkin] QR sem assinatura (legado): ${qr_code}`)
     }
 
     const admin = createSupabaseAdmin()

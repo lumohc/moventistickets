@@ -60,11 +60,19 @@ export async function POST(req: NextRequest) {
           : { kind: 'percent_grossup' as const, rate: Number(feeRow.fee_amount) })
       : undefined
 
+    // Busca fee_exempt separado — coluna pode não existir ainda (migração pendente)
+    let feeExempt = false
+    {
+      const { data: evEx } = await admin.from('events').select('fee_exempt').eq('id', order.event_id as string).single()
+      feeExempt = (evEx as any)?.fee_exempt === true
+    }
+
     const pricing = priceOrder({
       ticketFaces,
       method: 'pix',
       coupon: couponDiscount ?? undefined,
       processingFeeOverride,
+      feeExempt,
     })
     const amount = pricing.buyerTotal
 

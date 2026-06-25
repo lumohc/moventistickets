@@ -172,6 +172,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
                   eventId={event.id}
                   priceFace={priceFace}
                   halfPrice={!!event.half_price}
+                  feeExempt={!!event.fee_exempt}
                 />
               </div>
             ) : (

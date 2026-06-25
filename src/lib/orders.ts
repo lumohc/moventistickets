@@ -125,7 +125,17 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
       venueName: venue?.name ?? '',
       tickets: emailTickets,
       orderId: order.id,
-    }).catch((err) => console.error('[orders:email]', err))
+    }).catch((err) => {
+      // ATENÇÃO: pedido já está pago e ingressos já emitidos — o cliente pagou.
+      // Falha de e-mail NÃO reverte a confirmação, mas DEVE ser investigada.
+      // Busque "EMAIL_DELIVERY_FAILURE" nos logs e reenvie manualmente via
+      // /pedido/[id] ou pelo painel admin até que haja reenvio automático.
+      console.error(
+        `[EMAIL_DELIVERY_FAILURE] order_id=${order.id} ` +
+          `buyer=${order.buyer_email} event="${ev?.name}" ` +
+          `tickets=${emailTickets.length} error=${err}`,
+      )
+    })
   }
 
   return { ok: true, status: 'paid' }

@@ -10,16 +10,17 @@ const C = {
 }
 
 interface Props {
-  eventId:   string
-  priceFace: number
-  halfPrice: boolean
+  eventId:    string
+  priceFace:  number
+  halfPrice:  boolean
+  feeExempt?: boolean
 }
 
 function fmt(n: number) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export default function TicketGeralWidget({ eventId, priceFace, halfPrice }: Props) {
+export default function TicketGeralWidget({ eventId, priceFace, halfPrice, feeExempt }: Props) {
   const router = useRouter()
   const [qty, setQty]           = useState(1)
   const [type, setType]         = useState<'inteira' | 'meia-entrada'>('inteira')
@@ -113,7 +114,9 @@ export default function TicketGeralWidget({ eventId, priceFace, halfPrice }: Pro
           <span>{fmt(total)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontSize: '0.75rem', color: C.muted }}>+ taxas de serviço e pagamento</span>
+          <span style={{ fontSize: '0.75rem', color: C.muted }}>
+            {feeExempt ? 'Sem taxas adicionais' : '+ taxas de serviço e pagamento'}
+          </span>
           <span style={{ fontSize: '1.3rem', fontWeight: 700, color: C.green }}>{fmt(total)}</span>
         </div>
       </div>

@@ -21,6 +21,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const allowed = [
     'price_face',     // preço de face padrão
     'half_price',     // habilita meia-entrada
+    'fee_exempt',     // evento isento de taxas (serviço e processamento = R$0)
     'event_date',     // data do evento
     'event_time',     // hora do evento
     'sale_start',     // início das vendas

@@ -72,6 +72,8 @@ export interface OrderPricingInput {
   coupon?:     CouponDiscount;
   /** Override de taxa de processamento (para config do admin em runtime). */
   processingFeeOverride?: ProcessingFeeConfig;
+  /** Quando true, zera taxa de serviço e taxa de processamento (evento isento). */
+  feeExempt?: boolean;
 }
 
 export interface TicketLine {
@@ -129,6 +131,7 @@ export function priceOrder({
   method,
   coupon,
   processingFeeOverride,
+  feeExempt,
 }: OrderPricingInput): OrderPricing {
   if (ticketFaces.length === 0) {
     return {
@@ -146,13 +149,13 @@ export function priceOrder({
 
   const perTicket: TicketLine[] = effectiveFaces.map((face) => ({
     face:       round2(face),
-    serviceFee: serviceFeeForTicket(face),
+    serviceFee: feeExempt ? 0 : serviceFeeForTicket(face),
   }));
 
   const discountedFaceTotal = round2(perTicket.reduce((s, t) => s + t.face, 0));
   const serviceFeeTotal     = round2(perTicket.reduce((s, t) => s + t.serviceFee, 0));
   const base                = round2(discountedFaceTotal + serviceFeeTotal);
-  const procFee             = processingFee(base, method, processingFeeOverride);
+  const procFee             = feeExempt ? 0 : processingFee(base, method, processingFeeOverride);
   const buyerTotal          = round2(base + procFee);
 
   return {

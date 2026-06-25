@@ -78,7 +78,14 @@ export async function POST(req: NextRequest) {
           : { kind: 'percent_grossup' as const, rate: Number(feeRow.fee_amount) })
       : undefined
 
-    const pricing = priceOrder({ ticketFaces, method, coupon: couponDiscount ?? undefined, processingFeeOverride })
+    // Busca fee_exempt separado — coluna pode não existir ainda
+    let feeExempt = false
+    {
+      const { data: evEx } = await admin.from('events').select('fee_exempt').eq('id', order.event_id as string).single()
+      feeExempt = (evEx as any)?.fee_exempt === true
+    }
+
+    const pricing = priceOrder({ ticketFaces, method, coupon: couponDiscount ?? undefined, processingFeeOverride, feeExempt })
     const amount  = pricing.buyerTotal
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json({ error: 'Valor calculado inválido.' }, { status: 422 })
