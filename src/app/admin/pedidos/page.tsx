@@ -151,6 +151,17 @@ export default function AdminPedidosPage() {
                     </button>
                   )}
                   <a
+                    href={`/admin/pedidos/${o.id}`}
+                    style={{
+                      padding: '6px 12px', background: 'transparent',
+                      border: `1px solid ${C.border}`, borderRadius: 8,
+                      color: C.text, fontSize: '0.78rem', textDecoration: 'none',
+                      whiteSpace: 'nowrap', fontWeight: 600,
+                    }}
+                  >
+                    Detalhe
+                  </a>
+                  <a
                     href={`/pedido/${o.id}`}
                     target="_blank"
                     style={{
