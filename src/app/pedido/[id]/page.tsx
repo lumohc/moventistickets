@@ -239,7 +239,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
           {[
             { label: 'Subtotal (face)',        value: fmt(Number(order.face_total)) },
             { label: 'Taxa de serviço',        value: fmt(Number(order.service_fee_total)) },
-            { label: `Taxa de pagamento (${order.payment_method === 'pix' ? 'PIX' : 'cartão'})`,
+            { label: 'Taxa de processamento',
               value: fmt(Number(order.payment_fee)) },
           ].map(r => (
             <div key={r.label} style={{

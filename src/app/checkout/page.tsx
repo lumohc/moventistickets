@@ -437,7 +437,7 @@ function CheckoutContent() {
                     { l: 'Ingressos', v: formatBRL(pricing.faceTotal) },
                     couponApplied && { l: `Desconto (${couponApplied.code})`, v: `- ${formatBRL(pricing.couponDiscount)}` },
                     { l: 'Taxa de serviço', v: formatBRL(pricing.serviceFeeTotal) },
-                    { l: method === 'pix' ? 'Taxa PIX' : `Taxa ${cardTypeLabel(cardType)}`, v: formatBRL(pricing.processingFee) },
+                    { l: 'Taxa de processamento', v: formatBRL(pricing.processingFee) },
                   ].filter(Boolean).map((r: any) => (
                     <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: couponApplied && r.l.startsWith('Desconto') ? C.green : C.muted, padding: '3px 0' }}>
                       <span>{r.l}</span><span>{r.v}</span>
