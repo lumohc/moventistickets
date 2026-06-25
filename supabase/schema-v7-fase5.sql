@@ -51,8 +51,10 @@ CREATE INDEX IF NOT EXISTS idx_seat_blocks_event ON seat_blocks (event_id);
 
 ALTER TABLE seat_blocks ENABLE ROW LEVEL SECURITY;
 
--- Somente service role (admin server-side) pode operar
-CREATE POLICY IF NOT EXISTS "seat_blocks: service role only"
+-- Somente service role (admin server-side) pode operar.
+-- (Postgres não suporta IF NOT EXISTS em CREATE POLICY → drop antes p/ idempotência.)
+DROP POLICY IF EXISTS "seat_blocks: service role only" ON seat_blocks;
+CREATE POLICY "seat_blocks: service role only"
   ON seat_blocks FOR ALL
   USING (false)
   WITH CHECK (false);
