@@ -65,7 +65,20 @@ export async function POST(req: NextRequest) {
       couponId = couponResult.couponId
     }
 
-    const pricing = priceOrder({ ticketFaces, method, coupon: couponDiscount ?? undefined })
+    // Busca config de taxa do banco (admin pode ter alterado em /admin/configuracoes)
+    const dbMethod = method === 'credit_card' ? 'credit_card' : 'debit_card'
+    const { data: feeRow } = await admin
+      .from('payment_method_configs')
+      .select('fee_kind, fee_amount, is_enabled')
+      .eq('method', dbMethod)
+      .single()
+    const processingFeeOverride = feeRow
+      ? (feeRow.fee_kind === 'fixed'
+          ? { kind: 'fixed' as const, amount: Number(feeRow.fee_amount) }
+          : { kind: 'percent_grossup' as const, rate: Number(feeRow.fee_amount) })
+      : undefined
+
+    const pricing = priceOrder({ ticketFaces, method, coupon: couponDiscount ?? undefined, processingFeeOverride })
     const amount  = pricing.buyerTotal
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json({ error: 'Valor calculado inválido.' }, { status: 422 })

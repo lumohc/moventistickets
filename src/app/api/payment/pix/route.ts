@@ -47,10 +47,24 @@ export async function POST(req: NextRequest) {
     // Recalcula total para PIX com cupom aplicado
     const seats = (order.seats as Array<{ price: number }>) ?? []
     const ticketFaces = seats.map((s) => Number(s.price))
+
+    // Busca config de taxa do banco (admin pode ter alterado em /admin/configuracoes)
+    const { data: feeRow } = await admin
+      .from('payment_method_configs')
+      .select('fee_kind, fee_amount, is_enabled')
+      .eq('method', 'pix')
+      .single()
+    const processingFeeOverride = feeRow
+      ? (feeRow.fee_kind === 'fixed'
+          ? { kind: 'fixed' as const, amount: Number(feeRow.fee_amount) }
+          : { kind: 'percent_grossup' as const, rate: Number(feeRow.fee_amount) })
+      : undefined
+
     const pricing = priceOrder({
       ticketFaces,
       method: 'pix',
       coupon: couponDiscount ?? undefined,
+      processingFeeOverride,
     })
     const amount = pricing.buyerTotal
 

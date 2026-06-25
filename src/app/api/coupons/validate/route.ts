@@ -21,10 +21,23 @@ export async function POST(req: NextRequest) {
     // Calcula o impacto do cupom no total (para exibição no checkout)
     let preview: ReturnType<typeof priceOrder> | null = null
     if (Array.isArray(ticket_faces) && ticket_faces.length > 0) {
+      const effectiveMethod: PaymentMethod = (method as PaymentMethod) ?? 'pix'
+      // Busca config de taxa do banco para o preview ser preciso
+      const { data: feeRow } = await admin
+        .from('payment_method_configs')
+        .select('fee_kind, fee_amount')
+        .eq('method', effectiveMethod)
+        .maybeSingle()
+      const processingFeeOverride = feeRow
+        ? (feeRow.fee_kind === 'fixed'
+            ? { kind: 'fixed' as const, amount: Number(feeRow.fee_amount) }
+            : { kind: 'percent_grossup' as const, rate: Number(feeRow.fee_amount) })
+        : undefined
       preview = priceOrder({
         ticketFaces: ticket_faces.map(Number),
-        method:      (method as PaymentMethod) ?? 'pix',
+        method:      effectiveMethod,
         coupon:      result.discount,
+        processingFeeOverride,
       })
     }
 
