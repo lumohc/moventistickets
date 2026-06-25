@@ -19,8 +19,9 @@ const NAV = [
   { href: '/admin/locais',           label: 'Locais',       icon: '🏛️' },
   { href: '/admin/pedidos',          label: 'Pedidos',      icon: '🎟️' },
   { href: '/admin/financeiro',       label: 'Financeiro',   icon: '💰' },
+  { href: '/admin/pdv',              label: 'PDV / Balcao', icon: '#' },
   { href: '/admin/cupons',           label: 'Cupons',       icon: '%' },
-  { href: '/admin/configuracoes',    label: 'Configurações', icon: '⚙' },
+  { href: '/admin/configuracoes',    label: 'Configuracoes', icon: '⚙' },
 ]
 
 export default function AdminSidebar() {
