@@ -1,9 +1,19 @@
 const BASE_URL = process.env.ASAAS_BASE_URL ?? 'https://api.asaas.com/v3'
 
+function asaasToken(): string {
+  let token = (process.env.ASAAS_API_KEY ?? '').trim()
+  // A chave do Asaas começa com "$". Em alguns ambientes (env via .htaccess/
+  // LiteSpeed) o "$" inicial é comido como variável de shell → a chave chega sem
+  // ele e o pagamento cai no mock. Guardamos a chave SEM "$" no env e
+  // recolocamos aqui. Se já vier com "$", não muda nada.
+  if (token && !token.startsWith('$') && token.startsWith('aact_')) token = '$' + token
+  return token
+}
+
 function asaasHeaders() {
   return {
     'Content-Type': 'application/json',
-    'access_token': process.env.ASAAS_API_KEY ?? '',
+    'access_token': asaasToken(),
     'User-Agent': 'Moventis/1.0',
   }
 }
