@@ -1,4 +1,24 @@
+import { readFileSync } from 'fs'
+import { homedir } from 'os'
+import { join } from 'path'
+
 import nodemailer from 'nodemailer'
+
+// Senha SMTP por ARQUIVO (prioridade) com fallback pra env. No runtime do
+// Hostinger a env pode carregar uma senha desatualizada (e o `.htaccess` come
+// caracteres como `#`). O arquivo ~/.moventis-smtp-pass é a fonte confiável e
+// sobrevive a deploys. homedir() no app Passenger = pasta do domínio.
+let _smtpPassFile: string | null = null
+function getSmtpPass(): string {
+  if (_smtpPassFile === null) {
+    try {
+      _smtpPassFile = readFileSync(join(homedir(), '.moventis-smtp-pass'), 'utf8').trim()
+    } catch {
+      _smtpPassFile = ''
+    }
+  }
+  return _smtpPassFile || (process.env.SMTP_PASS ?? '').trim()
+}
 
 interface TicketEmailParams {
   to: string
@@ -72,7 +92,7 @@ export async function sendTicketEmail(params: TicketEmailParams): Promise<void> 
   // 2. SMTP (fallback — configure SMTP_HOST, SMTP_USER, SMTP_PASS)
   const smtpHost = process.env.SMTP_HOST
   const smtpUser = process.env.SMTP_USER
-  const smtpPass = process.env.SMTP_PASS
+  const smtpPass = getSmtpPass()
 
   if (smtpHost && smtpUser && smtpPass) {
     const port = Number(process.env.SMTP_PORT ?? 465)
