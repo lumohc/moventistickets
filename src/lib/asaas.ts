@@ -1,13 +1,35 @@
+import { readFileSync } from 'fs'
+import { homedir } from 'os'
+import { join } from 'path'
+
 const BASE_URL = process.env.ASAAS_BASE_URL ?? 'https://api.asaas.com/v3'
 
-function asaasToken(): string {
+// Fallback de chave por ARQUIVO. No runtime do Hostinger (Next standalone +
+// LiteSpeed) a env ASAAS_API_KEY não chega (a do Asaas é longa e começa com "$").
+// Então a chave também fica em ~/.moventis-asaas-key e lemos de lá quando a env
+// vier vazia. Lido uma vez e cacheado.
+let _fileKey: string | null = null
+function fileKey(): string {
+  if (_fileKey !== null) return _fileKey
+  try {
+    _fileKey = readFileSync(join(homedir(), '.moventis-asaas-key'), 'utf8').trim()
+  } catch {
+    _fileKey = ''
+  }
+  return _fileKey
+}
+
+export function asaasToken(): string {
   let token = (process.env.ASAAS_API_KEY ?? '').trim()
-  // A chave do Asaas começa com "$". Em alguns ambientes (env via .htaccess/
-  // LiteSpeed) o "$" inicial é comido como variável de shell → a chave chega sem
-  // ele e o pagamento cai no mock. Guardamos a chave SEM "$" no env e
-  // recolocamos aqui. Se já vier com "$", não muda nada.
+  if (!token) token = fileKey()
+  // A chave do Asaas começa com "$"; alguns ambientes comem o "$" → recoloca.
   if (token && !token.startsWith('$') && token.startsWith('aact_')) token = '$' + token
   return token
+}
+
+/** true se há chave Asaas utilizável (env ou arquivo). */
+export function asaasConfigured(): boolean {
+  return asaasToken().length > 0
 }
 
 function asaasHeaders() {

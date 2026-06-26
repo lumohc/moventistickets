@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
-import { findOrCreateCustomer, createCardPayment, AsaasCardError, type CardBillingType } from '@/lib/asaas'
+import { findOrCreateCustomer, createCardPayment, AsaasCardError, asaasConfigured, type CardBillingType } from '@/lib/asaas'
 import { confirmOrderAndIssueTickets } from '@/lib/orders'
 import { priceOrder, type PaymentMethod } from '@/lib/pricing'
 import { validateCoupon } from '@/lib/coupon-utils'
@@ -94,8 +94,7 @@ export async function POST(req: NextRequest) {
     const eventName = (order.events as { name?: string } | null)?.name ?? 'Evento'
     const billingType: CardBillingType = method === 'credit_card' ? 'CREDIT_CARD' : 'DEBIT_CARD'
 
-    const asaasKey = process.env.ASAAS_API_KEY
-    if (!asaasKey || asaasKey === 'PREENCHER') {
+    if (!asaasConfigured()) {
       return NextResponse.json(
         { error: 'Pagamento com cartão não disponível neste ambiente.' },
         { status: 503 },

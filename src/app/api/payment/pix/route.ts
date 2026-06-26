@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { generateQRDataURL, buildPixMockPayload } from '@/lib/generate-qr'
-import { findOrCreateCustomer, createPixPayment } from '@/lib/asaas'
+import { findOrCreateCustomer, createPixPayment, asaasConfigured } from '@/lib/asaas'
 import { validateCoupon } from '@/lib/coupon-utils'
 import { priceOrder } from '@/lib/pricing'
 
@@ -106,8 +106,7 @@ export async function POST(req: NextRequest) {
     let pixExpiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
     let asaasPaymentId: string | null = null
 
-    const asaasKey = process.env.ASAAS_API_KEY
-    if (asaasKey && asaasKey !== 'PREENCHER') {
+    if (asaasConfigured()) {
       try {
         const customerId = await findOrCreateCustomer({ name: buyer_name, cpf: buyer_cpf, email: buyer_email })
         const pix = await createPixPayment({
