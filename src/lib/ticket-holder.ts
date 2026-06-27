@@ -3,7 +3,7 @@ import { signTicket } from '@/lib/ticket-signing'
 
 export type ReissueCode =
   | 'not_found' | 'forbidden' | 'not_paid' | 'deadline'
-  | 'limit' | 'no_transfer_half' | 'invalid'
+  | 'limit' | 'invalid'
 
 export type ReissueResult =
   | { ok: true; qr_version: number; qr_code: string; order_id: string }
@@ -49,10 +49,8 @@ export async function reissueTicketHolder(input: ReissueInput): Promise<ReissueR
   }
   if (order?.status !== 'paid') return { ok: false, code: 'not_paid', message: 'Ingresso não está pago.' }
 
-  // Meia não transfere a terceiro (só correção de nome).
-  if (input.changeType === 'transfer' && ticket.ticket_type === 'meia-entrada') {
-    return { ok: false, code: 'no_transfer_half', message: 'Meia-entrada não transfere a terceiros — só correção de nome.' }
-  }
+  // Inteira e meia transferem igual (1 troca, até D-1). Sem CPF na compra, o
+  // controle é na porta: nome do ingresso = documento do beneficiário.
 
   const deadlineDays = ev?.holder_edit_deadline_days ?? 1
   const maxChanges   = ev?.holder_max_changes ?? 1

@@ -21,8 +21,8 @@ const btnPri: React.CSSProperties = {
 }
 
 export default function TicketActions({
-  ticketId, ticketType, buyerEmail,
-}: { ticketId: string; ticketType: string; buyerEmail: string | null }) {
+  ticketId, buyerEmail,
+}: { ticketId: string; buyerEmail: string | null }) {
   const [mode, setMode] = useState<null | 'edit' | 'transfer'>(null)
   const [name, setName]   = useState('')
   const [email, setEmail] = useState('')
@@ -62,9 +62,7 @@ export default function TicketActions({
       {!mode && (
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => { setMode('edit'); setErr(null); setDone(null) }} style={btnSec}>Editar nome</button>
-          {ticketType !== 'meia-entrada' && (
-            <button onClick={() => { setMode('transfer'); setErr(null); setDone(null) }} style={btnSec}>Transferir</button>
-          )}
+          <button onClick={() => { setMode('transfer'); setErr(null); setDone(null) }} style={btnSec}>Transferir</button>
         </div>
       )}
 

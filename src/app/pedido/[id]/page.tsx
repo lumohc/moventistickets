@@ -166,7 +166,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
                   <p style={{ marginTop: 8, fontSize: '0.62rem', color: C.muted, fontFamily: 'monospace', wordBreak: 'break-all' }}>
                     {t.qr_code}
                   </p>
-                  <TicketActions ticketId={t.id} ticketType={t.ticket_type} buyerEmail={order.buyer_email as string | null} />
+                  <TicketActions ticketId={t.id} buyerEmail={order.buyer_email as string | null} />
                 </div>
               ))}
             </div>
