@@ -177,7 +177,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
               </div>
             ) : (
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 32px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                <p style={{ fontSize: '2rem', marginBottom: 12 }}>🎭</p>
+                <img src="/logo-transparent.svg" alt="" style={{ height: 34, opacity: 0.3, marginBottom: 12 }} />
                 <p style={{ fontSize: '1rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>Ingressos em breve</p>
                 <p style={{ fontSize: '0.875rem', color: C.muted }}>
                   A venda de ingressos será aberta em breve. Fique de olho!

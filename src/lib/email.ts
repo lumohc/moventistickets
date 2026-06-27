@@ -180,7 +180,7 @@ function buildEmailHtml(params: TicketEmailParams): string {
 
         <tr>
           <td style="background:#ffffff;padding:32px 32px 24px;border-left:1px solid #DDD9D0;border-right:1px solid #DDD9D0;">
-            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1A1D22;letter-spacing:-0.02em;">Seus ingressos chegaram! 🎭</h1>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1A1D22;letter-spacing:-0.02em;">Seus ingressos chegaram!</h1>
             <p style="margin:0;font-size:15px;color:rgba(26,29,34,0.6);line-height:1.6;">
               Olá, <strong style="color:#1A1D22;">${params.buyerName}</strong>. Seus ingressos estão confirmados. Apresente o QR code na entrada do evento.
             </p>
@@ -191,8 +191,8 @@ function buildEmailHtml(params: TicketEmailParams): string {
           <td style="background:#ffffff;padding:0 32px 24px;border-left:1px solid #DDD9D0;border-right:1px solid #DDD9D0;">
             <div style="background:#F4F1EB;border:1px solid #DDD9D0;border-radius:12px;padding:18px 20px;">
               <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#1A1D22;">${params.eventName}</p>
-              <p style="margin:0 0 3px;font-size:13px;color:rgba(26,29,34,0.6);">📅 ${params.eventDate}</p>
-              <p style="margin:0;font-size:13px;color:rgba(26,29,34,0.6);">📍 ${params.venueName}</p>
+              <p style="margin:0 0 3px;font-size:13px;color:rgba(26,29,34,0.6);">${params.eventDate}</p>
+              <p style="margin:0;font-size:13px;color:rgba(26,29,34,0.6);">${params.venueName}</p>
             </div>
           </td>
         </tr>

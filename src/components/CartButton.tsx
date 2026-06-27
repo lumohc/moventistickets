@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Ticket } from 'lucide-react'
 
 const KEY = 'moventis_cart'
 
@@ -62,7 +63,7 @@ export default function CartButton() {
         maxWidth: 'calc(100vw - 32px)',
       }}
     >
-      <span style={{ fontSize: '1.1rem' }}>🎟️</span>
+      <Ticket size={18} color="#fff" strokeWidth={1.5} />
       <span>
         {cart.count} poltrona{cart.count > 1 ? 's' : ''}
         <span style={{ opacity: 0.85, fontWeight: 500 }}> · {left}</span>

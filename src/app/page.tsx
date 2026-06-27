@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
+import { Search, Armchair, CreditCard, Smartphone } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Moventis — Ingressos para eventos em Santa Catarina',
@@ -8,11 +9,7 @@ export const metadata: Metadata = {
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', greenDk: '#3d5041',
-}
-
-const CAT_ICON: Record<string, string> = {
-  teatro: '🎭', danca: '💃', musica: '🎶', circo: '🎪', stand_up: '🎤', festival: '🎉',
+  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', greenDk: '#3d5041', esmeralda: '#1F6B4E',
 }
 
 function fmtDate(d?: string | null, t?: string | null) {
@@ -82,13 +79,13 @@ export default async function HomePage() {
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24 }}>
             {[
-              { step: '01', icon: '🔍', title: 'Escolha o evento', desc: 'Navegue pelos eventos disponíveis em cartaz.' },
-              { step: '02', icon: '💺', title: 'Selecione seu assento', desc: 'Visualize o mapa e escolha exatamente onde sentar.' },
-              { step: '03', icon: '💳', title: 'Pague com segurança', desc: 'PIX com QR code ou cartão de crédito.' },
-              { step: '04', icon: '📱', title: 'Ingresso digital', desc: 'Receba o QR code por e-mail. Mostre na entrada.' },
+              { step: '01', Icon: Search, title: 'Escolha o evento', desc: 'Navegue pelos eventos disponíveis em cartaz.' },
+              { step: '02', Icon: Armchair, title: 'Selecione seu assento', desc: 'Visualize o mapa e escolha exatamente onde sentar.' },
+              { step: '03', Icon: CreditCard, title: 'Pague com segurança', desc: 'PIX com QR code ou cartão de crédito.' },
+              { step: '04', Icon: Smartphone, title: 'Ingresso digital', desc: 'Receba o QR code por e-mail. Mostre na entrada.' },
             ].map(item => (
               <div key={item.step} style={{ textAlign: 'center', padding: '0 12px' }}>
-                <div style={{ fontSize: '2.2rem', marginBottom: 12 }}>{item.icon}</div>
+                <div style={{ marginBottom: 12 }}><item.Icon size={30} color={C.esmeralda} strokeWidth={1.5} /></div>
                 <p style={{ fontSize: '0.7rem', color: C.green, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>{item.step}</p>
                 <h3 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 8 }}>{item.title}</h3>
                 <p style={{ fontSize: '0.875rem', color: C.muted, lineHeight: 1.6 }}>{item.desc}</p>
@@ -117,7 +114,6 @@ export default async function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {upcoming.map((ev: any) => {
               const venue    = ev.venues as any
-              const cat      = ev.category ?? 'outro'
               const priceFace = ev.price_face ? Number(ev.price_face) : null
 
               return (
@@ -131,12 +127,14 @@ export default async function HomePage() {
                   }}>
                     {/* Mini thumb */}
                     <div style={{
-                      width: 72, minHeight: 72, flexShrink: 0,
-                      background: 'rgba(79,102,84,0.10)',
+                      width: 72, flexShrink: 0, alignSelf: 'stretch',
+                      background: ev.poster_url ? undefined : 'rgba(31,107,78,0.08)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.8rem', alignSelf: 'stretch',
+                      overflow: 'hidden',
                     }}>
-                      {CAT_ICON[cat] ?? '🎟️'}
+                      {ev.poster_url
+                        ? <img src={ev.poster_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <img src="/logo-transparent.svg" alt="" style={{ maxWidth: 46, opacity: 0.4 }} />}
                     </div>
                     <div style={{ padding: '14px 16px', flex: 1 }}>
                       <p style={{ fontSize: '0.85rem', fontWeight: 700, color: C.text, marginBottom: 3, lineHeight: 1.3 }}>{ev.name}</p>

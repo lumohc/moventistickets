@@ -1,5 +1,6 @@
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import type { Metadata } from 'next'
+import { Calendar, MapPin } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Eventos — Moventis',
@@ -8,16 +9,12 @@ export const metadata: Metadata = {
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', esmeralda: '#1F6B4E',
 }
 
 const CAT_LABEL: Record<string, string> = {
   teatro: 'Teatro', danca: 'Dança', musica: 'Música',
   circo: 'Circo', stand_up: 'Humor', festival: 'Festival', outro: 'Evento',
-}
-const CAT_ICON: Record<string, string> = {
-  teatro: '🎭', danca: '💃', musica: '🎶',
-  circo: '🎪', stand_up: '🎤', festival: '🎉', outro: '🎟️',
 }
 
 function fmtDate(d?: string | null, t?: string | null) {
@@ -68,7 +65,7 @@ export default async function EventosPage() {
         {/* Nenhum evento */}
         {upcoming.length === 0 && (
           <div style={{ textAlign: 'center', padding: '80px 24px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <p style={{ fontSize: '3rem', marginBottom: 16 }}>🎭</p>
+            <img src="/logo-transparent.svg" alt="" style={{ height: 40, opacity: 0.3, marginBottom: 16 }} />
             <p style={{ fontSize: '1.1rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>Nenhum evento disponível</p>
             <p style={{ fontSize: '0.9rem', color: C.muted }}>Novos eventos em breve. Volte logo!</p>
           </div>
@@ -107,11 +104,10 @@ export default async function EventosPage() {
                       </div>
                     ) : (
                       <div style={{
-                        height: 140, background: `linear-gradient(135deg, rgba(79,102,84,0.12), rgba(79,102,84,0.06))`,
+                        height: 140, background: `linear-gradient(135deg, rgba(31,107,78,0.12), rgba(31,107,78,0.05))`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '3.5rem',
                       }}>
-                        {CAT_ICON[cat] ?? '🎟️'}
+                        <img src="/logo-transparent.svg" alt="" style={{ maxWidth: 130, maxHeight: 46, opacity: 0.4 }} />
                       </div>
                     )}
 
@@ -147,10 +143,10 @@ export default async function EventosPage() {
                       {/* Data + local */}
                       <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <p style={{ fontSize: '0.8rem', color: C.text, fontWeight: 500 }}>
-                          📅 {fmtDate(ev.event_date, ev.event_time)}
+                          <Calendar size={13} color={C.esmeralda} strokeWidth={1.5} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 4 }} />{fmtDate(ev.event_date, ev.event_time)}
                         </p>
                         <p style={{ fontSize: '0.78rem', color: C.muted }}>
-                          📍 {venue?.name ?? '—'} · {venue?.city ?? ev.city}
+                          <MapPin size={13} color={C.esmeralda} strokeWidth={1.5} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 4 }} />{venue?.name ?? '—'} · {venue?.city ?? ev.city}
                         </p>
                       </div>
 

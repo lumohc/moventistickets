@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { Ticket, Search, Calendar, MapPin } from 'lucide-react'
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', esmeralda: '#1F6B4E',
 }
 
 const inp: React.CSSProperties = {
@@ -14,8 +15,8 @@ const inp: React.CSSProperties = {
 }
 
 const ST: Record<string, { label: string; color: string }> = {
-  paid:            { label: 'Pago ✅',       color: C.green },
-  pending_payment: { label: 'Aguardando ⏳', color: '#92610a' },
+  paid:            { label: 'Pago',       color: C.green },
+  pending_payment: { label: 'Aguardando', color: '#92610a' },
   expired:         { label: 'Expirado',      color: C.muted as string },
   cancelled:       { label: 'Cancelado',     color: '#c0392b' },
 }
@@ -65,7 +66,7 @@ export default function MeusIngressosPage() {
 
       <div style={{ maxWidth: 580, margin: '0 auto', padding: '48px 20px' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <p style={{ fontSize: '2.5rem', marginBottom: 12 }}>🎟️</p>
+          <p style={{ marginBottom: 12 }}><Ticket size={40} color={C.esmeralda} strokeWidth={1.5} /></p>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 8 }}>
             Meus ingressos
           </h1>
@@ -100,7 +101,7 @@ export default function MeusIngressosPage() {
           <>
             {orders.length === 0 ? (
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px', textAlign: 'center' }}>
-                <p style={{ fontSize: '1.5rem', marginBottom: 12 }}>🔍</p>
+                <p style={{ marginBottom: 12 }}><Search size={28} color={C.muted} strokeWidth={1.5} /></p>
                 <p style={{ fontWeight: 600, color: C.text, marginBottom: 6 }}>Nenhum pedido encontrado</p>
                 <p style={{ fontSize: '0.875rem', color: C.muted }}>Verifique o e-mail ou use o e-mail exato que foi informado na compra.</p>
               </div>
@@ -113,16 +114,18 @@ export default function MeusIngressosPage() {
                   return (
                     <a key={o.id} href={`/pedido/${o.id}`} style={{ textDecoration: 'none' }}>
                       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <div style={{ fontSize: '2rem', flexShrink: 0 }}>🎭</div>
+                        <div style={{ flexShrink: 0, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8 }}>
+                          <img src="/logo-transparent.svg" alt="" style={{ maxWidth: 30, maxHeight: 26, opacity: 0.35 }} />
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontWeight: 700, color: C.text, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {ev?.name ?? '—'}
                           </p>
                           <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 2 }}>
-                            📅 {fmtDate(ev?.event_date, ev?.event_time)}
+                            <Calendar size={13} color={C.esmeralda} strokeWidth={1.5} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 4 }} />{fmtDate(ev?.event_date, ev?.event_time)}
                           </p>
                           <p style={{ fontSize: '0.78rem', color: C.muted }}>
-                            📍 {venue?.name ?? ev?.venue_name ?? '—'}
+                            <MapPin size={13} color={C.esmeralda} strokeWidth={1.5} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 4 }} />{venue?.name ?? ev?.venue_name ?? '—'}
                           </p>
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>

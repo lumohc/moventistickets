@@ -3,11 +3,12 @@ import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { generateQRDataURL } from '@/lib/generate-qr'
 import PixPaymentCard from '@/components/PixPaymentCard'
 import TicketActions from '@/components/pedido/TicketActions'
+import { CheckCircle2, Clock, XCircle, Ticket, Calendar, MapPin } from 'lucide-react'
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
   text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654',
+  green: '#4F6654', esmeralda: '#1F6B4E',
 }
 
 function fmt(n: number) {
@@ -68,7 +69,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
             background: 'rgba(79,102,84,0.08)', border: '1px solid rgba(79,102,84,0.25)',
             borderRadius: 16, padding: '24px 28px', marginBottom: 24, textAlign: 'center',
           }}>
-            <p style={{ fontSize: '3rem', marginBottom: 8 }}>✅</p>
+            <p style={{ marginBottom: 8 }}><CheckCircle2 size={46} color={C.esmeralda} strokeWidth={1.5} /></p>
             <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: C.green, letterSpacing: '-0.02em', marginBottom: 6 }}>
               Pedido confirmado!
             </h1>
@@ -84,7 +85,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
             borderRadius: 16, padding: '24px 28px', marginBottom: 24,
           }}>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '3rem', marginBottom: 8 }}>⏳</p>
+              <p style={{ marginBottom: 8 }}><Clock size={46} color="#92610a" strokeWidth={1.5} /></p>
               <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#92610a', letterSpacing: '-0.02em', marginBottom: 6 }}>
                 Aguardando pagamento
               </h1>
@@ -107,7 +108,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
             background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.20)',
             borderRadius: 16, padding: '24px 28px', marginBottom: 24, textAlign: 'center',
           }}>
-            <p style={{ fontSize: '3rem', marginBottom: 8 }}>❌</p>
+            <p style={{ marginBottom: 8 }}><XCircle size={46} color="#7a1a1a" strokeWidth={1.5} /></p>
             <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#7a1a1a', letterSpacing: '-0.02em', marginBottom: 6 }}>
               Pedido expirado
             </h1>
@@ -135,8 +136,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
             borderRadius: 16, padding: 28, marginBottom: 20,
             boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
           }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 4 }}>
-              🎟️ Seus ingressos
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Ticket size={18} color={C.esmeralda} strokeWidth={1.5} /> Seus ingressos
             </h2>
             <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 20 }}>
               Apresente o QR code na entrada do evento. Um por poltrona.
@@ -187,7 +188,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
               {event.name}
             </p>
             <p style={{ fontSize: '0.875rem', color: C.muted, marginBottom: 2 }}>
-              📅{' '}
+              <Calendar size={14} color={C.esmeralda} strokeWidth={1.5} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 5 }} />
               {event.event_date
                 ? new Date(event.event_date + 'T' + (event.event_time ?? '00:00')).toLocaleDateString('pt-BR', {
                     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -197,7 +198,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
               {event.event_time ? ` às ${event.event_time.slice(0, 5)}` : ''}
             </p>
             <p style={{ fontSize: '0.875rem', color: C.muted }}>
-              📍 {event.venue_name} — {event.city}
+              <MapPin size={14} color={C.esmeralda} strokeWidth={1.5} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 5 }} />
+              {event.venue_name} — {event.city}
             </p>
           </div>
         )}
