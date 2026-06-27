@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
 }
 
 const STATUS_INFO: Record<string, { label: string; color: string; bg: string }> = {
@@ -157,7 +157,7 @@ export default function AdminEventosPage() {
                     padding: '14px 22px', alignItems: 'center',
                     borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none',
                     cursor: 'pointer',
-                    background: isActive ? 'rgba(79,102,84,0.06)' : 'transparent',
+                    background: isActive ? 'rgba(31,107,78,0.06)' : 'transparent',
                     transition: 'background 0.1s',
                   }}
                 >
@@ -193,9 +193,9 @@ export default function AdminEventosPage() {
               {msg && (
                 <div style={{
                   padding: '8px 12px', borderRadius: 8, marginBottom: 14, fontSize: '0.8rem',
-                  background: msg.type === 'ok' ? 'rgba(79,102,84,0.08)' : '#fdf2f2',
+                  background: msg.type === 'ok' ? 'rgba(31,107,78,0.08)' : '#fdf2f2',
                   color: msg.type === 'ok' ? C.green : '#c0392b',
-                  border: `1px solid ${msg.type === 'ok' ? 'rgba(79,102,84,0.2)' : '#f5c6cb'}`,
+                  border: `1px solid ${msg.type === 'ok' ? 'rgba(31,107,78,0.2)' : '#f5c6cb'}`,
                 }}>
                   {msg.text}
                 </div>

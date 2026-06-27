@@ -6,9 +6,9 @@ import SeatPickerWidget from '@/components/mapa/SeatPickerWidget'
 import TicketGeralWidget from '@/components/evento/TicketGeralWidget'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.55)',
-  green: '#4F6654', greenDk: '#3d5041',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.55)',
+  green: '#1F6B4E', greenDk: '#175840',
 }
 
 const CAT_LABEL: Record<string, string> = {
@@ -108,7 +108,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
         {/* Header */}
         <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a href="/eventos" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
           </a>
           <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>← Todos os eventos</a>
         </header>
@@ -117,10 +117,10 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
           {/* Hero */}
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px', marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-              <span style={{ display: 'inline-block', background: 'rgba(79,102,84,0.10)', border: '1px solid rgba(79,102,84,0.25)', color: C.green, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '4px 12px', borderRadius: 100 }}>
+              <span style={{ display: 'inline-block', background: 'rgba(31,107,78,0.10)', border: '1px solid rgba(31,107,78,0.25)', color: C.green, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '4px 12px', borderRadius: 100 }}>
                 {catLabel}
               </span>
-              <span style={{ display: 'inline-block', background: 'rgba(26,29,34,0.06)', border: `1px solid ${C.border}`, color: C.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', padding: '4px 12px', borderRadius: 100 }}>
+              <span style={{ display: 'inline-block', background: 'rgba(26,33,27,0.06)', border: `1px solid ${C.border}`, color: C.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', padding: '4px 12px', borderRadius: 100 }}>
                 {ageLabel}
               </span>
             </div>
@@ -177,7 +177,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
               </div>
             ) : (
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 32px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                <img src="/logo-transparent.svg" alt="" style={{ height: 34, opacity: 0.3, marginBottom: 12 }} />
+                <img src="/moventis-icone-v.svg" alt="" style={{ height: 34, opacity: 0.3, marginBottom: 12 }} />
                 <p style={{ fontSize: '1rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>Ingressos em breve</p>
                 <p style={{ fontSize: '0.875rem', color: C.muted }}>
                   A venda de ingressos será aberta em breve. Fique de olho!
@@ -206,7 +206,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
                 <p style={{ fontSize: '0.875rem', color: C.muted }}>Preços a confirmar.</p>
               )}
 
-              <div style={{ marginTop: 20, padding: 14, background: 'rgba(79,102,84,0.06)', borderRadius: 8, border: '1px solid rgba(79,102,84,0.15)', fontSize: '0.75rem', color: C.muted, lineHeight: 1.6 }}>
+              <div style={{ marginTop: 20, padding: 14, background: 'rgba(31,107,78,0.06)', borderRadius: 8, border: '1px solid rgba(31,107,78,0.15)', fontSize: '0.75rem', color: C.muted, lineHeight: 1.6 }}>
                 + taxa de serviço por ingresso · PIX R$2 por pedido · Cartão 4,98% — pagos pelo comprador.
               </div>
 

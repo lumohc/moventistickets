@@ -5,12 +5,12 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
 const C = {
-  bg:      '#F4F1EB',
+  bg:      '#F4F3EC',
   surface: '#FFFFFF',
-  border:  '#DDD9D0',
-  text:    '#1A1D22',
-  muted:   'rgba(26,29,34,0.52)',
-  green:   '#4F6654',
+  border:  '#D8DACF',
+  text:    '#1A211B',
+  muted:   'rgba(26,33,27,0.52)',
+  green:   '#1F6B4E',
   red:     '#c0392b',
   yellow:  '#92610a',
 }
@@ -110,7 +110,7 @@ export default function CheckinPage() {
     )
 
     if (result.status === 'ok') return (
-      <div style={{ background: 'rgba(79,102,84,0.08)', border: '2px solid #4F6654', borderRadius: 16, padding: '28px', marginBottom: 20 }}>
+      <div style={{ background: 'rgba(31,107,78,0.08)', border: '2px solid #1F6B4E', borderRadius: 16, padding: '28px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ fontSize: '3rem', flexShrink: 0 }}>✅</div>
           <div>

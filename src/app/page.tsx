@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 }
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', greenDk: '#3d5041', esmeralda: '#1F6B4E',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E', greenDk: '#175840', esmeralda: '#1F6B4E',
 }
 
 function fmtDate(d?: string | null, t?: string | null) {
@@ -39,7 +39,7 @@ export default async function HomePage() {
       {/* Header */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <a href="/eventos" style={{ fontSize: '0.875rem', color: C.muted, textDecoration: 'none', fontWeight: 500 }}>Eventos</a>
@@ -50,7 +50,7 @@ export default async function HomePage() {
 
       {/* Hero */}
       <section className="resp-section-pad" style={{ padding: '80px 24px 60px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
-        <div style={{ display: 'inline-block', background: 'rgba(79,102,84,0.10)', border: '1px solid rgba(79,102,84,0.25)', color: C.green, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '5px 16px', borderRadius: 100, marginBottom: 24 }}>
+        <div style={{ display: 'inline-block', background: 'rgba(31,107,78,0.10)', border: '1px solid rgba(31,107,78,0.25)', color: C.green, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '5px 16px', borderRadius: 100, marginBottom: 24 }}>
           Florianópolis & Santa Catarina
         </div>
         <h1 className="resp-hero-h1" style={{ fontSize: '3rem', fontWeight: 700, color: C.text, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 20 }}>
@@ -134,7 +134,7 @@ export default async function HomePage() {
                     }}>
                       {ev.poster_url
                         ? <img src={ev.poster_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <img src="/logo-transparent.svg" alt="" style={{ maxWidth: 46, opacity: 0.4 }} />}
+                        : <img src="/moventis-icone-v.svg" alt="" style={{ maxWidth: 46, opacity: 0.4 }} />}
                     </div>
                     <div style={{ padding: '14px 16px', flex: 1 }}>
                       <p style={{ fontSize: '0.85rem', fontWeight: 700, color: C.text, marginBottom: 3, lineHeight: 1.3 }}>{ev.name}</p>
@@ -161,7 +161,7 @@ export default async function HomePage() {
       {/* CTA Produtor */}
       <section style={{ padding: '60px 24px', background: C.text, marginTop: 20 }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, color: '#F4F1EB', letterSpacing: '-0.02em', marginBottom: 12 }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, color: '#F4F3EC', letterSpacing: '-0.02em', marginBottom: 12 }}>
             Você produz eventos?
           </h2>
           <p style={{ fontSize: '1rem', color: 'rgba(244,241,235,0.60)', marginBottom: 28, lineHeight: 1.6 }}>

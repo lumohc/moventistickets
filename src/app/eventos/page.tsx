@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 }
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', esmeralda: '#1F6B4E',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E', esmeralda: '#1F6B4E',
 }
 
 const CAT_LABEL: Record<string, string> = {
@@ -44,7 +44,7 @@ export default async function EventosPage() {
       {/* Header */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
         </a>
         <a href="/produtor/login" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none', padding: '7px 16px', border: `1px solid ${C.border}`, borderRadius: 8 }}>
           Sou produtor →
@@ -65,7 +65,7 @@ export default async function EventosPage() {
         {/* Nenhum evento */}
         {upcoming.length === 0 && (
           <div style={{ textAlign: 'center', padding: '80px 24px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <img src="/logo-transparent.svg" alt="" style={{ height: 40, opacity: 0.3, marginBottom: 16 }} />
+            <img src="/moventis-icone-v.svg" alt="" style={{ height: 40, opacity: 0.3, marginBottom: 16 }} />
             <p style={{ fontSize: '1.1rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>Nenhum evento disponível</p>
             <p style={{ fontSize: '0.9rem', color: C.muted }}>Novos eventos em breve. Volte logo!</p>
           </div>
@@ -107,7 +107,7 @@ export default async function EventosPage() {
                         height: 140, background: `linear-gradient(135deg, rgba(31,107,78,0.12), rgba(31,107,78,0.05))`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <img src="/logo-transparent.svg" alt="" style={{ maxWidth: 130, maxHeight: 46, opacity: 0.4 }} />
+                        <img src="/moventis-icone-v.svg" alt="" style={{ maxWidth: 130, maxHeight: 46, opacity: 0.4 }} />
                       </div>
                     )}
 
@@ -117,7 +117,7 @@ export default async function EventosPage() {
                         <span style={{
                           fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.08em',
                           textTransform: 'uppercase', color: C.green,
-                          background: 'rgba(79,102,84,0.09)', padding: '3px 10px', borderRadius: 100,
+                          background: 'rgba(31,107,78,0.09)', padding: '3px 10px', borderRadius: 100,
                         }}>
                           {CAT_LABEL[cat] ?? 'Evento'}
                         </span>

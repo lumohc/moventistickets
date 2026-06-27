@@ -7,9 +7,9 @@ import Sidebar from '@/components/produtor/Sidebar'
 import PosterUpload from '@/components/produtor/PosterUpload'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', error: '#c0392b',
 }
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', border: `1px solid ${C.border}`,
@@ -265,7 +265,7 @@ export default function EditarEventoPage() {
         )}
 
         {success && (
-          <div style={{ background: 'rgba(79,102,84,0.08)', border: '1px solid rgba(79,102,84,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: C.green }}>
+          <div style={{ background: 'rgba(31,107,78,0.08)', border: '1px solid rgba(31,107,78,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: C.green }}>
             ✅ Evento salvo com sucesso.
           </div>
         )}

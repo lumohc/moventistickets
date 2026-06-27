@@ -2,8 +2,8 @@ import { createSupabaseAdmin } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', greenBg: 'rgba(79,102,84,0.08)',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E', greenBg: 'rgba(31,107,78,0.08)',
 }
 
 export const metadata = { title: 'Locais — Admin Moventis' }
@@ -36,7 +36,7 @@ export default async function AdminLocaisPage() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '10px 20px',
-              background: C.green, color: '#F4F1EB',
+              background: C.green, color: '#F4F3EC',
               borderRadius: 8, textDecoration: 'none',
               fontSize: '0.875rem', fontWeight: 600,
             }}
@@ -54,7 +54,7 @@ export default async function AdminLocaisPage() {
               <p style={{ fontSize: '0.875rem', color: C.muted, marginBottom: 24 }}>
                 Cadastre o TAC, Pedro Ivo e Ademir Rosa para reutilizar em todos os eventos.
               </p>
-              <a href="/admin/locais/novo" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: C.green, color: '#F4F1EB', borderRadius: 8, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+              <a href="/admin/locais/novo" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: C.green, color: '#F4F3EC', borderRadius: 8, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
                 + Cadastrar primeiro local
               </a>
             </div>
@@ -93,7 +93,7 @@ export default async function AdminLocaisPage() {
                     display: 'inline-block',
                     padding: '3px 10px', borderRadius: 100,
                     fontSize: '0.72rem', fontWeight: 700,
-                    background: v.is_active ? 'rgba(79,102,84,0.1)' : 'rgba(26,29,34,0.06)',
+                    background: v.is_active ? 'rgba(31,107,78,0.1)' : 'rgba(26,33,27,0.06)',
                     color: v.is_active ? C.green : C.muted,
                   }}>
                     {v.is_active ? 'Ativo' : 'Inativo'}

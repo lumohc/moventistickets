@@ -6,9 +6,9 @@ import TicketActions from '@/components/pedido/TicketActions'
 import { CheckCircle2, Clock, XCircle, Ticket, Calendar, MapPin } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', esmeralda: '#1F6B4E',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', esmeralda: '#1F6B4E',
 }
 
 function fmt(n: number) {
@@ -58,7 +58,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
         background: C.surface, borderBottom: `1px solid ${C.border}`,
         padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10,
       }}>
-        <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+        <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
       </header>
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px' }}>
@@ -66,7 +66,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
         {/* Status principal */}
         {isPaid && (
           <div style={{
-            background: 'rgba(79,102,84,0.08)', border: '1px solid rgba(79,102,84,0.25)',
+            background: 'rgba(31,107,78,0.08)', border: '1px solid rgba(31,107,78,0.25)',
             borderRadius: 16, padding: '24px 28px', marginBottom: 24, textAlign: 'center',
           }}>
             <p style={{ marginBottom: 8 }}><CheckCircle2 size={46} color={C.esmeralda} strokeWidth={1.5} /></p>

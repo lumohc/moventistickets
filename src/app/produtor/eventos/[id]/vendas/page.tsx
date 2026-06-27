@@ -3,9 +3,9 @@ import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-
 import Sidebar from '@/components/produtor/Sidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E',
 }
 
 function fmt(n: number) {
@@ -173,7 +173,7 @@ export default async function VendasPage({ params }: { params: { id: string } })
         {/* Aviso repasse */}
         <div style={{
           marginTop: 20, padding: '14px 20px',
-          background: 'rgba(79,102,84,0.06)', border: '1px solid rgba(79,102,84,0.15)',
+          background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.15)',
           borderRadius: 10, fontSize: '0.8rem', color: C.muted,
         }}>
           💡 Os valores de repasse são processados após o encerramento do evento. Dúvidas? Fale com a equipe Moventis.

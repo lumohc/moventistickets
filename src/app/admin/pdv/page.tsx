@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
   red: '#c0392b', redBg: 'rgba(244,67,54,0.08)', redBorder: 'rgba(244,67,54,0.25)',
 }
 
@@ -30,8 +30,8 @@ function fmtDate(d: string | null) {
 }
 
 const inputStyle = {
-  width: '100%', padding: '8px 10px', border: `1px solid #DDD9D0`,
-  borderRadius: 8, fontSize: '0.875rem', color: '#1A1D22', background: '#F4F1EB',
+  width: '100%', padding: '8px 10px', border: `1px solid #D8DACF`,
+  borderRadius: 8, fontSize: '0.875rem', color: '#1A211B', background: '#F4F3EC',
   outline: 'none', boxSizing: 'border-box' as const,
 }
 
@@ -162,7 +162,7 @@ export default function PDVPage() {
                   cursor: 'pointer',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,102,84,0.04)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(31,107,78,0.04)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <div>
@@ -265,7 +265,7 @@ export default function PDVPage() {
                 disabled={busy}
                 style={{
                   width: '100%', marginTop: 20, padding: '14px',
-                  background: busy ? 'rgba(79,102,84,0.6)' : C.green,
+                  background: busy ? 'rgba(31,107,78,0.6)' : C.green,
                   color: '#fff', border: 'none', borderRadius: 10,
                   fontSize: '1rem', fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer',
                   letterSpacing: '-0.01em',

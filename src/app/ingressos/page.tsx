@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { Ticket, Search, Calendar, MapPin } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', esmeralda: '#1F6B4E',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E', esmeralda: '#1F6B4E',
 }
 
 const inp: React.CSSProperties = {
@@ -59,7 +59,7 @@ export default function MeusIngressosPage() {
       {/* Header */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
         </a>
         <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>Ver eventos</a>
       </header>
@@ -115,7 +115,7 @@ export default function MeusIngressosPage() {
                     <a key={o.id} href={`/pedido/${o.id}`} style={{ textDecoration: 'none' }}>
                       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ flexShrink: 0, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8 }}>
-                          <img src="/logo-transparent.svg" alt="" style={{ maxWidth: 30, maxHeight: 26, opacity: 0.35 }} />
+                          <img src="/moventis-icone-v.svg" alt="" style={{ maxWidth: 30, maxHeight: 26, opacity: 0.35 }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontWeight: 700, color: C.text, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

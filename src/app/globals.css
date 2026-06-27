@@ -2,14 +2,14 @@
 
 :root {
   /* Paleta Moventis — tema claro (off-white) */
-  --lumo-bg:       #F4F1EB;
+  --lumo-bg:       #F4F3EC;
   --lumo-surface:  #FFFFFF;
-  --lumo-border:   #DDD9D0;
-  --lumo-text:     #1A1D22;
-  --lumo-muted:    rgba(26,29,34,0.50);
-  --lumo-green:    #4F6654;
-  --lumo-green-lt: #3d5041;
-  --lumo-cream:    #F4F1EB;
+  --lumo-border:   #D8DACF;
+  --lumo-text:     #1A211B;
+  --lumo-muted:    rgba(26,33,27,0.50);
+  --lumo-green:    #1F6B4E;
+  --lumo-green-lt: #175840;
+  --lumo-cream:    #F4F3EC;
 }
 
 @theme inline {
@@ -34,7 +34,7 @@ body {
 
 /* ── Seat picker trigger ── */
 .lumo-seat-picker-trigger {
-  background: #4F6654;
+  background: #1F6B4E;
   color: #FFFFFF;
   border: none;
   border-radius: 8px;
@@ -47,7 +47,7 @@ body {
   gap: 8px;
   transition: background 0.2s;
 }
-.lumo-seat-picker-trigger:hover:not(:disabled) { background: #3d5041; }
+.lumo-seat-picker-trigger:hover:not(:disabled) { background: #175840; }
 .lumo-seat-picker-trigger:disabled { opacity: 0.45; cursor: not-allowed; }
 .lumo-seat-picker-summary {
   font-size: 0.8rem;

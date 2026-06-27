@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
   red: '#dc2626',
 }
 
@@ -152,7 +152,7 @@ export default function VenueEditForm({ venue }: { venue: Venue }) {
         )}
 
         {saved && (
-          <div style={{ padding: '10px 14px', background: 'rgba(79,102,84,0.08)', border: '1px solid rgba(79,102,84,0.3)', borderRadius: 8, fontSize: '0.875rem', color: C.green, fontWeight: 600 }}>
+          <div style={{ padding: '10px 14px', background: 'rgba(31,107,78,0.08)', border: '1px solid rgba(31,107,78,0.3)', borderRadius: 8, fontSize: '0.875rem', color: C.green, fontWeight: 600 }}>
             Alterações salvas.
           </div>
         )}
@@ -161,7 +161,7 @@ export default function VenueEditForm({ venue }: { venue: Venue }) {
           <button
             type="submit"
             disabled={loading}
-            style={{ flex: 1, padding: '12px', background: C.green, color: '#F4F1EB', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}
+            style={{ flex: 1, padding: '12px', background: C.green, color: '#F4F3EC', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}
           >
             {loading ? 'Salvando…' : 'Salvar alterações'}
           </button>

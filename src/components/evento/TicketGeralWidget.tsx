@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const C = {
-  bg:     '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text:   '#1A1D22', muted:  'rgba(26,29,34,0.52)',
-  green:  '#4F6654', greenDk: '#3d5041', error: '#c0392b',
+  bg:     '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text:   '#1A211B', muted:  'rgba(26,33,27,0.52)',
+  green:  '#1F6B4E', greenDk: '#175840', error: '#c0392b',
 }
 
 interface Props {
@@ -108,7 +108,7 @@ export default function TicketGeralWidget({ eventId, priceFace, halfPrice, feeEx
       </div>
 
       {/* Preço */}
-      <div style={{ background: 'rgba(79,102,84,0.06)', border: '1px solid rgba(79,102,84,0.15)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+      <div style={{ background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.15)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: C.muted, marginBottom: 4 }}>
           <span>{qty}× {fmt(unitPrice)}</span>
           <span>{fmt(total)}</span>

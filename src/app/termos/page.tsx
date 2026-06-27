@@ -6,8 +6,8 @@ export const metadata: Metadata = {
 }
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.55)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.55)', green: '#1F6B4E',
 }
 
 export default function TermosPage() {
@@ -16,7 +16,7 @@ export default function TermosPage() {
       {/* Header */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
         </a>
         <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>← Voltar</a>
       </header>
@@ -142,7 +142,7 @@ export default function TermosPage() {
           </Section>
 
           {/* Aviso */}
-          <div style={{ marginTop: 48, padding: '16px 20px', background: 'rgba(79,102,84,0.06)', border: '1px solid rgba(79,102,84,0.20)', borderRadius: 10, fontSize: '0.82rem', color: C.muted, lineHeight: 1.6 }}>
+          <div style={{ marginTop: 48, padding: '16px 20px', background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.20)', borderRadius: 10, fontSize: '0.82rem', color: C.muted, lineHeight: 1.6 }}>
             ⚠️ Este documento deve ser revisado por advogado responsável antes de qualquer uso oficial ou publicação definitiva.
           </div>
 
@@ -168,11 +168,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section style={{ marginBottom: 36 }}>
       <h2 style={{
-        fontSize: '1.1rem', fontWeight: 700, color: '#1A1D22',
+        fontSize: '1.1rem', fontWeight: 700, color: '#1A211B',
         letterSpacing: '-0.02em', marginBottom: 14,
-        paddingBottom: 10, borderBottom: '1px solid #DDD9D0',
+        paddingBottom: 10, borderBottom: '1px solid #D8DACF',
       }}>{title}</h2>
-      <div style={{ fontSize: '0.93rem', color: 'rgba(26,29,34,0.75)', lineHeight: 1.8 }}>
+      <div style={{ fontSize: '0.93rem', color: 'rgba(26,33,27,0.75)', lineHeight: 1.8 }}>
         {children}
       </div>
     </section>
@@ -181,7 +181,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function SubTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1A1D22', marginTop: 20, marginBottom: 8 }}>
+    <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1A211B', marginTop: 20, marginBottom: 8 }}>
       {children}
     </h3>
   )

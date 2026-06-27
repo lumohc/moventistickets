@@ -4,9 +4,9 @@ import { useState, useRef } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', error: '#c0392b',
 }
 
 interface Props {
@@ -85,7 +85,7 @@ export default function PosterUpload({ eventId, currentUrl, onUploaded }: Props)
             onClick={() => inputRef.current?.click()}
             style={{
               position: 'absolute', bottom: 8, right: 8,
-              padding: '6px 14px', background: 'rgba(26,29,34,0.75)',
+              padding: '6px 14px', background: 'rgba(26,33,27,0.75)',
               color: '#fff', border: 'none', borderRadius: 8,
               fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
               backdropFilter: 'blur(4px)',

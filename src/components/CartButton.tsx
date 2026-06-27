@@ -7,7 +7,7 @@ const KEY = 'moventis_cart'
 
 interface Cart { order_id: string; expires_at: string; count: number; total?: number }
 
-const C = { green: '#4F6654', greenDk: '#3d5041' }
+const C = { green: '#1F6B4E', greenDk: '#175840' }
 
 /**
  * Botão flutuante de carrinho. Lê o pedido ativo do localStorage (gravado pelo

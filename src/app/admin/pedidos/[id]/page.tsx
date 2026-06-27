@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
   red: '#c0392b', redBg: 'rgba(244,67,54,0.08)', redBorder: 'rgba(244,67,54,0.25)',
 }
 
@@ -198,9 +198,9 @@ export default function OrderDetailPage() {
         {msg && (
           <div style={{
             padding: '10px 16px', borderRadius: 10, marginBottom: 20, fontSize: '0.875rem',
-            background: msg.type === 'ok' ? 'rgba(79,102,84,0.08)' : C.redBg,
+            background: msg.type === 'ok' ? 'rgba(31,107,78,0.08)' : C.redBg,
             color: msg.type === 'ok' ? C.green : C.red,
-            border: `1px solid ${msg.type === 'ok' ? 'rgba(79,102,84,0.2)' : C.redBorder}`,
+            border: `1px solid ${msg.type === 'ok' ? 'rgba(31,107,78,0.2)' : C.redBorder}`,
           }}>{msg.text}</div>
         )}
 
