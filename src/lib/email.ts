@@ -63,6 +63,15 @@ async function withRetry<T>(
 export async function sendTicketEmail(params: TicketEmailParams): Promise<void> {
   const html = buildEmailHtml(params)
 
+  // QR como anexo inline (CID). O Gmail (e vários clientes) NÃO renderiza
+  // <img src="data:image/png;base64,..."> em e-mail — por isso o QR sumia.
+  // Anexamos o PNG e referenciamos por cid:qr-N no HTML.
+  const qrParts = params.tickets.map((t, i) => ({
+    filename: `ingresso-${i + 1}.png`,
+    b64:      t.qrDataUrl.split(',')[1] ?? '',
+    cid:      `qr-${i}`,
+  }))
+
   // 1. Resend (provider primário — configure RESEND_API_KEY)
   const resendKey = process.env.RESEND_API_KEY
   if (resendKey && resendKey !== 'PREENCHER') {
@@ -78,6 +87,10 @@ export async function sendTicketEmail(params: TicketEmailParams): Promise<void> 
           to: [params.to],
           subject: `Seus ingressos — ${params.eventName}`,
           html,
+          attachments: qrParts.map(q => ({
+            filename: q.filename, content: q.b64, content_id: q.cid,
+            content_type: 'image/png', disposition: 'inline',
+          })),
         }),
       })
       if (!res.ok) {
@@ -108,6 +121,9 @@ export async function sendTicketEmail(params: TicketEmailParams): Promise<void> 
           to: params.to,
           subject: `Seus ingressos — ${params.eventName}`,
           html,
+          attachments: qrParts.map(q => ({
+            filename: q.filename, content: Buffer.from(q.b64, 'base64'), cid: q.cid,
+          })),
         }),
       `smtp order=${params.orderId} to=${params.to}`,
     )
@@ -135,7 +151,7 @@ function buildEmailHtml(params: TicketEmailParams): string {
         <p style="font-size:15px;font-weight:700;color:#1A1D22;margin:0 0 2px;">${t.seatName}</p>
         <p style="font-size:13px;color:rgba(26,29,34,0.6);margin:0 0 16px;">${t.groupName}</p>
         <div style="text-align:center;background:#ffffff;border-radius:10px;padding:16px;border:1px solid #DDD9D0;">
-          <img src="${t.qrDataUrl}" alt="QR Code" width="160" height="160" style="display:block;margin:0 auto;" />
+          <img src="cid:qr-${i}" alt="QR Code" width="160" height="160" style="display:block;margin:0 auto;" />
           <p style="font-size:10px;color:#999;margin:10px 0 0;font-family:'Courier New',monospace;word-break:break-all;">${t.qrCode}</p>
         </div>
       </div>
