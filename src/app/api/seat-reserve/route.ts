@@ -37,6 +37,23 @@ export async function POST(request: NextRequest) {
 
     const eventId = evtWrap.data.id
 
+    // Reserva ATÔMICA via função no banco (anti dupla-reserva sob concorrência).
+    // A função insere ou assume reserva VENCIDA atomicamente; recusa se ativa/vendida.
+    const rpcWrap = await safe(
+      db.rpc('reserve_seat', { p_event: eventId, p_seat: seat_id as string, p_type: type, p_token: token, p_ttl: ttl }),
+    )
+    const claim = rpcWrap && !rpcWrap.error
+      ? (rpcWrap.data as { ok: boolean; reason?: string; expires_at?: string } | null)
+      : null
+
+    if (claim) {
+      if (!claim.ok) {
+        return NextResponse.json({ status: 'error', message: 'Poltrona indisponível' }, { status: 409 })
+      }
+      return NextResponse.json({ status: 'success', data: { reservation_token: token, seat_id, ticket_type: type, expires_at: claim.expires_at } })
+    }
+
+    // Fallback legado (função reserve_seat ainda não criada no banco): check-then-insert.
     const [resWrap, soldWrap] = await Promise.all([
       safe(db.from('reservations').select('id').eq('event_id', eventId).eq('seat_id', seat_id).gt('expires_at', now).limit(1)),
       safe(db.from('tickets').select('id').eq('event_id', eventId).eq('seat_id', seat_id).limit(1)),
