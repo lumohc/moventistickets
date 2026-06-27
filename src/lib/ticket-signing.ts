@@ -1,30 +1,38 @@
 /**
- * Assinatura de ingresso (QR) — segurança base da Fase 0.
+ * Assinatura de ingresso (QR) — segurança base + versionamento (item 4).
  *
- * O QR carrega o id do ingresso + uma assinatura HMAC verificável, no formato:
- *   MVT:<ticketId>.<assinatura>
+ * Formato atual (assinado, com versão):
+ *   MVT:<ticketId>.<version>.<assinatura>     (assinatura = HMAC de "ticketId:version")
+ * Formatos aceitos por compatibilidade:
+ *   MVT:<ticketId>.<assinatura>               (antigo, sem versão → versão 1)
+ *   MVT:<ticketId>                            (legado, sem assinatura)
  *
- * O check-in valida a ASSINATURA (não só o número): um "print" com um id chutado
- * ou adulterado não passa, porque não tem como gerar a assinatura sem o segredo.
+ * A VERSÃO permite re-emitir o ingresso (edição de nome / transferência): a cada
+ * troca o qr_version sobe, o QR é re-assinado, e o check-in passa a recusar QRs
+ * de versão anterior (o "print" antigo deixa de valer).
  *
- * Segredo: `TICKET_SIGNING_SECRET` (env). É um segredo — não vai pro Git.
- * Se ausente, o ingresso é emitido SEM assinatura (com aviso) para não quebrar a
- * emissão; configure o segredo em produção para a verificação valer.
+ * Segredo: `TICKET_SIGNING_SECRET` (env). Sem ele, emite SEM assinatura (aviso).
  */
 import { createHmac, timingSafeEqual } from 'crypto';
 
 const PREFIX = 'MVT';
-const SIG_LEN = 16; // base64url truncado — suficiente e compacto no QR
+const SIG_LEN = 16; // base64url truncado — compacto no QR
 
-function computeSig(ticketId: string, secret: string): string {
-  return createHmac('sha256', secret).update(ticketId).digest('base64url').slice(0, SIG_LEN);
+function computeSig(payload: string, secret: string): string {
+  return createHmac('sha256', secret).update(payload).digest('base64url').slice(0, SIG_LEN);
+}
+
+function safeEq(a: string, b: string): boolean {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ba.length === bb.length && timingSafeEqual(ba, bb);
 }
 
 /**
- * Gera o conteúdo do QR para um ingresso. Com segredo → assinado; sem segredo →
- * `MVT:<ticketId>` (formato legado), com aviso no log.
+ * Gera o conteúdo do QR para um ingresso numa dada versão.
+ * Com segredo → assinado (`MVT:<id>.<version>.<sig>`); sem segredo → legado.
  */
-export function signTicket(ticketId: string): string {
+export function signTicket(ticketId: string, version = 1): string {
   const secret = process.env.TICKET_SIGNING_SECRET;
   if (!secret) {
     console.warn(
@@ -33,7 +41,7 @@ export function signTicket(ticketId: string): string {
     );
     return `${PREFIX}:${ticketId}`;
   }
-  return `${PREFIX}:${ticketId}.${computeSig(ticketId, secret)}`;
+  return `${PREFIX}:${ticketId}.${version}.${computeSig(`${ticketId}:${version}`, secret)}`;
 }
 
 export interface VerifyResult {
@@ -41,36 +49,46 @@ export interface VerifyResult {
   valid: boolean;
   /** Id do ingresso extraído do QR (mesmo quando inválido), p/ busca/log. */
   ticketId: string | null;
+  /** Versão do QR (1 quando formato antigo/legado). */
+  version: number;
   /** QR sem assinatura (formato legado) — não dá pra verificar. */
   unsigned: boolean;
 }
 
 /**
- * Verifica um conteúdo de QR. Use no check-in: só deixa entrar com `valid: true`.
- * Comparação em tempo constante (timing-safe) contra ataque de timing.
+ * Verifica um conteúdo de QR. Use no check-in: só deixa entrar com `valid: true`
+ * E `version` igual ao qr_version atual do ingresso (recusa QR re-emitido).
+ * Comparação em tempo constante (timing-safe).
  */
 export function verifyTicketQr(qr: string): VerifyResult {
   if (!qr || !qr.startsWith(`${PREFIX}:`)) {
-    return { valid: false, ticketId: null, unsigned: false };
+    return { valid: false, ticketId: null, version: 1, unsigned: false };
   }
   const body = qr.slice(PREFIX.length + 1);
-  const dot = body.lastIndexOf('.');
-
-  // Sem ponto = formato legado, sem assinatura.
-  if (dot === -1) {
-    return { valid: false, ticketId: body || null, unsigned: true };
-  }
-
-  const ticketId = body.slice(0, dot);
-  const sig = body.slice(dot + 1);
+  const parts = body.split('.');
   const secret = process.env.TICKET_SIGNING_SECRET;
-  if (!secret || !ticketId || !sig) {
-    return { valid: false, ticketId: ticketId || null, unsigned: false };
+
+  // Legado sem assinatura: MVT:<ticketId>
+  if (parts.length === 1) {
+    return { valid: false, ticketId: parts[0] || null, version: 1, unsigned: true };
   }
 
-  const expected = computeSig(ticketId, secret);
-  const a = Buffer.from(sig);
-  const b = Buffer.from(expected);
-  const valid = a.length === b.length && timingSafeEqual(a, b);
-  return { valid, ticketId, unsigned: false };
+  // Formato antigo assinado: MVT:<ticketId>.<sig> (versão implícita 1)
+  if (parts.length === 2) {
+    const [ticketId, sig] = parts;
+    if (!secret || !ticketId || !sig) {
+      return { valid: false, ticketId: ticketId || null, version: 1, unsigned: false };
+    }
+    const valid = safeEq(sig, computeSig(ticketId, secret));
+    return { valid, ticketId, version: 1, unsigned: false };
+  }
+
+  // Formato atual: MVT:<ticketId>.<version>.<sig>
+  const [ticketId, versionStr, sig] = parts;
+  const version = Number(versionStr) || 1;
+  if (!secret || !ticketId || !sig) {
+    return { valid: false, ticketId: ticketId || null, version, unsigned: false };
+  }
+  const valid = safeEq(sig, computeSig(`${ticketId}:${version}`, secret));
+  return { valid, ticketId, version, unsigned: false };
 }

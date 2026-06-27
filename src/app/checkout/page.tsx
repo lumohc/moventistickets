@@ -93,6 +93,9 @@ function CheckoutContent() {
   const [email, setEmail] = useState('')
   const [cpf,   setCpf]   = useState('')
   const [phone, setPhone] = useState('')
+  // Nomes dos titulares (1 por ingresso). holders[0] = comprador quando "sou eu".
+  const [holders, setHolders] = useState<string[]>([])
+  const [souEu,   setSouEu]   = useState(true)
 
   // Método e formulário de cartão
   const [method, setMethod] = useState<PaymentMethod>('pix')
@@ -168,6 +171,12 @@ function CheckoutContent() {
       .finally(() => setLoading(false))
   }, [sessionId, params])
 
+  // Inicializa um campo de nome por ingresso quando a sessão carrega.
+  useEffect(() => {
+    const n = session?.seats.length ?? 0
+    setHolders(prev => (prev.length === n ? prev : Array.from({ length: n }, (_, i) => prev[i] ?? '')))
+  }, [session?.seats])
+
   // ── Cálculo de preço (reativo ao método e ao cupom) ────────────────────────
   const ticketFaces = session?.seats.map(s => s.price) ?? []
   const effectiveMethod: PaymentMethod = method === 'pix' ? 'pix' : cardType
@@ -218,6 +227,10 @@ function CheckoutContent() {
     if (cpf.replace(/\D/g, '').length < 11) { setFormErr('CPF inválido.'); return }
     if (phone.replace(/\D/g, '').length < 10) { setFormErr('Celular/WhatsApp inválido (inclua o DDD).'); return }
 
+    // Nome do titular de cada ingresso (1º = comprador quando "sou eu").
+    const seatHolders = (session?.seats ?? []).map((_, i) => ((i === 0 && souEu ? name : holders[i]) ?? '').trim())
+    if (seatHolders.some(h => !h)) { setFormErr('Informe o nome do titular de cada ingresso.'); return }
+
     if (method !== 'pix') {
       // Validações do cartão
       if (!cardHolder.trim())  { setFormErr('Nome do titular obrigatório.'); return }
@@ -230,16 +243,16 @@ function CheckoutContent() {
     setPaying(true)
     try {
       if (method === 'pix') {
-        await submitPix()
+        await submitPix(seatHolders)
       } else {
-        await submitCard()
+        await submitCard(seatHolders)
       }
     } finally {
       setPaying(false)
     }
   }
 
-  async function submitPix() {
+  async function submitPix(seatHolders: string[]) {
     const res = await fetch('/api/payment/pix', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -249,6 +262,7 @@ function CheckoutContent() {
         buyer_email: email,
         buyer_cpf:   cpf,
         buyer_phone: phone.replace(/\D/g, ''),
+        seat_holders: seatHolders,
         coupon_code: couponApplied?.code ?? undefined,
       }),
     })
@@ -266,7 +280,7 @@ function CheckoutContent() {
     }
   }
 
-  async function submitCard() {
+  async function submitCard(seatHolders: string[]) {
     const [expMonth, expYear] = cardExpiry.split('/')
     const res = await fetch('/api/payment/card', {
       method: 'POST',
@@ -277,6 +291,7 @@ function CheckoutContent() {
         buyer_email:        email,
         buyer_cpf:          cpf,
         buyer_phone:        phone.replace(/\D/g, ''),
+        seat_holders:       seatHolders,
         card_type:          cardType,
         card_holder_name:   cardHolder,
         card_number:        cardNumber.replace(/\D/g, ''),
@@ -503,6 +518,41 @@ function CheckoutContent() {
                       maxLength={16}
                     />
                   </div>
+
+                  {/* Nomes nos ingressos */}
+                  {session && session.seats.length > 0 && (
+                    <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 18, marginBottom: method !== 'pix' ? 8 : 4 }}>
+                      <p style={{ fontSize: '0.88rem', fontWeight: 700, color: C.text, margin: '0 0 4px' }}>
+                        Quem vai usar cada ingresso
+                      </p>
+                      <p style={{ fontSize: '0.78rem', color: C.muted, margin: '0 0 14px' }}>
+                        O nome vai impresso no ingresso e fica no QR de entrada.
+                      </p>
+                      {session.seats.map((s, i) => (
+                        <div key={s.seat_id} style={{ marginBottom: 12 }}>
+                          <label style={lbl}>
+                            {s.seat_name} · {s.ticket_type === 'meia-entrada' ? 'meia' : 'inteira'} *
+                          </label>
+                          <input
+                            value={i === 0 && souEu ? name : (holders[i] ?? '')}
+                            disabled={i === 0 && souEu}
+                            onChange={e => {
+                              const v = e.target.value
+                              setHolders(h => { const n = [...h]; n[i] = v; return n })
+                            }}
+                            style={{ ...inp, opacity: i === 0 && souEu ? 0.65 : 1 }}
+                            placeholder="Nome de quem vai usar"
+                          />
+                          {i === 0 && (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: '0.8rem', color: C.muted, cursor: 'pointer' }}>
+                              <input type="checkbox" checked={souEu} onChange={e => setSouEu(e.target.checked)} />
+                              Sou eu (usar meu nome)
+                            </label>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Formulário de cartão */}
                   {method !== 'pix' && (

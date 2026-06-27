@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       order_id,
-      buyer_name, buyer_email, buyer_cpf, buyer_phone,
+      buyer_name, buyer_email, buyer_cpf, buyer_phone, seat_holders,
       card_type,              // 'credit_card' | 'debit_card'
       card_holder_name,
       card_number,
@@ -147,12 +147,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Erro ao processar o cartão.' }, { status: 502 })
     }
 
-    // Atualiza o pedido com método de pagamento real + cupom + total recalculado
+    // Mescla os nomes dos titulares (1 por assento) nos seats do pedido.
+    const mergedSeats = Array.isArray(order.seats)
+      ? (order.seats as Array<Record<string, unknown>>).map((s, i) => ({
+          ...s,
+          holder_name: (Array.isArray(seat_holders) ? seat_holders[i] : undefined) || s.holder_name || null,
+        }))
+      : order.seats
+
+    // Atualiza o pedido com método de pagamento real + cupom + titulares + total
     await admin.from('orders').update({
       buyer_name,
       buyer_email,
       buyer_cpf,
       buyer_whatsapp:    buyer_phone,
+      seats:             mergedSeats,
       payment_method:    method,
       payment_fee:       pricing.processingFee,
       face_total:        pricing.faceTotal,

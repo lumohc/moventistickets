@@ -30,6 +30,7 @@ interface TicketEmailParams {
     seatName: string
     groupName: string
     ticketType: string
+    holderName?: string
     qrDataUrl: string  // base64
     qrCode: string     // texto do QR
   }>
@@ -149,7 +150,8 @@ function buildEmailHtml(params: TicketEmailParams): string {
       </div>
       <div style="background:#F4F1EB;padding:18px 20px;">
         <p style="font-size:15px;font-weight:700;color:#1A1D22;margin:0 0 2px;">${t.seatName}</p>
-        <p style="font-size:13px;color:rgba(26,29,34,0.6);margin:0 0 16px;">${t.groupName}</p>
+        <p style="font-size:13px;color:rgba(26,29,34,0.6);margin:0 0 ${t.holderName ? '6' : '16'}px;">${t.groupName}</p>
+        ${t.holderName ? `<p style="font-size:13px;color:#1A1D22;margin:0 0 16px;"><strong>Titular:</strong> ${t.holderName}</p>` : ''}
         <div style="text-align:center;background:#ffffff;border-radius:10px;padding:16px;border:1px solid #DDD9D0;">
           <img src="cid:qr-${i}" alt="QR Code" width="160" height="160" style="display:block;margin:0 auto;" />
           <p style="font-size:10px;color:#999;margin:10px 0 0;font-family:'Courier New',monospace;word-break:break-all;">${t.qrCode}</p>

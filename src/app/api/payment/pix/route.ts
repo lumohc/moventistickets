@@ -7,7 +7,7 @@ import { priceOrder } from '@/lib/pricing'
 
 export async function POST(req: NextRequest) {
   try {
-    const { order_id, buyer_name, buyer_email, buyer_cpf, buyer_phone, coupon_code } = await req.json()
+    const { order_id, buyer_name, buyer_email, buyer_cpf, buyer_phone, seat_holders, coupon_code } = await req.json()
 
     if (!order_id || !buyer_name || !buyer_email || !buyer_cpf || !buyer_phone) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 })
@@ -131,12 +131,21 @@ export async function POST(req: NextRequest) {
       pixQrImage   = await generateQRDataURL(pixCopyPaste)
     }
 
-    // Salva comprador, PIX, cupom e totais recalculados
+    // Mescla os nomes dos titulares (1 por assento) nos seats do pedido.
+    const mergedSeats = Array.isArray(order.seats)
+      ? (order.seats as Array<Record<string, unknown>>).map((s, i) => ({
+          ...s,
+          holder_name: (Array.isArray(seat_holders) ? seat_holders[i] : undefined) || s.holder_name || null,
+        }))
+      : order.seats
+
+    // Salva comprador, PIX, cupom, titulares e totais recalculados
     await admin.from('orders').update({
       buyer_name,
       buyer_email,
       buyer_cpf,
       buyer_whatsapp:    buyer_phone,
+      seats:             mergedSeats,
       payment_method:    'pix',
       payment_fee:       pricing.processingFee,
       face_total:        pricing.faceTotal,

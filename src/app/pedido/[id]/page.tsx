@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { generateQRDataURL } from '@/lib/generate-qr'
 import PixPaymentCard from '@/components/PixPaymentCard'
+import TicketActions from '@/components/pedido/TicketActions'
 
 const C = {
   bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
@@ -39,7 +40,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
   if (isPaid) {
     const { data: tks } = await admin
       .from('tickets')
-      .select('id, seat_name, group_name, ticket_type, price, qr_code')
+      .select('id, seat_name, group_name, ticket_type, price, qr_code, holder_name')
       .eq('order_id', id)
       .order('seat_name')
     if (tks) {
@@ -149,9 +150,14 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
                   <p style={{ fontSize: '0.85rem', fontWeight: 700, color: C.text, marginBottom: 2 }}>
                     {t.seat_name}
                   </p>
-                  <p style={{ fontSize: '0.72rem', color: C.muted, marginBottom: 12 }}>
+                  <p style={{ fontSize: '0.72rem', color: C.muted, marginBottom: t.holder_name ? 4 : 12 }}>
                     {t.group_name} — {capitalize(t.ticket_type)}
                   </p>
+                  {t.holder_name && (
+                    <p style={{ fontSize: '0.78rem', fontWeight: 600, color: C.text, marginBottom: 12 }}>
+                      {t.holder_name}
+                    </p>
+                  )}
                   <img
                     src={t.qr_image}
                     alt={`QR ${t.seat_name}`}
@@ -160,6 +166,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
                   <p style={{ marginTop: 8, fontSize: '0.62rem', color: C.muted, fontFamily: 'monospace', wordBreak: 'break-all' }}>
                     {t.qr_code}
                   </p>
+                  <TicketActions ticketId={t.id} ticketType={t.ticket_type} buyerEmail={order.buyer_email as string | null} />
                 </div>
               ))}
             </div>

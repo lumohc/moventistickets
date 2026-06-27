@@ -20,7 +20,21 @@ describe('com TICKET_SIGNING_SECRET configurado', () => {
     const r = verifyTicketQr(qr);
     expect(r.valid).toBe(true);
     expect(r.ticketId).toBe(ID);
+    expect(r.version).toBe(1);
     expect(r.unsigned).toBe(false);
+  });
+
+  it('versão muda o QR e a verificação devolve a versão', () => {
+    const v1 = signTicket(ID, 1);
+    const v2 = signTicket(ID, 2);
+    expect(v1).not.toBe(v2);
+
+    const r2 = verifyTicketQr(v2);
+    expect(r2.valid).toBe(true);
+    expect(r2.version).toBe(2);
+
+    // O QR da v1 continua válido como v1 (o check-in é quem recusa versão antiga).
+    expect(verifyTicketQr(v1).version).toBe(1);
   });
 
   it('rejeita assinatura adulterada', () => {
@@ -32,9 +46,9 @@ describe('com TICKET_SIGNING_SECRET configurado', () => {
   });
 
   it('rejeita id trocado com assinatura de outro ingresso', () => {
-    const qr = signTicket(ID);
-    const sig = qr.split('.')[1];
-    const forged = `MVT:id-falso.${sig}`;
+    const qr = signTicket(ID);          // MVT:ID.1.sig
+    const parts = qr.split('.');         // ['MVT:ID', '1', 'sig']
+    const forged = `MVT:id-falso.${parts[1]}.${parts[2]}`;
     expect(verifyTicketQr(forged).valid).toBe(false);
   });
 
@@ -43,6 +57,15 @@ describe('com TICKET_SIGNING_SECRET configurado', () => {
     expect(r.valid).toBe(false);
     expect(r.unsigned).toBe(true);
     expect(r.ticketId).toBe(ID);
+  });
+
+  it('aceita o formato antigo (sem versão) como versão 1', () => {
+    // QR antigo: MVT:<id>.<sig> com sig = HMAC(id)
+    const { createHmac } = require('crypto');
+    const sig = createHmac('sha256', SECRET).update(ID).digest('base64url').slice(0, 16);
+    const r = verifyTicketQr(`MVT:${ID}.${sig}`);
+    expect(r.valid).toBe(true);
+    expect(r.version).toBe(1);
   });
 
   it('rejeita lixo', () => {

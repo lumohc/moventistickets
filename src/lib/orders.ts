@@ -12,6 +12,7 @@ interface OrderSeat {
   group_name: string
   ticket_type: string
   price: number
+  holder_name?: string
 }
 
 export type ConfirmResult =
@@ -67,7 +68,9 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
         group_name: seat.group_name,
         ticket_type: seat.ticket_type,
         price: seat.price,
-        qr_code: signTicket(ticketId),
+        holder_name: seat.holder_name?.trim() || order.buyer_name || null,
+        qr_version: 1,
+        qr_code: signTicket(ticketId, 1),
       }
     })
 
@@ -93,7 +96,7 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
   // no array em memória).
   const { data: tickets } = await admin
     .from('tickets')
-    .select('seat_name, group_name, ticket_type, qr_code')
+    .select('seat_name, group_name, ticket_type, qr_code, holder_name')
     .eq('order_id', order.id)
 
   const ev = order.events
@@ -108,10 +111,11 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
       : '—'
 
     const emailTickets = await Promise.all(
-      tickets.map(async (t: { seat_name: string; group_name: string; ticket_type: string; qr_code: string }) => ({
+      tickets.map(async (t: { seat_name: string; group_name: string; ticket_type: string; qr_code: string; holder_name: string | null }) => ({
         seatName: t.seat_name,
         groupName: t.group_name,
         ticketType: t.ticket_type,
+        holderName: t.holder_name ?? undefined,
         qrCode: t.qr_code,
         qrDataUrl: await generateQRDataURL(t.qr_code),
       })),
