@@ -95,7 +95,8 @@ function CheckoutContent() {
   const [phone, setPhone] = useState('')
   // Nomes dos titulares (1 por ingresso). holders[0] = comprador quando "sou eu".
   const [holders, setHolders] = useState<string[]>([])
-  const [souEu,   setSouEu]   = useState(true)
+  // Índice do ingresso marcado como "sou eu" (recebe o nome do comprador). null = nenhum.
+  const [meIndex, setMeIndex] = useState<number | null>(0)
 
   // Método e formulário de cartão
   const [method, setMethod] = useState<PaymentMethod>('pix')
@@ -228,7 +229,7 @@ function CheckoutContent() {
     if (phone.replace(/\D/g, '').length < 10) { setFormErr('Celular/WhatsApp inválido (inclua o DDD).'); return }
 
     // Nome do titular de cada ingresso (1º = comprador quando "sou eu").
-    const seatHolders = (session?.seats ?? []).map((_, i) => ((i === 0 && souEu ? name : holders[i]) ?? '').trim())
+    const seatHolders = (session?.seats ?? []).map((_, i) => ((i === meIndex ? name : holders[i]) ?? '').trim())
     if (seatHolders.some(h => !h)) { setFormErr('Informe o nome do titular de cada ingresso.'); return }
 
     if (method !== 'pix') {
@@ -534,21 +535,19 @@ function CheckoutContent() {
                             {s.seat_name} · {s.ticket_type === 'meia-entrada' ? 'meia' : 'inteira'} *
                           </label>
                           <input
-                            value={i === 0 && souEu ? name : (holders[i] ?? '')}
-                            disabled={i === 0 && souEu}
+                            value={meIndex === i ? name : (holders[i] ?? '')}
+                            disabled={meIndex === i}
                             onChange={e => {
                               const v = e.target.value
                               setHolders(h => { const n = [...h]; n[i] = v; return n })
                             }}
-                            style={{ ...inp, opacity: i === 0 && souEu ? 0.65 : 1 }}
+                            style={{ ...inp, opacity: meIndex === i ? 0.65 : 1 }}
                             placeholder="Nome de quem vai usar"
                           />
-                          {i === 0 && (
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: '0.8rem', color: C.muted, cursor: 'pointer' }}>
-                              <input type="checkbox" checked={souEu} onChange={e => setSouEu(e.target.checked)} />
-                              Sou eu (usar meu nome)
-                            </label>
-                          )}
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: '0.8rem', color: C.muted, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={meIndex === i} onChange={e => setMeIndex(e.target.checked ? i : null)} />
+                            Sou eu (usar meu nome)
+                          </label>
                         </div>
                       ))}
                     </div>
