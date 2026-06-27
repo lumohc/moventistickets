@@ -573,6 +573,18 @@
       .then(function (r) {
         return r.json().then(function (body) {
           if (!r.ok || body.status === 'error') throw new Error(body.message || 'HTTP ' + r.status);
+          // Persiste o carrinho ativo (id + expira) pro botão de carrinho lembrar
+          // a reserva mesmo se o cliente sair da página.
+          try {
+            if (body.session_id) {
+              localStorage.setItem('moventis_cart', JSON.stringify({
+                order_id:   body.session_id,
+                expires_at: body.expires_at,
+                count:      seatsPayload.length,
+                total:      body.total,
+              }));
+            }
+          } catch (e) {}
           self._updateSubmittingMsg('Tudo certo! Indo pro carrinho…');
           var url = body.redirect_url || self.config.cartUrl;
           setTimeout(function () { window.location.href = url; }, 600);

@@ -144,6 +144,11 @@ function CheckoutContent() {
     return () => { active = false; clearInterval(id) }
   }, [step, method, sessionId, confirmed])
 
+  // Limpa o carrinho persistido (localStorage) quando o pagamento confirma.
+  useEffect(() => {
+    if (confirmed) { try { localStorage.removeItem('moventis_cart') } catch { /* ignora */ } }
+  }, [confirmed])
+
   // ── Carrega sessão ────────────────────────────────────────────────────────
   useEffect(() => {
     const token    = params.get('token')
