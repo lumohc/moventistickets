@@ -44,6 +44,7 @@ export async function findOrCreateCustomer(params: {
   name: string
   cpf: string
   email: string
+  phone?: string
 }): Promise<string> {
   const cpfDigits = params.cpf.replace(/\D/g, '')
 
@@ -59,7 +60,12 @@ export async function findOrCreateCustomer(params: {
   const createRes = await fetch(`${BASE_URL}/customers`, {
     method: 'POST',
     headers: asaasHeaders(),
-    body: JSON.stringify({ name: params.name, cpfCnpj: cpfDigits, email: params.email }),
+    body: JSON.stringify({
+      name: params.name,
+      cpfCnpj: cpfDigits,
+      email: params.email,
+      ...(params.phone ? { mobilePhone: params.phone.replace(/\D/g, '') } : {}),
+    }),
   })
   if (!createRes.ok) throw new Error(`Asaas createCustomer: ${await createRes.text()}`)
   const customer = await createRes.json()

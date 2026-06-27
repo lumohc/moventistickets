@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       order_id,
-      buyer_name, buyer_email, buyer_cpf,
+      buyer_name, buyer_email, buyer_cpf, buyer_phone,
       card_type,              // 'credit_card' | 'debit_card'
       card_holder_name,
       card_number,
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       coupon_code,
     } = body
 
-    if (!order_id || !buyer_name || !buyer_email || !buyer_cpf ||
+    if (!order_id || !buyer_name || !buyer_email || !buyer_cpf || !buyer_phone ||
         !card_type || !card_holder_name || !card_number ||
         !card_expiry_month || !card_expiry_year || !card_cvv || !card_postal_code) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 })
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     let asaasPaymentId: string
     try {
       const customerId = await findOrCreateCustomer({
-        name: buyer_name, cpf: buyer_cpf, email: buyer_email,
+        name: buyer_name, cpf: buyer_cpf, email: buyer_email, phone: buyer_phone,
       })
 
       const result = await createCardPayment({
@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
           name:          buyer_name,
           email:         buyer_email,
           cpfCnpj:       buyer_cpf,
+          phone:         buyer_phone,
           postalCode:    card_postal_code,
           addressNumber: card_address_number || 'S/N',
         },
@@ -151,6 +152,7 @@ export async function POST(req: NextRequest) {
       buyer_name,
       buyer_email,
       buyer_cpf,
+      buyer_whatsapp:    buyer_phone,
       payment_method:    method,
       payment_fee:       pricing.processingFee,
       face_total:        pricing.faceTotal,

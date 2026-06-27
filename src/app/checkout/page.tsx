@@ -92,6 +92,7 @@ function CheckoutContent() {
   const [name,  setName]  = useState('')
   const [email, setEmail] = useState('')
   const [cpf,   setCpf]   = useState('')
+  const [phone, setPhone] = useState('')
 
   // Método e formulário de cartão
   const [method, setMethod] = useState<PaymentMethod>('pix')
@@ -212,9 +213,10 @@ function CheckoutContent() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFormErr(null)
-    if (!name.trim() || !email.trim() || !cpf.trim()) { setFormErr('Preencha todos os campos.'); return }
+    if (!name.trim() || !email.trim() || !cpf.trim() || !phone.trim()) { setFormErr('Preencha todos os campos.'); return }
     if (!/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(email)) { setFormErr('E-mail inválido.'); return }
     if (cpf.replace(/\D/g, '').length < 11) { setFormErr('CPF inválido.'); return }
+    if (phone.replace(/\D/g, '').length < 10) { setFormErr('Celular/WhatsApp inválido (inclua o DDD).'); return }
 
     if (method !== 'pix') {
       // Validações do cartão
@@ -246,6 +248,7 @@ function CheckoutContent() {
         buyer_name:  name,
         buyer_email: email,
         buyer_cpf:   cpf,
+        buyer_phone: phone.replace(/\D/g, ''),
         coupon_code: couponApplied?.code ?? undefined,
       }),
     })
@@ -273,6 +276,7 @@ function CheckoutContent() {
         buyer_name:         name,
         buyer_email:        email,
         buyer_cpf:          cpf,
+        buyer_phone:        phone.replace(/\D/g, ''),
         card_type:          cardType,
         card_holder_name:   cardHolder,
         card_number:        cardNumber.replace(/\D/g, ''),
@@ -476,9 +480,28 @@ function CheckoutContent() {
                     <label style={lbl}>E-mail *</label>
                     <input type="email" required value={email} onChange={e => setEmail(e.target.value)} style={inp} placeholder="seu@email.com" />
                   </div>
-                  <div style={{ marginBottom: method !== 'pix' ? 24 : 20 }}>
+                  <div style={{ marginBottom: 14 }}>
                     <label style={lbl}>CPF *</label>
                     <input required value={cpf} onChange={e => setCpf(e.target.value)} style={inp} placeholder="000.000.000-00" maxLength={18} />
+                  </div>
+                  <div style={{ marginBottom: method !== 'pix' ? 24 : 20 }}>
+                    <label style={lbl}>Celular / WhatsApp *</label>
+                    <input
+                      required
+                      type="tel"
+                      value={phone}
+                      onChange={e => {
+                        const v = e.target.value.replace(/\D/g, '').slice(0, 11)
+                        const f = v.length > 10 ? `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`
+                          : v.length > 6 ? `(${v.slice(0, 2)}) ${v.slice(2, 6)}-${v.slice(6)}`
+                            : v.length > 2 ? `(${v.slice(0, 2)}) ${v.slice(2)}`
+                              : v
+                        setPhone(f)
+                      }}
+                      style={inp}
+                      placeholder="(00) 00000-0000"
+                      maxLength={16}
+                    />
                   </div>
 
                   {/* Formulário de cartão */}

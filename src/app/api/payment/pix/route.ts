@@ -7,9 +7,9 @@ import { priceOrder } from '@/lib/pricing'
 
 export async function POST(req: NextRequest) {
   try {
-    const { order_id, buyer_name, buyer_email, buyer_cpf, coupon_code } = await req.json()
+    const { order_id, buyer_name, buyer_email, buyer_cpf, buyer_phone, coupon_code } = await req.json()
 
-    if (!order_id || !buyer_name || !buyer_email || !buyer_cpf) {
+    if (!order_id || !buyer_name || !buyer_email || !buyer_cpf || !buyer_phone) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 })
     }
 
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
 
     if (asaasConfigured()) {
       try {
-        const customerId = await findOrCreateCustomer({ name: buyer_name, cpf: buyer_cpf, email: buyer_email })
+        const customerId = await findOrCreateCustomer({ name: buyer_name, cpf: buyer_cpf, email: buyer_email, phone: buyer_phone })
         const pix = await createPixPayment({
           customerId,
           value:       amount,
@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
       buyer_name,
       buyer_email,
       buyer_cpf,
+      buyer_whatsapp:    buyer_phone,
       payment_method:    'pix',
       payment_fee:       pricing.processingFee,
       face_total:        pricing.faceTotal,
