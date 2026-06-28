@@ -26,8 +26,8 @@ function fmt(n: number) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export default async function MeusIngressosPage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
-  const { t } = await searchParams
+export default async function MeusIngressosPage({ searchParams }: { searchParams: Promise<{ t?: string; expired?: string }> }) {
+  const { t, expired } = await searchParams
 
   // Acesso 1: token assinado do e-mail de confirmação (vale até o evento).
   let email: string | null = null
@@ -47,7 +47,7 @@ export default async function MeusIngressosPage({ searchParams }: { searchParams
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', flexDirection: 'column' }}>
         <SiteHeader />
         <div style={{ maxWidth: 460, margin: '0 auto', padding: '48px 20px', width: '100%', flex: 1, boxSizing: 'border-box' }}>
-          <IngressosLogin expired={acc.expired} />
+          <IngressosLogin expired={acc.expired || expired === '1'} />
         </div>
         <SiteFooter />
       </div>
