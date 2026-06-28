@@ -35,6 +35,7 @@ interface TicketEmailParams {
     qrCode: string     // texto do QR
   }>
   orderId: string
+  accessUrl?: string  // link assinado "Acessar meus ingressos" (acesso seguro)
 }
 
 /** Tenta `fn` até `maxAttempts` vezes com backoff linear de 500ms entre tentativas. */
@@ -196,6 +197,14 @@ function buildEmailHtml(params: TicketEmailParams): string {
             </div>
           </td>
         </tr>
+
+        ${params.accessUrl ? `
+        <tr>
+          <td style="background:#ffffff;padding:0 32px 24px;border-left:1px solid #D8DACF;border-right:1px solid #D8DACF;text-align:center;">
+            <a href="${params.accessUrl}" style="display:inline-block;background:#1F6B4E;color:#F4F3EC;text-decoration:none;font-size:15px;font-weight:700;padding:14px 30px;border-radius:10px;">Acessar meus ingressos</a>
+            <p style="margin:10px 0 0;font-size:12px;color:rgba(26,33,27,0.5);line-height:1.5;">Acesse seus ingressos com segurança, a qualquer momento.</p>
+          </td>
+        </tr>` : ''}
 
         <tr>
           <td style="background:#ffffff;padding:0 32px 32px;border-left:1px solid #D8DACF;border-right:1px solid #D8DACF;">

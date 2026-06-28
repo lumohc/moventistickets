@@ -4,6 +4,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { sendTicketEmail } from '@/lib/email'
 import { generateQRDataURL } from '@/lib/generate-qr'
 import { signTicket } from '@/lib/ticket-signing'
+import { signAccess, accessExpFromEvent } from '@/lib/access-token'
 
 interface OrderSeat {
   seat_id: string
@@ -92,6 +93,30 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
   await admin.from('orders').update({ status: 'paid' }).eq('id', order.id)
   await admin.from('reservations').delete().eq('order_id', order.id)
 
+  // Base de clientes (marketing) + conta passwordless "por trás" + consentimento.
+  // NÃO bloqueia a confirmação — o cliente já pagou. Falhas só logam.
+  if (order.buyer_email) {
+    const custEmail = String(order.buyer_email).trim().toLowerCase()
+    const customerRow: Record<string, unknown> = {
+      email: custEmail,
+      name:  order.buyer_name ?? null,
+      phone: order.buyer_whatsapp ?? null,
+    }
+    // Só promove o opt-in quando consentiu NESTA compra — nunca rebaixa um sim anterior.
+    if (order.marketing_opt_in) {
+      customerRow.marketing_opt_in = true
+      customerRow.marketing_consent_at = order.marketing_consent_at ?? new Date().toISOString()
+      customerRow.consent_version = 'v1'
+    }
+    const { error: custErr } = await admin.from('customers').upsert(customerRow, { onConflict: 'email' })
+    if (custErr) console.warn(`[orders] base de clientes não gravada (rode a v12): ${custErr.message}`)
+
+    // Conta do comprador (passwordless) — habilita o magic link "Entrar". Idempotente.
+    try {
+      await admin.auth.admin.createUser({ email: custEmail, email_confirm: true })
+    } catch { /* já existe — segue */ }
+  }
+
   // E-mail com os ingressos REALMENTE persistidos (relê do banco, não confia
   // no array em memória).
   const { data: tickets } = await admin
@@ -109,6 +134,11 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
           month: 'long',
         }) + (ev.event_time ? ` às ${String(ev.event_time).slice(0, 5)}` : '')
       : '—'
+
+    // Link assinado longo (vale até o evento) pro botão "Acessar meus ingressos".
+    const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://moventistickets.com.br'
+    const accessToken = signAccess(order.buyer_email, accessExpFromEvent(ev?.event_date))
+    const accessUrl = accessToken ? `${SITE}/ingressos?t=${encodeURIComponent(accessToken)}` : undefined
 
     const emailTickets = await Promise.all(
       tickets.map(async (t: { seat_name: string; group_name: string; ticket_type: string; qr_code: string; holder_name: string | null }) => ({
@@ -129,6 +159,7 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
       venueName: venue?.name ?? '',
       tickets: emailTickets,
       orderId: order.id,
+      accessUrl,
     }).catch((err) => {
       // ATENÇÃO: pedido já está pago e ingressos já emitidos — o cliente pagou.
       // Falha de e-mail NÃO reverte a confirmação, mas DEVE ser investigada.

@@ -93,6 +93,9 @@ function CheckoutContent() {
   const [email, setEmail] = useState('')
   const [cpf,   setCpf]   = useState('')
   const [phone, setPhone] = useState('')
+  // Consentimento de marketing (opt-in, NÃO pré-marcado) + token de acesso pós-compra
+  const [marketingOptIn, setMarketingOptIn] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   // Nomes dos titulares (1 por ingresso). holders[0] = comprador quando "sou eu".
   const [holders, setHolders] = useState<string[]>([])
   // Índice do ingresso marcado como "sou eu" (recebe o nome do comprador). null = nenhum.
@@ -270,6 +273,7 @@ function CheckoutContent() {
         buyer_phone: phone.replace(/\D/g, ''),
         seat_holders: seatHolders,
         coupon_code: couponApplied?.code ?? undefined,
+        marketing_opt_in: marketingOptIn,
       }),
     })
     const json = await res.json()
@@ -282,6 +286,7 @@ function CheckoutContent() {
         pix_expires_at: json.pix_expires_at,
         buyer_total:    json.buyer_total ?? pricing.buyerTotal,
       })
+      setAccessToken(json.access_token ?? null)
       setStep('payment')
     }
   }
@@ -306,12 +311,14 @@ function CheckoutContent() {
         card_cvv:           cardCvv,
         card_postal_code:   cardPostal.replace(/\D/g, ''),
         coupon_code:        couponApplied?.code ?? undefined,
+        marketing_opt_in:   marketingOptIn,
       }),
     })
     const json = await res.json()
     if (!res.ok || !json.ok) {
       setFormErr(json.error || 'Erro ao processar o cartão. Verifique os dados e tente novamente.')
     } else {
+      setAccessToken(json.access_token ?? null)
       setConfirmed(true)
       setStep('payment')
     }
@@ -525,6 +532,12 @@ function CheckoutContent() {
                     />
                   </div>
 
+                  {/* Consentimento de marketing (LGPD) — opt-in, NÃO pré-marcado */}
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 18, fontSize: '0.82rem', color: C.muted, cursor: 'pointer', lineHeight: 1.5 }}>
+                    <input type="checkbox" checked={marketingOptIn} onChange={e => setMarketingOptIn(e.target.checked)} style={{ marginTop: 2, flexShrink: 0, width: 16, height: 16 }} />
+                    Quero receber novidades e ofertas da Moventis por e-mail.
+                  </label>
+
                   {/* Nomes nos ingressos */}
                   {session && session.seats.length > 0 && (
                     <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 18, marginBottom: method !== 'pix' ? 8 : 4 }}>
@@ -659,7 +672,7 @@ function CheckoutContent() {
                   <p style={{ fontSize: '0.88rem', color: C.muted, lineHeight: 1.6 }}>
                     Enviamos seus ingressos para <strong style={{ color: C.text }}>{email || 'seu e-mail'}</strong>.
                   </p>
-                  <a href={`/pedido/${sessionId}`} style={{ display: 'inline-block', marginTop: 20, padding: '12px 22px', background: C.green, color: '#fff', borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, textDecoration: 'none' }}>
+                  <a href={`/pedido/${sessionId}${accessToken ? `?t=${encodeURIComponent(accessToken)}` : ''}`} style={{ display: 'inline-block', marginTop: 20, padding: '12px 22px', background: C.green, color: '#fff', borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, textDecoration: 'none' }}>
                     Ver meus ingressos →
                   </a>
                 </div>
@@ -713,7 +726,7 @@ function CheckoutContent() {
                 </div>
 
                 <div style={{ marginTop: 20, textAlign: 'center' }}>
-                  <a href={`/pedido/${sessionId}`} style={{ fontSize: '0.85rem', color: C.green, textDecoration: 'none', fontWeight: 600 }}>
+                  <a href={`/pedido/${sessionId}${accessToken ? `?t=${encodeURIComponent(accessToken)}` : ''}`} style={{ fontSize: '0.85rem', color: C.green, textDecoration: 'none', fontWeight: 600 }}>
                     Ver meu pedido →
                   </a>
                 </div>

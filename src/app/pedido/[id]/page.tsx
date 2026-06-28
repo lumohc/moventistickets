@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
-import { createSupabaseAdmin } from '@/lib/supabase-server'
+import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
+import { verifyAccess } from '@/lib/access-token'
 import { generateQRDataURL } from '@/lib/generate-qr'
 import PixPaymentCard from '@/components/PixPaymentCard'
 import TicketActions from '@/components/pedido/TicketActions'
-import { CheckCircle2, Clock, XCircle, Ticket, Calendar, MapPin } from 'lucide-react'
+import { CheckCircle2, Clock, XCircle, Ticket, Calendar, MapPin, Lock } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -18,8 +19,9 @@ function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
 }
 
-export default async function PedidoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PedidoPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ t?: string }> }) {
   const { id } = await params
+  const { t } = await searchParams
   const admin = createSupabaseAdmin()
 
   const { data: order } = await admin
@@ -29,6 +31,33 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
     .single()
 
   if (!order) notFound()
+
+  // Acesso seguro: só o dono — via token assinado do e-mail OU sessão (magic link).
+  const buyerEmail = String(order.buyer_email || '').toLowerCase()
+  let authorized = false
+  const acc = verifyAccess(t)
+  if (acc.valid && acc.email && acc.email === buyerEmail) authorized = true
+  if (!authorized) {
+    const sb = await createSupabaseServerClient()
+    const { data: { user } } = await sb.auth.getUser()
+    if (user?.email && user.email.toLowerCase() === buyerEmail) authorized = true
+  }
+  if (!authorized) {
+    return (
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ maxWidth: 420, width: '100%', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 32px', textAlign: 'center' }}>
+          <p style={{ marginBottom: 12 }}><Lock size={38} color={C.esmeralda} strokeWidth={1.5} /></p>
+          <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: C.text, marginBottom: 8 }}>Acesso protegido</h1>
+          <p style={{ fontSize: '0.9rem', color: C.muted, lineHeight: 1.6, marginBottom: 20 }}>
+            Para ver os ingressos deste pedido, entre com o e-mail usado na compra.
+          </p>
+          <a href="/ingressos" style={{ display: 'inline-block', padding: '12px 28px', background: C.green, color: '#fff', borderRadius: 10, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
+            Entrar para ver
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const isPaid     = order.status === 'paid'
   const isPending  = order.status === 'pending_payment'
