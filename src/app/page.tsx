@@ -74,7 +74,7 @@ export default async function HomePage() {
                       <p style={{ fontSize: '0.72rem', color: C.muted }}>{venue?.name ?? '—'}, {venue?.city ?? ''}</p>
                       {priceFace && (
                         <p style={{ fontSize: '0.8rem', fontWeight: 700, color: C.green, marginTop: 6 }}>
-                          a partir de R$ {ev.half_price ? (priceFace / 2).toFixed(2) : priceFace.toFixed(2)}
+                          a partir de R$ {(ev.half_price ? priceFace / 2 : priceFace).toFixed(2).replace('.', ',')}
                         </p>
                       )}
                     </div>

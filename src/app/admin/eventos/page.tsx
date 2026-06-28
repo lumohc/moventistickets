@@ -169,7 +169,7 @@ export default function AdminEventosPage() {
                   <p style={{ fontSize: '0.8rem', color: C.muted }}>{fmtDate(ev.event_date)}</p>
                   <p style={{ fontSize: '0.8rem', color: C.muted }}>{CAT_LABEL[ev.category ?? ''] ?? '—'}</p>
                   <p style={{ fontSize: '0.8rem', color: C.text, fontWeight: 500 }}>
-                    {ev.price_face ? `R$ ${Number(ev.price_face).toFixed(2)}` : '—'}
+                    {ev.price_face ? `R$ ${Number(ev.price_face).toFixed(2).replace('.', ',')}` : '—'}
                     {ev.half_price ? ' ½' : ''}
                   </p>
                   <span style={{
@@ -210,7 +210,7 @@ export default function AdminEventosPage() {
                   { label: 'Data',      value: fmtDate(selected.event_date) },
                   { label: 'Categoria', value: CAT_LABEL[selected.category ?? ''] ?? '—' },
                   { label: 'Faixa etária', value: selected.age_rating === 'livre' ? 'Livre' : `${selected.age_rating} anos` },
-                  { label: 'Preço face', value: selected.price_face ? `R$ ${Number(selected.price_face).toFixed(2)}${selected.half_price ? ' + meia-entrada' : ''}` : '—' },
+                  { label: 'Preço face', value: selected.price_face ? `R$ ${Number(selected.price_face).toFixed(2).replace('.', ',')}${selected.half_price ? ' + meia-entrada' : ''}` : '—' },
                 ].map(r => (
                   <div key={r.label}>
                     <p style={{ fontSize: '0.72rem', color: C.muted }}>{r.label}</p>

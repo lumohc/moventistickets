@@ -81,14 +81,14 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
   // Monta lista de preços
   const prices: { label: string; value: string }[] = []
   if (priceFace) {
-    prices.push({ label: 'Inteira', value: `R$ ${priceFace.toFixed(2)}` })
-    if (event.half_price) prices.push({ label: 'Meia-entrada', value: `R$ ${(priceFace / 2).toFixed(2)}` })
+    prices.push({ label: 'Inteira', value: `R$ ${priceFace.toFixed(2).replace('.', ',')}` })
+    if (event.half_price) prices.push({ label: 'Meia-entrada', value: `R$ ${(priceFace / 2).toFixed(2).replace('.', ',')}` })
   } else if (event.prices && typeof event.prices === 'object') {
     Object.entries(event.prices as Record<string, number>).forEach(([k, v]) => {
       const [group, type] = k.split('|')
       prices.push({
         label: `${group.charAt(0).toUpperCase() + group.slice(1)} — ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-        value: `R$ ${Number(v).toFixed(2)}`,
+        value: `R$ ${Number(v).toFixed(2).replace('.', ',')}`,
       })
     })
   }

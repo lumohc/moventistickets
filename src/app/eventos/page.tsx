@@ -153,7 +153,7 @@ export default async function EventosPage({ searchParams }: { searchParams: Prom
                             <>
                               <p style={{ fontSize: '0.68rem', color: C.muted, marginBottom: 1 }}>a partir de</p>
                               <p style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text }}>
-                                R$ {ev.half_price ? (priceFace / 2).toFixed(2) : priceFace.toFixed(2)}
+                                R$ {(ev.half_price ? priceFace / 2 : priceFace).toFixed(2).replace('.', ',')}
                               </p>
                             </>
                           ) : (
