@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import { X, CircleCheck, Ban } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -188,7 +189,7 @@ export default function AdminProdutoresPage() {
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', position: 'sticky', top: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                 <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text }}>{selected.name}</h2>
-                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, fontSize: '1.2rem', padding: 0 }}>✕</button>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 0, display: 'inline-flex' }} aria-label="Fechar"><X size={20} strokeWidth={1.5} /></button>
               </div>
 
               {msg && (
@@ -259,9 +260,10 @@ export default function AdminProdutoresPage() {
                         flex: 1, padding: '10px 0', background: C.green, color: '#fff',
                         border: 'none', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600,
                         cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}
                     >
-                      ✅ Aprovar
+                      <CircleCheck size={16} strokeWidth={1.5} /> Aprovar
                     </button>
                   )}
                   {selected.status !== 'suspended' && (
@@ -273,9 +275,10 @@ export default function AdminProdutoresPage() {
                         border: '1px solid rgba(244,67,54,0.25)', borderRadius: 8,
                         fontSize: '0.85rem', fontWeight: 600,
                         cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}
                     >
-                      ⛔ Suspender
+                      <Ban size={16} strokeWidth={1.5} /> Suspender
                     </button>
                   )}
                   {selected.status !== 'pending' && (

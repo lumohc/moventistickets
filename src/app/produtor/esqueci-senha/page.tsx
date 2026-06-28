@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { Mail } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -52,7 +53,7 @@ export default function EsqueciSenhaPage() {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 32, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           {sent ? (
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '2.5rem', marginBottom: 16 }}>📧</p>
+              <p style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Mail size={44} strokeWidth={1.5} color={C.green} /></p>
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text, marginBottom: 10 }}>E-mail enviado!</h2>
               <p style={{ fontSize: '0.875rem', color: C.muted, lineHeight: 1.6, marginBottom: 24 }}>
                 Se esse e-mail está cadastrado, você receberá um link para redefinir sua senha em breve. Verifique também a pasta de spam.

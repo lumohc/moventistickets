@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { Pencil, Image as ImageIcon, Clock } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -89,9 +90,10 @@ export default function PosterUpload({ eventId, currentUrl, onUploaded }: Props)
               color: '#fff', border: 'none', borderRadius: 8,
               fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
               backdropFilter: 'blur(4px)',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
             }}
           >
-            ✏️ Trocar
+            <Pencil size={14} strokeWidth={1.5} /> Trocar
           </button>
         </div>
       ) : (
@@ -108,7 +110,7 @@ export default function PosterUpload({ eventId, currentUrl, onUploaded }: Props)
           onMouseEnter={e => (e.currentTarget.style.borderColor = C.green)}
           onMouseLeave={e => (e.currentTarget.style.borderColor = C.border)}
         >
-          <p style={{ fontSize: '2rem', marginBottom: 8 }}>🖼️</p>
+          <p style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><ImageIcon size={32} strokeWidth={1.5} color={C.muted} /></p>
           <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text, marginBottom: 4 }}>
             {uploading ? 'Enviando…' : 'Clique ou arraste uma imagem aqui'}
           </p>
@@ -125,7 +127,7 @@ export default function PosterUpload({ eventId, currentUrl, onUploaded }: Props)
       />
 
       {uploading && (
-        <p style={{ fontSize: '0.8rem', color: C.muted }}>⏳ Enviando imagem…</p>
+        <p style={{ fontSize: '0.8rem', color: C.muted, display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} strokeWidth={1.5} /> Enviando imagem…</p>
       )}
 
       {error && (

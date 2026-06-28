@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
+import { Ticket, Banknote, FileText, Clock, Lightbulb } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -87,10 +88,10 @@ export default async function VendasPage({ params }: { params: { id: string } })
         {/* Cards de resumo */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
-            { icon: '🎟️', value: totalIngressos,          label: 'Ingressos vendidos',   highlight: false },
-            { icon: '💰', value: fmt(totalRepasse),        label: 'Você vai receber',      highlight: true  },
-            { icon: '🧾', value: fmt(totalTaxas),          label: 'Taxas Moventis',        highlight: false },
-            { icon: '⏳', value: (orders ?? []).filter((o: any) => o.status === 'pending_payment').length, label: 'Aguardando pagto', highlight: false },
+            { Icon: Ticket,   value: totalIngressos,          label: 'Ingressos vendidos',   highlight: false },
+            { Icon: Banknote, value: fmt(totalRepasse),        label: 'Você vai receber',      highlight: true  },
+            { Icon: FileText, value: fmt(totalTaxas),          label: 'Taxas Moventis',        highlight: false },
+            { Icon: Clock,    value: (orders ?? []).filter((o: any) => o.status === 'pending_payment').length, label: 'Aguardando pagto', highlight: false },
           ].map(card => (
             <div key={card.label} style={{
               background: card.highlight ? C.green : C.surface,
@@ -98,7 +99,7 @@ export default async function VendasPage({ params }: { params: { id: string } })
               borderRadius: 14, padding: '20px 22px',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
-              <p style={{ fontSize: '1.4rem', marginBottom: 6 }}>{card.icon}</p>
+              <p style={{ marginBottom: 6 }}><card.Icon size={22} strokeWidth={1.5} color={card.highlight ? '#fff' : C.green} /></p>
               <p style={{ fontSize: '1.6rem', fontWeight: 700, color: card.highlight ? '#fff' : C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
               <p style={{ fontSize: '0.78rem', color: card.highlight ? 'rgba(255,255,255,0.75)' : C.muted, marginTop: 2 }}>{card.label}</p>
             </div>
@@ -175,8 +176,9 @@ export default async function VendasPage({ params }: { params: { id: string } })
           marginTop: 20, padding: '14px 20px',
           background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.15)',
           borderRadius: 10, fontSize: '0.8rem', color: C.muted,
+          display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          💡 Os valores de repasse são processados após o encerramento do evento. Dúvidas? Fale com a equipe Moventis.
+          <Lightbulb size={16} strokeWidth={1.5} /> Os valores de repasse são processados após o encerramento do evento. Dúvidas? Fale com a equipe Moventis.
         </div>
       </main>
     </div>

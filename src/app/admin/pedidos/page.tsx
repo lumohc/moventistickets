@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import { CircleCheck, CircleX, RotateCw, Lightbulb } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -26,7 +27,7 @@ export default function AdminPedidosPage() {
   const [orders, setOrders]     = useState<any[]>([])
   const [loading, setLoading]   = useState(true)
   const [simulating, setSimulating] = useState<string | null>(null)
-  const [msg, setMsg]           = useState<string | null>(null)
+  const [msg, setMsg]           = useState<{ type: 'ok' | 'error'; text: string } | null>(null)
 
   async function loadOrders() {
     const res  = await fetch('/api/painel/orders?limit=100')
@@ -45,11 +46,11 @@ export default function AdminPedidosPage() {
       body: JSON.stringify({ order_id: orderId, status: 'paid' }),
     })
     if (res.ok) {
-      setMsg('✅ Pedido marcado como pago!')
+      setMsg({ type: 'ok', text: 'Pedido marcado como pago!' })
       await loadOrders()
     } else {
       const j = await res.json()
-      setMsg('❌ ' + (j.error ?? 'Erro'))
+      setMsg({ type: 'error', text: j.error ?? 'Erro' })
     }
     setSimulating(null)
     setTimeout(() => setMsg(null), 3000)
@@ -68,8 +69,11 @@ export default function AdminPedidosPage() {
         </div>
 
         {msg && (
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 18px', marginBottom: 16, fontSize: '0.9rem', color: C.text }}>
-            {msg}
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 18px', marginBottom: 16, fontSize: '0.9rem', color: C.text, display: 'flex', alignItems: 'center', gap: 8 }}>
+            {msg.type === 'ok'
+              ? <CircleCheck size={18} strokeWidth={1.5} color={C.green} />
+              : <CircleX size={18} strokeWidth={1.5} color="#c0392b" />}
+            {msg.text}
           </div>
         )}
 
@@ -79,8 +83,8 @@ export default function AdminPedidosPage() {
             <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text }}>
               {loading ? 'Carregando…' : `${orders.length} pedido(s)`}
             </h2>
-            <button onClick={loadOrders} style={{ fontSize: '0.8rem', color: C.green, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-              ↻ Atualizar
+            <button onClick={loadOrders} style={{ fontSize: '0.8rem', color: C.green, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <RotateCw size={15} strokeWidth={1.5} /> Atualizar
             </button>
           </div>
 
@@ -145,9 +149,10 @@ export default function AdminPedidosPage() {
                         border: 'none', borderRadius: 8, fontSize: '0.78rem',
                         fontWeight: 600, cursor: simulating === o.id ? 'not-allowed' : 'pointer',
                         opacity: simulating === o.id ? 0.6 : 1, whiteSpace: 'nowrap',
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
                       }}
                     >
-                      {simulating === o.id ? '…' : '✅ Simular Pago'}
+                      {simulating === o.id ? '…' : <><CircleCheck size={15} strokeWidth={1.5} /> Simular Pago</>}
                     </button>
                   )}
                   <a
@@ -179,8 +184,8 @@ export default function AdminPedidosPage() {
           })}
         </div>
 
-        <p style={{ marginTop: 20, fontSize: '0.78rem', color: C.muted }}>
-          💡 Em produção, o status muda automaticamente via webhook do Asaas.
+        <p style={{ marginTop: 20, fontSize: '0.78rem', color: C.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Lightbulb size={15} strokeWidth={1.5} /> Em produção, o status muda automaticamente via webhook do Asaas.
         </p>
       </main>
     </div>

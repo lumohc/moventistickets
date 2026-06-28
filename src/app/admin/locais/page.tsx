@@ -1,5 +1,6 @@
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import { Landmark } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -49,7 +50,7 @@ export default async function AdminLocaisPage() {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
           {!venues || venues.length === 0 ? (
             <div style={{ padding: '60px 32px', textAlign: 'center' }}>
-              <p style={{ fontSize: '2rem', marginBottom: 12 }}>🏛️</p>
+              <p style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Landmark size={40} strokeWidth={1.5} color={C.muted} /></p>
               <p style={{ fontWeight: 600, color: C.text, marginBottom: 6 }}>Nenhum local cadastrado ainda</p>
               <p style={{ fontSize: '0.875rem', color: C.muted, marginBottom: 24 }}>
                 Cadastre o TAC, Pedro Ivo e Ademir Rosa para reutilizar em todos os eventos.

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
+import { Hand, Clock, CalendarDays, CircleCheck, Banknote } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -58,8 +59,8 @@ export default async function DashboardPage() {
       <main style={{ flex: 1, marginLeft: 220, padding: '40px 36px' }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
-            Olá, {producer.name.split(' ')[0]} 👋
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            Olá, {producer.name.split(' ')[0]} <Hand size={22} strokeWidth={1.5} color={C.green} />
           </h1>
           <p style={{ color: C.muted, fontSize: '0.9rem', marginTop: 4 }}>
             {producer.status === 'pending'
@@ -77,7 +78,7 @@ export default async function DashboardPage() {
             borderRadius: 12, padding: '14px 20px', marginBottom: 28,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <span style={{ fontSize: '1.2rem' }}>⏳</span>
+            <span style={{ display: 'inline-flex' }}><Clock size={20} strokeWidth={1.5} color="#92610a" /></span>
             <div>
               <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#92610a' }}>Cadastro em análise</p>
               <p style={{ fontSize: '0.8rem', color: '#a07020', marginTop: 2 }}>
@@ -90,16 +91,16 @@ export default async function DashboardPage() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
-            { label: 'Eventos criados',  value: totalEvents  ?? 0, icon: '🎭' },
-            { label: 'Vendas confirmadas', value: totalOrders ?? 0, icon: '✅' },
-            { label: 'A receber (face)',  value: fmt(totalReceita),  icon: '💰' },
+            { label: 'Eventos criados',  value: totalEvents  ?? 0, Icon: CalendarDays },
+            { label: 'Vendas confirmadas', value: totalOrders ?? 0, Icon: CircleCheck },
+            { label: 'A receber (face)',  value: fmt(totalReceita),  Icon: Banknote },
           ].map(stat => (
             <div key={stat.label} style={{
               background: C.surface, border: `1px solid ${C.border}`,
               borderRadius: 14, padding: '22px 24px',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
-              <p style={{ fontSize: '1.5rem', marginBottom: 6 }}>{stat.icon}</p>
+              <p style={{ marginBottom: 6 }}><stat.Icon size={24} strokeWidth={1.5} color={C.green} /></p>
               <p style={{ fontSize: '1.8rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
                 {stat.value}
               </p>

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { ChevronUp, ChevronDown, ArrowLeft } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -188,8 +189,8 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
                       </p>
                     </div>
                     <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, -1) }} title="Mover para cima" style={arrowBtn} disabled={i === 0}>↑</button>
-                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, 1) }} title="Mover para baixo" style={arrowBtn} disabled={i === areas.length - 1}>↓</button>
+                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, -1) }} title="Mover para cima" style={arrowBtn} disabled={i === 0}><ChevronUp size={14} strokeWidth={1.5} /></button>
+                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, 1) }} title="Mover para baixo" style={arrowBtn} disabled={i === areas.length - 1}><ChevronDown size={14} strokeWidth={1.5} /></button>
                     </div>
                   </div>
                 </div>
@@ -218,7 +219,7 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
         <div>
           {!sel ? (
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '60px 32px', textAlign: 'center', color: C.muted }}>
-              <p style={{ fontSize: '1.5rem', marginBottom: 12 }}>←</p>
+              <p style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><ArrowLeft size={24} strokeWidth={1.5} color={C.muted} /></p>
               <p style={{ fontWeight: 600, color: C.text, marginBottom: 6 }}>Selecione um setor</p>
               <p style={{ fontSize: '0.875rem' }}>Ou clique em "+ Setor" para criar um novo.</p>
             </div>

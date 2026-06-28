@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
 import SalesChart from '@/components/produtor/SalesChart'
+import { Banknote, FileText, CircleCheck } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -75,9 +76,9 @@ export default async function FinanceiroPage() {
         {/* Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
-            { icon: '💰', label: 'Você vai receber',   value: fmt(totalRepasse), highlight: true  },
-            { icon: '🧾', label: 'Taxas Moventis',     value: fmt(totalTaxas),   highlight: false },
-            { icon: '✅', label: 'Pedidos pagos',      value: paidOrders?.length ?? 0, highlight: false },
+            { Icon: Banknote,    label: 'Você vai receber',   value: fmt(totalRepasse), highlight: true  },
+            { Icon: FileText,    label: 'Taxas Moventis',     value: fmt(totalTaxas),   highlight: false },
+            { Icon: CircleCheck, label: 'Pedidos pagos',      value: paidOrders?.length ?? 0, highlight: false },
           ].map(card => (
             <div key={card.label} style={{
               background: card.highlight ? C.green : C.surface,
@@ -85,7 +86,7 @@ export default async function FinanceiroPage() {
               borderRadius: 14, padding: '22px 24px',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
-              <p style={{ fontSize: '1.5rem', marginBottom: 6 }}>{card.icon}</p>
+              <p style={{ marginBottom: 6 }}><card.Icon size={24} strokeWidth={1.5} color={card.highlight ? '#fff' : C.green} /></p>
               <p style={{ fontSize: '1.6rem', fontWeight: 700, color: card.highlight ? '#fff' : C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
               <p style={{ fontSize: '0.78rem', color: card.highlight ? 'rgba(255,255,255,0.75)' : C.muted, marginTop: 2 }}>{card.label}</p>
             </div>

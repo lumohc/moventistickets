@@ -1,5 +1,6 @@
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import { Building2, CalendarDays, Megaphone, CircleCheck, Banknote, TriangleAlert } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -34,11 +35,11 @@ export default async function AdminDashboard() {
   const totalReceita = (revenueData ?? []).reduce((s: number, o: any) => s + Number(o.service_fee_total), 0)
 
   const stats = [
-    { icon: '🏢', label: 'Produtores',    value: totalProdutores ?? 0,   alert: pendingProdutores ? `${pendingProdutores} aguardando` : null, href: '/admin/produtores' },
-    { icon: '🎭', label: 'Eventos',       value: totalEventos ?? 0,      alert: pendingEventos ? `${pendingEventos} em análise` : null,   href: '/admin/eventos' },
-    { icon: '📢', label: 'Publicados',    value: publishedEventos ?? 0,  alert: null, href: '/admin/eventos?status=published' },
-    { icon: '✅', label: 'Pedidos pagos', value: totalOrders ?? 0,       alert: null, href: '/admin/financeiro' },
-    { icon: '💰', label: 'Taxa gerada',   value: fmt(totalReceita),      alert: null, href: '/admin/financeiro' },
+    { Icon: Building2,    label: 'Produtores',    value: totalProdutores ?? 0,   alert: pendingProdutores ? `${pendingProdutores} aguardando` : null, href: '/admin/produtores' },
+    { Icon: CalendarDays, label: 'Eventos',       value: totalEventos ?? 0,      alert: pendingEventos ? `${pendingEventos} em análise` : null,   href: '/admin/eventos' },
+    { Icon: Megaphone,    label: 'Publicados',    value: publishedEventos ?? 0,  alert: null, href: '/admin/eventos?status=published' },
+    { Icon: CircleCheck,  label: 'Pedidos pagos', value: totalOrders ?? 0,       alert: null, href: '/admin/financeiro' },
+    { Icon: Banknote,     label: 'Taxa gerada',   value: fmt(totalReceita),      alert: null, href: '/admin/financeiro' },
   ]
 
   // Produtores recentes em análise
@@ -81,12 +82,12 @@ export default async function AdminDashboard() {
                 boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
                 transition: 'box-shadow 0.15s',
               }}>
-                <p style={{ fontSize: '1.4rem', marginBottom: 6 }}>{s.icon}</p>
+                <p style={{ marginBottom: 6 }}><s.Icon size={22} strokeWidth={1.5} color={C.green} /></p>
                 <p style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>{s.value}</p>
                 <p style={{ fontSize: '0.78rem', color: C.muted, marginTop: 2 }}>{s.label}</p>
                 {s.alert && (
-                  <p style={{ fontSize: '0.72rem', color: '#92610a', background: 'rgba(255,193,7,0.12)', borderRadius: 6, padding: '2px 8px', marginTop: 8, display: 'inline-block', fontWeight: 600 }}>
-                    ⚠ {s.alert}
+                  <p style={{ fontSize: '0.72rem', color: '#92610a', background: 'rgba(255,193,7,0.12)', borderRadius: 6, padding: '2px 8px', marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                    <TriangleAlert size={13} strokeWidth={1.5} /> {s.alert}
                   </p>
                 )}
               </div>
@@ -102,7 +103,7 @@ export default async function AdminDashboard() {
               <a href="/admin/produtores" style={{ fontSize: '0.78rem', color: C.green, textDecoration: 'none', fontWeight: 600 }}>Ver todos →</a>
             </div>
             {(!prodPending || prodPending.length === 0) ? (
-              <p style={{ padding: '24px 22px', color: C.muted, fontSize: '0.875rem' }}>Nenhum pendente. ✅</p>
+              <p style={{ padding: '24px 22px', color: C.muted, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 6 }}>Nenhum pendente. <CircleCheck size={16} strokeWidth={1.5} color={C.green} /></p>
             ) : (
               prodPending.map((p: any, i: number) => (
                 <a key={p.id} href={`/admin/produtores?id=${p.id}`} style={{ textDecoration: 'none', display: 'block' }}>
@@ -125,7 +126,7 @@ export default async function AdminDashboard() {
               <a href="/admin/eventos" style={{ fontSize: '0.78rem', color: C.green, textDecoration: 'none', fontWeight: 600 }}>Ver todos →</a>
             </div>
             {(!evPending || evPending.length === 0) ? (
-              <p style={{ padding: '24px 22px', color: C.muted, fontSize: '0.875rem' }}>Nenhum pendente. ✅</p>
+              <p style={{ padding: '24px 22px', color: C.muted, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 6 }}>Nenhum pendente. <CircleCheck size={16} strokeWidth={1.5} color={C.green} /></p>
             ) : (
               evPending.map((ev: any, i: number) => (
                 <a key={ev.id} href={`/admin/eventos?id=${ev.id}`} style={{ textDecoration: 'none', display: 'block' }}>
