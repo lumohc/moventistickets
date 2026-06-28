@@ -35,7 +35,7 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
 
   const { data: order } = await admin
     .from('orders')
-    .select('*, events(id, name, event_date, event_time, venues(name))')
+    .select('*, events(id, name, event_date, event_time, venue_name, city, duration_min, venues(name, address, city))')
     .eq('id', orderId)
     .single()
 
@@ -139,61 +139,137 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
     }
   }
 
-  // E-mail com os ingressos REALMENTE persistidos (relê do banco, não confia
-  // no array em memória).
-  const { data: tickets } = await admin
-    .from('tickets')
-    .select('seat_name, group_name, ticket_type, qr_code, holder_name')
-    .eq('order_id', order.id)
-
-  const ev = order.events
-  const venue = ev?.venues
-  if (order.buyer_email && tickets && tickets.length > 0) {
-    const dateStr = ev?.event_date
-      ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-        }) + (ev.event_time ? ` às ${String(ev.event_time).slice(0, 5)}` : '')
-      : '—'
-
-    // Link assinado longo (vale até o evento) pro botão "Acessar meus ingressos".
-    const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://moventistickets.com.br'
-    const accessToken = signAccess(order.buyer_email, accessExpFromEvent(ev?.event_date))
-    const accessUrl = accessToken ? `${SITE}/ingressos?t=${encodeURIComponent(accessToken)}` : undefined
-
-    const emailTickets = await Promise.all(
-      tickets.map(async (t: { seat_name: string; group_name: string; ticket_type: string; qr_code: string; holder_name: string | null }) => ({
-        seatName: t.seat_name,
-        groupName: t.group_name,
-        ticketType: t.ticket_type,
-        holderName: t.holder_name ?? undefined,
-        qrCode: t.qr_code,
-        qrDataUrl: await generateQRDataURL(t.qr_code),
-      })),
-    )
-
-    await sendTicketEmail({
-      to: order.buyer_email,
-      buyerName: order.buyer_name ?? 'Cliente',
-      eventName: ev?.name ?? 'Evento',
-      eventDate: dateStr,
-      venueName: venue?.name ?? '',
-      tickets: emailTickets,
-      orderId: order.id,
-      accessUrl,
-    }).catch((err) => {
-      // ATENÇÃO: pedido já está pago e ingressos já emitidos — o cliente pagou.
-      // Falha de e-mail NÃO reverte a confirmação, mas DEVE ser investigada.
-      // Busque "EMAIL_DELIVERY_FAILURE" nos logs e reenvie manualmente via
-      // /pedido/[id] ou pelo painel admin até que haja reenvio automático.
+  // E-mail de confirmação (enriquecido) — não bloqueia a confirmação: o cliente
+  // já pagou e os ingressos já foram emitidos. Falha de entrega só loga; reenviar
+  // pelo admin (/pedido ou painel) se preciso. Busque "EMAIL_DELIVERY_FAILURE".
+  if (order.buyer_email) {
+    await sendConfirmationEmailForOrder(order.id).catch((err) => {
       console.error(
-        `[EMAIL_DELIVERY_FAILURE] order_id=${order.id} ` +
-          `buyer=${order.buyer_email} event="${ev?.name}" ` +
-          `tickets=${emailTickets.length} error=${err}`,
+        `[EMAIL_DELIVERY_FAILURE] order_id=${order.id} buyer=${order.buyer_email} error=${err}`,
       )
     })
   }
 
   return { ok: true, status: 'paid' }
+}
+
+/**
+ * Monta e envia o e-mail de confirmação enriquecido (banner, detalhes do evento,
+ * resumo financeiro, botão de acesso seguro, agenda). Fonte única: usada pela
+ * confirmação do pedido E pelo "reenviar" do admin — mesmo layout sempre.
+ */
+export async function sendConfirmationEmailForOrder(
+  orderId: string,
+  opts?: { to?: string },
+): Promise<void> {
+  const admin = createSupabaseAdmin()
+  const { data: order } = await admin
+    .from('orders')
+    .select('*, events(id, name, event_date, event_time, venue_name, city, duration_min, venues(name, address, city))')
+    .eq('id', orderId)
+    .single()
+  if (!order) return
+
+  const to = (opts?.to ?? order.buyer_email) as string | null
+  if (!to) return
+
+  const { data: tickets } = await admin
+    .from('tickets')
+    .select('seat_name, group_name, ticket_type, price, qr_code, holder_name')
+    .eq('order_id', orderId)
+    .is('cancelled_at', null)
+    .order('seat_name')
+  if (!tickets || tickets.length === 0) return
+
+  const ev = order.events
+  const venue = ev?.venues
+
+  const dateStr = ev?.event_date
+    ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', {
+        weekday: 'long', day: 'numeric', month: 'long',
+      }) + (ev.event_time ? ` às ${String(ev.event_time).slice(0, 5)}` : '')
+    : '—'
+  const eventDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1)
+
+  // Local + endereço + "ver no mapa" + "adicionar à agenda".
+  const venueName = venue?.name || ev?.venue_name || ''
+  const cityStr   = venue?.city || ev?.city || ''
+  const venueAddress = [venue?.address, cityStr].filter(Boolean).join(' · ') || undefined
+  const mapQuery = [venueName, venue?.address, cityStr].filter(Boolean).join(', ')
+  const mapUrl = mapQuery ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : undefined
+  const calendarUrl = buildCalendarUrl(ev, venueName, cityStr)
+  const cancelFreeUntil = computeCancelFreeUntil(order.created_at, ev?.event_date, ev?.event_time)
+
+  // Link assinado longo (vale até o evento) pro botão "Acessar meus ingressos".
+  // Assina pro destinatário — se for reenvio a terceiro, ele não vê pedidos alheios.
+  const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://moventistickets.com.br'
+  const accessToken = signAccess(to, accessExpFromEvent(ev?.event_date))
+  const accessUrl = accessToken ? `${SITE}/ingressos?t=${encodeURIComponent(accessToken)}` : undefined
+
+  const emailTickets = await Promise.all(
+    tickets.map(async (t: { seat_name: string; group_name: string; ticket_type: string; price: number | null; qr_code: string; holder_name: string | null }) => ({
+      seatName: t.seat_name,
+      groupName: t.group_name,
+      ticketType: t.ticket_type,
+      holderName: t.holder_name ?? undefined,
+      price: t.price != null ? Number(t.price) : undefined,
+      qrCode: t.qr_code,
+      qrDataUrl: await generateQRDataURL(t.qr_code),
+    })),
+  )
+
+  await sendTicketEmail({
+    to,
+    buyerName: order.buyer_name ?? 'Cliente',
+    eventName: ev?.name ?? 'Evento',
+    eventDate,
+    venueName,
+    venueAddress,
+    mapUrl,
+    calendarUrl,
+    tickets: emailTickets,
+    faceTotal:  order.face_total != null ? Number(order.face_total) : undefined,
+    serviceFee: order.service_fee_total != null ? Number(order.service_fee_total) : undefined,
+    paymentFee: order.payment_fee != null ? Number(order.payment_fee) : undefined,
+    total:      order.total != null ? Number(order.total) : undefined,
+    paymentMethod: order.payment_method ?? null,
+    cancelFreeUntil,
+    orderId: order.id,
+    accessUrl,
+  })
+}
+
+interface EventForEmail {
+  name?: string
+  event_date?: string
+  event_time?: string
+  duration_min?: number | null
+}
+
+/** Link "Adicionar à agenda" (Google Calendar) com horário local (America/Sao_Paulo). */
+function buildCalendarUrl(ev: EventForEmail | null | undefined, venueName: string, city: string): string | undefined {
+  if (!ev?.event_date || !ev?.event_time) return undefined
+  const ymd = String(ev.event_date).replace(/-/g, '')
+  const [hh, mm] = String(ev.event_time).slice(0, 5).split(':').map(Number)
+  const durMin = ev.duration_min && ev.duration_min > 0 ? ev.duration_min : 120
+  const startTotal = hh * 60 + mm
+  const endTotal = Math.min(startTotal + durMin, 23 * 60 + 59) // clamp no mesmo dia
+  const fmt = (total: number) => `${ymd}T${String(Math.floor(total / 60)).padStart(2, '0')}${String(total % 60).padStart(2, '0')}00`
+  const text = encodeURIComponent(ev.name ?? 'Evento')
+  const loc = encodeURIComponent([venueName, city].filter(Boolean).join(', '))
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${fmt(startTotal)}/${fmt(endTotal)}&ctz=America/Sao_Paulo&location=${loc}`
+}
+
+/**
+ * Data-limite do cancelamento grátis (regra do bloco 5): min(compra + 7 dias,
+ * evento − 48h). Retorna undefined se já passou (sem janela).
+ */
+function computeCancelFreeUntil(createdAt: string | null, eventDate?: string, eventTime?: string): string | undefined {
+  if (!createdAt || !eventDate) return undefined
+  const purchaseDeadline = new Date(new Date(createdAt).getTime() + 7 * 24 * 3600 * 1000)
+  const evDateTime = new Date(`${eventDate}T${eventTime ? String(eventTime).slice(0, 8) : '00:00:00'}-03:00`)
+  const eventDeadline = new Date(evDateTime.getTime() - 48 * 3600 * 1000)
+  const deadline = purchaseDeadline < eventDeadline ? purchaseDeadline : eventDeadline
+  if (deadline.getTime() <= Date.now()) return undefined
+  return deadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', timeZone: 'America/Sao_Paulo' })
 }

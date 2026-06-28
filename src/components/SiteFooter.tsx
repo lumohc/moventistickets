@@ -16,7 +16,7 @@ export default function SiteFooter() {
           <div style={col}>
             <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 22, marginBottom: 4 }} />
             <p style={{ fontSize: '0.8rem', color: 'rgba(244,243,236,0.7)', lineHeight: 1.5, margin: 0 }}>
-              Ingressos para os melhores eventos.
+              O movimento dos grandes eventos.
             </p>
           </div>
 

@@ -3,8 +3,8 @@ import './globals.css'
 import './seat-picker.css'
 
 export const metadata: Metadata = {
-  title: 'Moventis',
-  description: 'Compra de ingressos online com escolha de assento. Teatro, dança, música e mais.',
+  title: 'Moventis Tickets — O movimento dos grandes eventos',
+  description: 'O movimento dos grandes eventos. Compre ingressos online com escolha de assento — teatro, dança, música e mais. Pagamento por PIX ou cartão, com QR seguro no seu celular.',
 }
 
 export const viewport: Viewport = {
