@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import Sidebar from '@/components/produtor/Sidebar'
+import { renderContract, contractToPlain } from '@/lib/contract'
+import { estimateAttendance } from '@/lib/attendance-estimate'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -57,6 +60,13 @@ export default function NovoEventoPage() {
   const [error, setError]       = useState<string | null>(null)
   const [venues, setVenues]     = useState<Venue[]>([])
   const [producerId, setProducerId] = useState<string | null>(null)
+  const [producerName, setProducerName] = useState('')
+  const [producerDoc, setProducerDoc]   = useState('')
+
+  // Aceite de contrato (clickwrap)
+  const [showAceite, setShowAceite] = useState(false)
+  const [accepted, setAccepted]     = useState(false)
+  const [ownTeam, setOwnTeam]       = useState(false)
 
   // Campos do formulário
   const [name, setName]               = useState('')
@@ -81,7 +91,7 @@ export default function NovoEventoPage() {
 
       const { data: prod } = await sb
         .from('producers')
-        .select('id, status')
+        .select('id, status, name, legal_name, document')
         .eq('user_id', user.id)
         .single()
 
@@ -90,6 +100,8 @@ export default function NovoEventoPage() {
         return
       }
       setProducerId(prod.id)
+      setProducerName(prod.legal_name || prod.name || '')
+      setProducerDoc(prod.document || '')
 
       const { data: vs } = await sb
         .from('venues')
@@ -155,8 +167,52 @@ export default function NovoEventoPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    save(false)
+    openAceite()
   }
+
+  function openAceite() {
+    if (!name.trim() || !eventDatetime || !priceFace) { setError('Preencha nome, data e preço antes de enviar.'); return }
+    setError(null); setAccepted(false); setShowAceite(true)
+  }
+
+  async function submitWithAcceptance() {
+    if (!producerId || !accepted) return
+    setLoading(true); setError(null)
+    const { date: eventDate, time: eventTime } = splitDatetime(eventDatetime)
+    const res = await fetch('/api/produtor/events', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contract_model: 'B', accept: accepted, own_team: ownTeam,
+        event: {
+          name: name.trim(), description: description.trim() || null,
+          category, age_rating: ageRating, venue_id: venueId || null,
+          event_date: eventDate || null, event_time: eventTime || null,
+          doors_open: doorsOpen || null, sales_open_at: salesOpenAt || null,
+          sale_end: saleEnd || null,
+          duration_min: duration ? parseInt(duration) : null,
+          price_face: priceFace ? parseFloat(priceFace.replace(',', '.')) : null,
+          half_price: halfPrice, producer_notes: producerNotes.trim() || null,
+        },
+      }),
+    })
+    const json = await res.json().catch(() => ({}))
+    setLoading(false)
+    if (!res.ok || !json.ok) { setError(json.error || 'Não foi possível enviar o evento.'); setShowAceite(false); return }
+    router.push(`/produtor/eventos/${json.event_id}`)
+  }
+
+  const selVenue = venues.find(v => v.id === venueId)
+  const capacity = selVenue?.salable_seats ?? 0
+  const estimate = estimateAttendance({ capacity, durationMin: duration ? parseInt(duration) : 0, ownTeam })
+  const contractText = contractToPlain(renderContract('B', {
+    producerName: producerName || '—',
+    producerDoc: producerDoc || '—',
+    eventName: name || '—',
+    eventDate: splitDatetime(eventDatetime).date
+      ? new Date(splitDatetime(eventDatetime).date + 'T00:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+      : 'a definir',
+  }))
+  const brl = (n: number) => 'R$ ' + n.toFixed(2).replace('.', ',')
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -360,7 +416,7 @@ export default function NovoEventoPage() {
                 cursor: (loading || !name || !eventDatetime || !priceFace) ? 'not-allowed' : 'pointer',
               }}
             >
-              {loading ? 'Salvando…' : 'Enviar para aprovação →'}
+              {loading ? 'Enviando…' : 'Aceitar e enviar evento →'}
             </button>
           </div>
 
@@ -369,6 +425,85 @@ export default function NovoEventoPage() {
           </p>
         </form>
       </main>
+
+      {showAceite && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(13,17,23,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 1000 }}
+          onClick={() => !loading && setShowAceite(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: C.surface, borderRadius: 16, maxWidth: 680, width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: 28, boxShadow: '0 12px 48px rgba(0,0,0,0.25)' }}
+          >
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 6 }}>Aceite do contrato</h2>
+            <p style={{ fontSize: '0.875rem', color: C.muted, marginBottom: 20 }}>Para enviar o evento, leia e aceite o Contrato de Intermediação de Venda de Ingressos.</p>
+
+            {/* Seletor de modelo */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+              <div style={{ border: `2px solid ${C.green}`, background: 'rgba(31,107,78,0.06)', borderRadius: 10, padding: '12px 14px' }}>
+                <p style={{ fontSize: '0.82rem', fontWeight: 700, color: C.green }}>Modelo B — Repasse pós-evento</p>
+                <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 2 }}>Repasse em 3 dias úteis após o evento.</p>
+              </div>
+              <div style={{ border: `1px solid ${C.border}`, background: C.bg, borderRadius: 10, padding: '12px 14px', opacity: 0.6 }}>
+                <p style={{ fontSize: '0.82rem', fontWeight: 700, color: C.text }}>Modelo A — Split 80/20</p>
+                <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 2 }}>Em breve — requer conta de recebimento.</p>
+              </div>
+            </div>
+
+            {/* Contrato renderizado */}
+            <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: 16, maxHeight: 240, overflowY: 'auto', background: C.bg, marginBottom: 18 }}>
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', fontSize: '0.78rem', color: C.text, lineHeight: 1.6, margin: 0 }}>{contractText}</pre>
+            </div>
+
+            {/* Estimativa de atendimento */}
+            <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: 16, marginBottom: 18 }}>
+              <p style={{ fontSize: '0.82rem', fontWeight: 700, color: C.text, marginBottom: 8 }}>Estimativa de atendimento presencial</p>
+              <div style={{ fontSize: '0.8rem', color: C.muted, lineHeight: 1.8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Bilheteiro (PDV)</span><span>{estimate.boxOffice}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Staff de portaria (1 / 250 lugares)</span><span>{estimate.gateStaff}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: C.text, borderTop: `1px solid ${C.border}`, marginTop: 6, paddingTop: 6 }}>
+                  <span>Custo estimado{estimate.durationMin ? ` (${estimate.durationLabel})` : ''}</span>
+                  <span>{estimate.free ? 'R$ 0,00 (grátis)' : brl(estimate.totalCost)}</span>
+                </div>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, cursor: 'pointer' }}>
+                <input type="checkbox" checked={ownTeam} onChange={e => setOwnTeam(e.target.checked)} style={{ width: 15, height: 15, accentColor: C.green }} />
+                <span style={{ fontSize: '0.8rem', color: C.text }}>Usar minha própria equipe de leitura (zera o staff de portaria)</span>
+              </label>
+              <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 10, lineHeight: 1.6 }}>
+                Eventos de até 2 horas não têm custo de atendimento. Esta é uma estimativa pela capacidade — a equipe final é fechada 48h antes, pela venda real.
+              </p>
+            </div>
+
+            {error && (
+              <div style={{ background: '#fdf2f2', border: '1px solid #f5c6cb', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: '0.82rem', color: C.error }}>{error}</div>
+            )}
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 18, cursor: 'pointer' }}>
+              <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} style={{ width: 16, height: 16, marginTop: 2, accentColor: C.green }} />
+              <span style={{ fontSize: '0.85rem', color: C.text, lineHeight: 1.5 }}>Li e aceito o <strong>Contrato de Intermediação de Venda de Ingressos</strong>.</span>
+            </label>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button
+                type="button" disabled={loading}
+                onClick={() => setShowAceite(false)}
+                style={{ padding: '12px 22px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button" disabled={loading || !accepted}
+                onClick={submitWithAcceptance}
+                style={{ padding: '12px 26px', background: (loading || !accepted) ? C.muted : C.green, color: '#fff', border: 'none', borderRadius: 10, fontSize: '0.9rem', fontWeight: 700, cursor: (loading || !accepted) ? 'not-allowed' : 'pointer' }}
+              >
+                {loading ? 'Enviando…' : 'Aceitar e enviar evento'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { LayoutDashboard, CalendarDays, Banknote, User, LogOut } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, Banknote, FileText, User, LogOut } from 'lucide-react'
 
 const C = {
   bg:      '#1A211B',
@@ -18,6 +18,7 @@ const NAV = [
   { href: '/produtor/dashboard',  label: 'Dashboard',    Icon: LayoutDashboard },
   { href: '/produtor/eventos',    label: 'Meus eventos', Icon: CalendarDays },
   { href: '/produtor/financeiro', label: 'Financeiro',   Icon: Banknote },
+  { href: '/produtor/contratos',  label: 'Meus contratos', Icon: FileText },
   { href: '/produtor/perfil',     label: 'Perfil',       Icon: User },
 ]
 
