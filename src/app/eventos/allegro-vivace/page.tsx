@@ -61,9 +61,9 @@ export default function AllegroVivacePage() {
   return (
     <main style={S.page}>
         <header style={S.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <a href="/" aria-label="Início" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
-          </div>
+          </a>
         </header>
 
         <div style={S.wrap}>

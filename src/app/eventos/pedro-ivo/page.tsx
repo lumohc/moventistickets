@@ -159,7 +159,9 @@ export default function PedroIvoDemoPage() {
 
       <main style={S.page}>
         <header style={S.header}>
-          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
+          <a href="/" aria-label="Início" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
+          </a>
           <span style={S.demoBadge}>Demo — mapa de assentos</span>
         </header>
 
