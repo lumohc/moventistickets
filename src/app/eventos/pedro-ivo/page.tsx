@@ -149,6 +149,8 @@ const prices = [
 ]
 
 export default function PedroIvoDemoPage() {
+  const minStr = [...prices].map(p => p.value)
+    .sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10))[0]
   return (
     <>
       <script
@@ -165,7 +167,7 @@ export default function PedroIvoDemoPage() {
           <span style={S.demoBadge}>Demo — mapa de assentos</span>
         </header>
 
-        <div style={S.wrap}>
+        <div className="mvt-evento-content" style={S.wrap}>
           <div style={S.demoNote}>
             Simulação interativa do mapa de assentos · Selecione poltronas, veja preços e simule o checkout · Os dados são fictícios.
           </div>
@@ -190,9 +192,13 @@ export default function PedroIvoDemoPage() {
             </div>
 
             <p style={S.desc}>{event.description}</p>
+
+            <div style={{ marginTop: 20 }}>
+              <a href="#comprar" className="mvt-top-cta">Escolher poltronas →</a>
+            </div>
           </div>
 
-          <div style={S.cols}>
+          <div id="comprar" className="resp-cols-2" style={{ scrollMarginTop: 16 }}>
             <div style={S.pickerCard}>
               <h2 style={S.h2}>Escolher poltronas</h2>
               <p style={S.pickerSub}>
@@ -217,6 +223,11 @@ export default function PedroIvoDemoPage() {
             </div>
           </div>
         </div>
+
+        <a href="#comprar" className="mvt-sticky-buy">
+          <span className="mvt-sticky-buy__price">a partir de <strong>{minStr}</strong></span>
+          <span className="mvt-sticky-buy__btn">Escolher poltronas</span>
+        </a>
       </main>
     </>
   )

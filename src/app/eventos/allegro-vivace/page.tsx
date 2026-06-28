@@ -58,6 +58,8 @@ const S = {
 }
 
 export default function AllegroVivacePage() {
+  const minStr = [...event.prices].map(p => p.value)
+    .sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10))[0]
   return (
     <main style={S.page}>
         <header style={S.header}>
@@ -66,7 +68,7 @@ export default function AllegroVivacePage() {
           </a>
         </header>
 
-        <div style={S.wrap}>
+        <div className="mvt-evento-content" style={S.wrap}>
           {/* Hero */}
           <div style={S.card}>
             <span style={S.badge}>Música Clássica</span>
@@ -88,9 +90,13 @@ export default function AllegroVivacePage() {
             </div>
 
             <p style={S.desc}>{event.description}</p>
+
+            <div style={{ marginTop: 20 }}>
+              <a href="#comprar" className="mvt-top-cta">Escolher poltronas →</a>
+            </div>
           </div>
 
-          <div style={S.cols}>
+          <div id="comprar" className="resp-cols-2" style={{ scrollMarginTop: 16 }}>
             {/* Mapa */}
             <div style={S.pickerCard}>
               <h2 style={S.h2}>Escolher poltronas</h2>
@@ -117,6 +123,11 @@ export default function AllegroVivacePage() {
             </div>
           </div>
         </div>
+
+        <a href="#comprar" className="mvt-sticky-buy">
+          <span className="mvt-sticky-buy__price">a partir de <strong>{minStr}</strong></span>
+          <span className="mvt-sticky-buy__btn">Escolher poltronas</span>
+        </a>
     </main>
   )
 }
