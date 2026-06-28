@@ -29,13 +29,13 @@ type CardType = 'credit_card' | 'debit_card'
 // ── Tokens ──────────────────────────────────────────────────────────────────
 
 const C = {
-  bg:      '#F4F1EB',
+  bg:      '#F4F3EC',
   surface: '#FFFFFF',
-  border:  '#DDD9D0',
-  text:    '#1A1D22',
-  muted:   'rgba(26,29,34,0.52)',
-  green:   '#4F6654',
-  greenDk: '#3d5041',
+  border:  '#D8DACF',
+  text:    '#1A211B',
+  muted:   'rgba(26,33,27,0.52)',
+  green:   '#1F6B4E',
+  greenDk: '#175840',
   error:   '#c0392b',
 }
 
@@ -93,6 +93,9 @@ function CheckoutContent() {
   const [email, setEmail] = useState('')
   const [cpf,   setCpf]   = useState('')
   const [phone, setPhone] = useState('')
+  // Consentimento de marketing (opt-in, NÃO pré-marcado) + token de acesso pós-compra
+  const [marketingOptIn, setMarketingOptIn] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   // Nomes dos titulares (1 por ingresso). holders[0] = comprador quando "sou eu".
   const [holders, setHolders] = useState<string[]>([])
   // Índice do ingresso marcado como "sou eu" (recebe o nome do comprador). null = nenhum.
@@ -270,6 +273,7 @@ function CheckoutContent() {
         buyer_phone: phone.replace(/\D/g, ''),
         seat_holders: seatHolders,
         coupon_code: couponApplied?.code ?? undefined,
+        marketing_opt_in: marketingOptIn,
       }),
     })
     const json = await res.json()
@@ -282,6 +286,7 @@ function CheckoutContent() {
         pix_expires_at: json.pix_expires_at,
         buyer_total:    json.buyer_total ?? pricing.buyerTotal,
       })
+      setAccessToken(json.access_token ?? null)
       setStep('payment')
     }
   }
@@ -306,12 +311,14 @@ function CheckoutContent() {
         card_cvv:           cardCvv,
         card_postal_code:   cardPostal.replace(/\D/g, ''),
         coupon_code:        couponApplied?.code ?? undefined,
+        marketing_opt_in:   marketingOptIn,
       }),
     })
     const json = await res.json()
     if (!res.ok || !json.ok) {
       setFormErr(json.error || 'Erro ao processar o cartão. Verifique os dados e tente novamente.')
     } else {
+      setAccessToken(json.access_token ?? null)
       setConfirmed(true)
       setStep('payment')
     }
@@ -343,7 +350,7 @@ function CheckoutContent() {
   const methodBtnStyle = (active: boolean): React.CSSProperties => ({
     flex: 1, padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
     border: `1.5px solid ${active ? C.green : C.border}`,
-    background: active ? 'rgba(79,102,84,0.07)' : C.surface,
+    background: active ? 'rgba(31,107,78,0.07)' : C.surface,
     color: active ? C.green : C.text, fontWeight: active ? 700 : 400,
     fontSize: '0.85rem', transition: 'all 0.15s',
   })
@@ -352,7 +359,7 @@ function CheckoutContent() {
     <main style={{ minHeight: '100vh', background: C.bg }}>
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
         </a>
         <a href="/" style={{ marginLeft: 8, fontSize: '0.8rem', color: C.muted, textDecoration: 'none' }}>← Início</a>
         <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: C.muted }}>Checkout seguro</span>
@@ -428,7 +435,7 @@ function CheckoutContent() {
                 <div style={{ marginBottom: 16 }}>
                   <p style={{ ...lbl, marginBottom: 10 }}>Cupom de desconto</p>
                   {couponApplied ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(79,102,84,0.07)', border: '1px solid rgba(79,102,84,0.2)', borderRadius: 8, padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(31,107,78,0.07)', border: '1px solid rgba(31,107,78,0.2)', borderRadius: 8, padding: '10px 14px' }}>
                       <span style={{ fontSize: '0.85rem', fontWeight: 600, color: C.green, flex: 1 }}>
                         {couponApplied.code} — {couponApplied.discount.type === 'percent' ? `${couponApplied.discount.value}% OFF` : `- ${formatBRL(couponApplied.discount.value)}`}
                       </span>
@@ -524,6 +531,12 @@ function CheckoutContent() {
                       maxLength={16}
                     />
                   </div>
+
+                  {/* Consentimento de marketing (LGPD) — opt-in, NÃO pré-marcado */}
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 18, fontSize: '0.82rem', color: C.muted, cursor: 'pointer', lineHeight: 1.5 }}>
+                    <input type="checkbox" checked={marketingOptIn} onChange={e => setMarketingOptIn(e.target.checked)} style={{ marginTop: 2, flexShrink: 0, width: 16, height: 16 }} />
+                    Quero receber novidades e ofertas da Moventis por e-mail.
+                  </label>
 
                   {/* Nomes nos ingressos */}
                   {session && session.seats.length > 0 && (
@@ -627,7 +640,7 @@ function CheckoutContent() {
                   )}
 
                   {/* Resumo do total */}
-                  <div style={{ background: 'rgba(79,102,84,0.05)', border: '1px solid rgba(79,102,84,0.12)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ background: 'rgba(31,107,78,0.05)', border: '1px solid rgba(31,107,78,0.12)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.85rem', color: C.muted }}>
                       {method === 'pix' ? 'PIX' : cardTypeLabel(cardType)}
                       {couponApplied && ` + cupom ${couponApplied.code}`}
@@ -659,7 +672,7 @@ function CheckoutContent() {
                   <p style={{ fontSize: '0.88rem', color: C.muted, lineHeight: 1.6 }}>
                     Enviamos seus ingressos para <strong style={{ color: C.text }}>{email || 'seu e-mail'}</strong>.
                   </p>
-                  <a href={`/pedido/${sessionId}`} style={{ display: 'inline-block', marginTop: 20, padding: '12px 22px', background: C.green, color: '#fff', borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, textDecoration: 'none' }}>
+                  <a href={`/pedido/${sessionId}${accessToken ? `?t=${encodeURIComponent(accessToken)}` : ''}`} style={{ display: 'inline-block', marginTop: 20, padding: '12px 22px', background: C.green, color: '#fff', borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, textDecoration: 'none' }}>
                     Ver meus ingressos →
                   </a>
                 </div>
@@ -697,7 +710,7 @@ function CheckoutContent() {
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(79,102,84,0.06)', border: '1px solid rgba(79,102,84,0.15)', borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'center' }}>
+                <div style={{ background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.15)', borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'center' }}>
                   <p style={{ fontSize: '0.75rem', color: C.muted, marginBottom: 4 }}>Valor a pagar</p>
                   <p style={{ fontSize: '1.8rem', fontWeight: 700, color: C.green }}>{formatBRL(pix.buyer_total)}</p>
                 </div>
@@ -713,7 +726,7 @@ function CheckoutContent() {
                 </div>
 
                 <div style={{ marginTop: 20, textAlign: 'center' }}>
-                  <a href={`/pedido/${sessionId}`} style={{ fontSize: '0.85rem', color: C.green, textDecoration: 'none', fontWeight: 600 }}>
+                  <a href={`/pedido/${sessionId}${accessToken ? `?t=${encodeURIComponent(accessToken)}` : ''}`} style={{ fontSize: '0.85rem', color: C.green, textDecoration: 'none', fontWeight: 600 }}>
                     Ver meu pedido →
                   </a>
                 </div>
@@ -737,8 +750,8 @@ function CheckoutContent() {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <main style={{ minHeight: '100vh', background: '#F4F1EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'rgba(26,29,34,0.52)' }}>Carregando…</p>
+      <main style={{ minHeight: '100vh', background: '#F4F3EC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'rgba(26,33,27,0.52)' }}>Carregando…</p>
       </main>
     }>
       <CheckoutContent />

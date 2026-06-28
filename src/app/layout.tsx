@@ -4,13 +4,13 @@ import './seat-picker.css'
 
 export const metadata: Metadata = {
   title: 'Moventis',
-  description: 'Compra de ingressos online com escolha de assento. Teatro, dança, música e mais em Santa Catarina.',
+  description: 'Compra de ingressos online com escolha de assento. Teatro, dança, música e mais.',
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#4F6654',
+  themeColor: '#1F6B4E',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

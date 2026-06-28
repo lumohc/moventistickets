@@ -5,8 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E', error: '#c0392b',
 }
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', border: `1px solid ${C.border}`,
@@ -187,7 +187,7 @@ export default function EditCupomPage() {
               <a href="/admin/cupons" style={{ flex: 1, padding: 13, background: 'transparent', color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, textDecoration: 'none', textAlign: 'center', fontSize: '0.9rem' }}>
                 Cancelar
               </a>
-              <button type="submit" disabled={saving} style={{ flex: 2, padding: 14, background: saving ? C.muted : C.green, color: '#F4F1EB', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
+              <button type="submit" disabled={saving} style={{ flex: 2, padding: 14, background: saving ? C.muted : C.green, color: '#F4F3EC', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
                 {saving ? 'Salvando…' : 'Salvar alterações'}
               </button>
             </div>

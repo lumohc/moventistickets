@@ -1,9 +1,10 @@
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import { Ticket, Banknote, HandCoins, CreditCard, BarChart3, QrCode, Store } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
 }
 
 function fmt(n: number) {
@@ -57,18 +58,18 @@ export default async function AdminFinanceiroPage() {
         {/* Cards de totais */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 16, marginBottom: 32 }}>
           {[
-            { icon: '🎟️', label: 'Pedidos pagos',      value: paid.length },
-            { icon: '💵', label: 'Volume face (R$)',    value: fmt(totalFace) },
-            { icon: '💰', label: 'Taxa de serviço',     value: fmt(totalService) },
-            { icon: '💳', label: 'Taxa de pagamento',   value: fmt(totalPayment) },
-            { icon: '📊', label: 'Volume total bruto',  value: fmt(totalGross) },
+            { Icon: Ticket,     label: 'Pedidos pagos',      value: paid.length },
+            { Icon: Banknote,   label: 'Volume face (R$)',    value: fmt(totalFace) },
+            { Icon: HandCoins,  label: 'Taxa de serviço',     value: fmt(totalService) },
+            { Icon: CreditCard, label: 'Taxa de processamento', value: fmt(totalPayment) },
+            { Icon: BarChart3,  label: 'Volume total bruto',  value: fmt(totalGross) },
           ].map(card => (
             <div key={card.label} style={{
               background: C.surface, border: `1px solid ${C.border}`,
               borderRadius: 14, padding: '18px 20px',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
-              <p style={{ fontSize: '1.3rem', marginBottom: 6 }}>{card.icon}</p>
+              <p style={{ marginBottom: 6 }}><card.Icon size={20} strokeWidth={1.5} color={C.green} /></p>
               <p style={{ fontSize: '1.4rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
               <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 2 }}>{card.label}</p>
             </div>
@@ -78,12 +79,12 @@ export default async function AdminFinanceiroPage() {
         {/* Split por método */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 16, marginBottom: 32 }}>
           {[
-            { icon: '📲', label: 'PIX',          count: byPix.length,  vol: byPix.reduce((s: number, o: any) => s + Number(o.total), 0)  },
-            { icon: '💳', label: 'Cartão',       count: byCard.length, vol: byCard.reduce((s: number, o: any) => s + Number(o.total), 0) },
-            { icon: '🏛️', label: 'Balcão (PDV)', count: byPdv.length,  vol: byPdv.reduce((s: number, o: any) => s + Number(o.total), 0)  },
+            { Icon: QrCode,     label: 'PIX',          count: byPix.length,  vol: byPix.reduce((s: number, o: any) => s + Number(o.total), 0)  },
+            { Icon: CreditCard, label: 'Cartão',       count: byCard.length, vol: byCard.reduce((s: number, o: any) => s + Number(o.total), 0) },
+            { Icon: Store,      label: 'Balcão (PDV)', count: byPdv.length,  vol: byPdv.reduce((s: number, o: any) => s + Number(o.total), 0)  },
           ].map(m => (
             <div key={m.label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-              <p style={{ fontSize: '1.2rem', marginBottom: 4 }}>{m.icon}</p>
+              <p style={{ marginBottom: 4 }}><m.Icon size={18} strokeWidth={1.5} color={C.green} /></p>
               <p style={{ fontSize: '0.85rem', fontWeight: 700, color: C.text }}>{m.label}</p>
               <p style={{ fontSize: '1.2rem', fontWeight: 700, color: C.text, marginTop: 4 }}>{fmt(m.vol)}</p>
               <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 2 }}>{m.count} pedido{m.count !== 1 ? 's' : ''}</p>

@@ -2,22 +2,23 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { LayoutDashboard, CalendarDays, Banknote, User, LogOut } from 'lucide-react'
 
 const C = {
-  bg:      '#1A1D22',
+  bg:      '#1A211B',
   surface: '#222630',
   border:  'rgba(255,255,255,0.07)',
-  text:    '#F4F1EB',
+  text:    '#F4F3EC',
   muted:   'rgba(244,241,235,0.45)',
-  green:   '#4F6654',
+  green:   '#1F6B4E',
   greenLt: '#73806A',
 }
 
 const NAV = [
-  { href: '/produtor/dashboard',  label: 'Dashboard',   icon: '◻' },
-  { href: '/produtor/eventos',    label: 'Meus eventos', icon: '🎭' },
-  { href: '/produtor/financeiro', label: 'Financeiro',   icon: '💰' },
-  { href: '/produtor/perfil',     label: 'Perfil',       icon: '👤' },
+  { href: '/produtor/dashboard',  label: 'Dashboard',    Icon: LayoutDashboard },
+  { href: '/produtor/eventos',    label: 'Meus eventos', Icon: CalendarDays },
+  { href: '/produtor/financeiro', label: 'Financeiro',   Icon: Banknote },
+  { href: '/produtor/perfil',     label: 'Perfil',       Icon: User },
 ]
 
 export default function Sidebar() {
@@ -39,12 +40,10 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{ padding: '24px 20px 20px', borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div>
-            <img src="/logo-reversed-transparent.svg" alt="Moventis" style={{ height: 48 }} />
-            <p style={{ fontSize: '0.65rem', color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Portal do Produtor</p>
-          </div>
-        </div>
+        <a href="/produtor/dashboard" style={{ display: 'block', textDecoration: 'none' }} aria-label="Painel">
+          <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 28 }} />
+          <p style={{ fontSize: '0.65rem', color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>Portal do Produtor</p>
+        </a>
       </div>
 
       {/* Nav */}
@@ -59,13 +58,13 @@ export default function Sidebar() {
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 12px', borderRadius: 8, marginBottom: 2,
                 textDecoration: 'none',
-                background: active ? 'rgba(79,102,84,0.18)' : 'transparent',
+                background: active ? 'rgba(31,107,78,0.18)' : 'transparent',
                 color: active ? C.text : C.muted,
                 fontSize: '0.875rem', fontWeight: active ? 600 : 400,
                 transition: 'all 0.15s',
               }}
             >
-              <span style={{ fontSize: '1rem', width: 20, textAlign: 'center' }}>{item.icon}</span>
+              <item.Icon size={18} strokeWidth={1.5} />
               {item.label}
             </a>
           )
@@ -83,7 +82,7 @@ export default function Sidebar() {
             display: 'flex', alignItems: 'center', gap: 8,
           }}
         >
-          <span>↩</span> Sair
+          <LogOut size={15} strokeWidth={1.5} /> Sair
         </button>
       </div>
     </aside>

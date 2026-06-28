@@ -4,6 +4,7 @@ import { findOrCreateCustomer, createCardPayment, AsaasCardError, asaasConfigure
 import { confirmOrderAndIssueTickets } from '@/lib/orders'
 import { priceOrder, type PaymentMethod } from '@/lib/pricing'
 import { validateCoupon } from '@/lib/coupon-utils'
+import { signAccess, accessExpFromEvent } from '@/lib/access-token'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +12,7 @@ export async function POST(req: NextRequest) {
     const {
       order_id,
       buyer_name, buyer_email, buyer_cpf, buyer_phone, seat_holders,
+      marketing_opt_in,
       card_type,              // 'credit_card' | 'debit_card'
       card_holder_name,
       card_number,
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order } = await admin
       .from('orders')
-      .select('*, events(id, name)')
+      .select('*, events(id, name, event_date)')
       .eq('id', order_id)
       .single()
 
@@ -48,6 +50,16 @@ export async function POST(req: NextRequest) {
     if (new Date(order.expires_at as string) < new Date()) {
       await admin.from('orders').update({ status: 'expired' }).eq('id', order_id)
       return NextResponse.json({ error: 'Reserva expirada.' }, { status: 410 })
+    }
+
+    // Token de acesso assinado (link "Acessar meus ingressos") + consentimento (LGPD)
+    const accessToken = signAccess(buyer_email, accessExpFromEvent((order.events as { event_date?: string } | null)?.event_date))
+    {
+      const { error: consentErr } = await admin.from('orders').update({
+        marketing_opt_in:     !!marketing_opt_in,
+        marketing_consent_at: marketing_opt_in ? new Date().toISOString() : null,
+      }).eq('id', order_id)
+      if (consentErr) console.warn('[payment/card] consentimento não gravado (rode a v12):', consentErr.message)
     }
 
     // Recalcula o total com método de cartão (diferente do PIX) + cupom
@@ -199,6 +211,7 @@ export async function POST(req: NextRequest) {
       status:           confirm.status,
       buyer_total:      amount,
       coupon_discount:  pricing.couponDiscount,
+      access_token:     accessToken,
     })
   } catch (err) {
     console.error('[payment/card]', err)

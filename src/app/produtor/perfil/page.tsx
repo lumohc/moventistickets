@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import Sidebar from '@/components/produtor/Sidebar'
+import { Clock, CircleCheck, Ban } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', error: '#c0392b',
 }
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', border: `1px solid ${C.border}`,
@@ -95,9 +96,12 @@ export default function PerfilPage() {
     setTimeout(() => setSuccess(false), 3000)
   }
 
-  const STATUS_LABEL: Record<string, string> = {
-    pending: '⏳ Cadastro em análise', approved: '✅ Conta aprovada', suspended: '⛔ Conta suspensa',
+  const STATUS_LABEL: Record<string, { Icon: typeof Clock; label: string }> = {
+    pending:   { Icon: Clock,       label: 'Cadastro em análise' },
+    approved:  { Icon: CircleCheck, label: 'Conta aprovada' },
+    suspended: { Icon: Ban,         label: 'Conta suspensa' },
   }
+  const statusInfo = STATUS_LABEL[status]
 
   if (loading) return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -117,8 +121,10 @@ export default function PerfilPage() {
           <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>
             Meu perfil
           </h1>
-          <p style={{ color: C.muted, fontSize: '0.9rem' }}>
-            {STATUS_LABEL[status] ?? status}
+          <p style={{ color: C.muted, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {statusInfo
+              ? <><statusInfo.Icon size={16} strokeWidth={1.5} /> {statusInfo.label}</>
+              : status}
           </p>
         </div>
 
@@ -128,8 +134,8 @@ export default function PerfilPage() {
           </div>
         )}
         {success && (
-          <div style={{ background: 'rgba(79,102,84,0.08)', border: '1px solid rgba(79,102,84,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: C.green }}>
-            ✅ Perfil atualizado.
+          <div style={{ background: 'rgba(31,107,78,0.08)', border: '1px solid rgba(31,107,78,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: C.green, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <CircleCheck size={16} strokeWidth={1.5} /> Perfil atualizado.
           </div>
         )}
 

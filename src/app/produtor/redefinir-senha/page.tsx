@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { CircleCheck } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', error: '#c0392b',
 }
 
 const inp: React.CSSProperties = {
@@ -65,7 +66,7 @@ export default function RedefinirSenhaPage() {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 32, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           {success ? (
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '2.5rem', marginBottom: 12 }}>✅</p>
+              <p style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><CircleCheck size={44} strokeWidth={1.5} color={C.green} /></p>
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text, marginBottom: 8 }}>Senha redefinida!</h2>
               <p style={{ fontSize: '0.875rem', color: C.muted }}>Redirecionando para o dashboard…</p>
             </div>

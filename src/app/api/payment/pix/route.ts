@@ -4,10 +4,11 @@ import { generateQRDataURL, buildPixMockPayload } from '@/lib/generate-qr'
 import { findOrCreateCustomer, createPixPayment, asaasConfigured } from '@/lib/asaas'
 import { validateCoupon } from '@/lib/coupon-utils'
 import { priceOrder } from '@/lib/pricing'
+import { signAccess, accessExpFromEvent } from '@/lib/access-token'
 
 export async function POST(req: NextRequest) {
   try {
-    const { order_id, buyer_name, buyer_email, buyer_cpf, buyer_phone, seat_holders, coupon_code } = await req.json()
+    const { order_id, buyer_name, buyer_email, buyer_cpf, buyer_phone, seat_holders, coupon_code, marketing_opt_in } = await req.json()
 
     if (!order_id || !buyer_name || !buyer_email || !buyer_cpf || !buyer_phone) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 })
@@ -30,6 +31,19 @@ export async function POST(req: NextRequest) {
     if (new Date(order.expires_at as string) < new Date()) {
       await admin.from('orders').update({ status: 'expired' }).eq('id', order_id)
       return NextResponse.json({ error: 'Reserva expirada.' }, { status: 410 })
+    }
+
+    // Token de acesso assinado (link "Acessar meus ingressos" — vale até o evento)
+    const accessToken = signAccess(buyer_email, accessExpFromEvent((order.events as { event_date?: string } | null)?.event_date))
+
+    // Consentimento de marketing (LGPD). Coluna pode não existir até a v12 —
+    // grava sem bloquear o pagamento (Supabase devolve {error}, não lança).
+    {
+      const { error: consentErr } = await admin.from('orders').update({
+        marketing_opt_in:     !!marketing_opt_in,
+        marketing_consent_at: marketing_opt_in ? new Date().toISOString() : null,
+      }).eq('id', order_id)
+      if (consentErr) console.warn('[payment/pix] consentimento não gravado (rode a v12):', consentErr.message)
     }
 
     // Valida e aplica cupom (se informado)
@@ -95,6 +109,7 @@ export async function POST(req: NextRequest) {
         pix_qr_image:   order.asaas_pix_qr_image,
         pix_expires_at: order.asaas_pix_expires_at,
         buyer_total:    Number(order.total),
+        access_token:   accessToken,
         order_id,
       })
     }
@@ -177,6 +192,7 @@ export async function POST(req: NextRequest) {
       pix_expires_at: pixExpiresAt,
       buyer_total:    amount,
       coupon_discount: pricing.couponDiscount,
+      access_token:   accessToken,
       order_id,
     })
   } catch (err: unknown) {

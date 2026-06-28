@@ -6,8 +6,8 @@ export const metadata: Metadata = {
 }
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.55)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.55)', green: '#1F6B4E',
 }
 
 export default function PrivacidadePage() {
@@ -16,7 +16,7 @@ export default function PrivacidadePage() {
       {/* Header */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
         </a>
         <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>← Voltar</a>
       </header>
@@ -84,7 +84,7 @@ export default function PrivacidadePage() {
             <div style={{ marginTop: 16, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(79,102,84,0.08)' }}>
+                  <tr style={{ background: 'rgba(31,107,78,0.08)' }}>
                     <th style={{ textAlign: 'left', padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: C.text, fontWeight: 700 }}>Finalidade</th>
                     <th style={{ textAlign: 'left', padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: C.text, fontWeight: 700 }}>Base legal</th>
                   </tr>
@@ -97,9 +97,9 @@ export default function PrivacidadePage() {
                     ['Cumprimento fiscal', 'Obrigação legal (art. 7º, II)'],
                     ['Marketing e novidades', 'Consentimento (art. 7º, I)'],
                   ].map(([fin, base], i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(26,29,34,0.02)' }}>
-                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,29,34,0.75)' }}>{fin}</td>
-                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,29,34,0.75)' }}>{base}</td>
+                    <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(26,33,27,0.02)' }}>
+                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,33,27,0.75)' }}>{fin}</td>
+                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,33,27,0.75)' }}>{base}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -121,7 +121,7 @@ export default function PrivacidadePage() {
             <div style={{ overflowX: 'auto', marginTop: 12 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(79,102,84,0.08)' }}>
+                  <tr style={{ background: 'rgba(31,107,78,0.08)' }}>
                     <th style={{ textAlign: 'left', padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: C.text, fontWeight: 700 }}>Categoria</th>
                     <th style={{ textAlign: 'left', padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: C.text, fontWeight: 700 }}>Prazo de retenção</th>
                   </tr>
@@ -134,9 +134,9 @@ export default function PrivacidadePage() {
                     ['Logs de acesso', '6 meses (Marco Civil da Internet)'],
                     ['Dados para marketing', 'Até o cancelamento do consentimento'],
                   ].map(([cat, prazo], i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(26,29,34,0.02)' }}>
-                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,29,34,0.75)' }}>{cat}</td>
-                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,29,34,0.75)' }}>{prazo}</td>
+                    <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(26,33,27,0.02)' }}>
+                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,33,27,0.75)' }}>{cat}</td>
+                      <td style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, color: 'rgba(26,33,27,0.75)' }}>{prazo}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -196,7 +196,7 @@ export default function PrivacidadePage() {
           </Section>
 
           {/* Aviso */}
-          <div style={{ marginTop: 48, padding: '16px 20px', background: 'rgba(79,102,84,0.06)', border: '1px solid rgba(79,102,84,0.20)', borderRadius: 10, fontSize: '0.82rem', color: C.muted, lineHeight: 1.6 }}>
+          <div style={{ marginTop: 48, padding: '16px 20px', background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.20)', borderRadius: 10, fontSize: '0.82rem', color: C.muted, lineHeight: 1.6 }}>
             ⚠️ Este documento deve ser revisado por advogado responsável antes de qualquer uso oficial ou publicação definitiva.
           </div>
 
@@ -222,11 +222,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section style={{ marginBottom: 36 }}>
       <h2 style={{
-        fontSize: '1.1rem', fontWeight: 700, color: '#1A1D22',
+        fontSize: '1.1rem', fontWeight: 700, color: '#1A211B',
         letterSpacing: '-0.02em', marginBottom: 14,
-        paddingBottom: 10, borderBottom: '1px solid #DDD9D0',
+        paddingBottom: 10, borderBottom: '1px solid #D8DACF',
       }}>{title}</h2>
-      <div style={{ fontSize: '0.93rem', color: 'rgba(26,29,34,0.75)', lineHeight: 1.8 }}>
+      <div style={{ fontSize: '0.93rem', color: 'rgba(26,33,27,0.75)', lineHeight: 1.8 }}>
         {children}
       </div>
     </section>
@@ -235,7 +235,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function SubTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1A1D22', marginTop: 20, marginBottom: 8 }}>
+    <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1A211B', marginTop: 20, marginBottom: 8 }}>
       {children}
     </h3>
   )

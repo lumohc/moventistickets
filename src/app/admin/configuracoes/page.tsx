@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E', error: '#c0392b',
 }
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', border: `1px solid ${C.border}`,
@@ -122,7 +122,7 @@ export default function ConfiguracoesPage() {
           </div>
         )}
         {success && (
-          <div style={{ background: 'rgba(79,102,84,0.08)', border: '1px solid rgba(79,102,84,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, fontSize: '0.85rem', color: C.green, fontWeight: 600 }}>
+          <div style={{ background: 'rgba(31,107,78,0.08)', border: '1px solid rgba(31,107,78,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, fontSize: '0.85rem', color: C.green, fontWeight: 600 }}>
             Configurações salvas com sucesso.
           </div>
         )}
@@ -186,7 +186,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={save}
                 disabled={saving}
-                style={{ padding: '13px 28px', background: saving ? C.muted : C.green, color: '#F4F1EB', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '13px 28px', background: saving ? C.muted : C.green, color: '#F4F3EC', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}
               >
                 {saving ? 'Salvando…' : 'Salvar configurações'}
               </button>
@@ -195,7 +195,7 @@ export default function ConfiguracoesPage() {
         </div>
 
         {/* Nota sobre taxas Asaas */}
-        <div style={{ maxWidth: 620, marginTop: 32, background: 'rgba(79,102,84,0.05)', border: '1px solid rgba(79,102,84,0.12)', borderRadius: 12, padding: '16px 20px', fontSize: '0.82rem', color: C.muted, lineHeight: 1.7 }}>
+        <div style={{ maxWidth: 620, marginTop: 32, background: 'rgba(31,107,78,0.05)', border: '1px solid rgba(31,107,78,0.12)', borderRadius: 12, padding: '16px 20px', fontSize: '0.82rem', color: C.muted, lineHeight: 1.7 }}>
           <p style={{ fontWeight: 600, color: C.text, marginBottom: 4 }}>Sobre as taxas</p>
           <p>PIX: taxa fixa cobrada uma vez por pedido, independente do valor.</p>
           <p>Cartão com <strong>gross-up</strong>: a taxa incide sobre o total final (incluindo ela mesma), garantindo que a Moventis não absorva o custo do gateway.</p>

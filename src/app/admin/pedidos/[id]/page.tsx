@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
   red: '#c0392b', redBg: 'rgba(244,67,54,0.08)', redBorder: 'rgba(244,67,54,0.25)',
 }
 
@@ -138,6 +138,21 @@ export default function OrderDetailPage() {
     else flash('err', json.error ?? 'Erro.')
   }
 
+  // Cancela/reembolsa UM ingresso (não o pedido inteiro) → libera a poltrona.
+  async function ticketAction(ticketId: string, refund: boolean) {
+    if (!window.confirm(`${refund ? 'Reembolsar' : 'Cancelar'} este ingresso? A poltrona será liberada e o QR invalidado.`)) return
+    setBusy(true)
+    const res  = await fetch(`/api/admin/tickets/${ticketId}/cancel`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ refund }),
+    })
+    const json = await res.json()
+    setBusy(false)
+    if (json.ok || res.ok) { flash('ok', refund ? 'Ingresso reembolsado.' : 'Ingresso cancelado.'); await load() }
+    else flash('err', json.error ?? 'Erro.')
+  }
+
   if (loading) return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
       <AdminSidebar />
@@ -198,9 +213,9 @@ export default function OrderDetailPage() {
         {msg && (
           <div style={{
             padding: '10px 16px', borderRadius: 10, marginBottom: 20, fontSize: '0.875rem',
-            background: msg.type === 'ok' ? 'rgba(79,102,84,0.08)' : C.redBg,
+            background: msg.type === 'ok' ? 'rgba(31,107,78,0.08)' : C.redBg,
             color: msg.type === 'ok' ? C.green : C.red,
-            border: `1px solid ${msg.type === 'ok' ? 'rgba(79,102,84,0.2)' : C.redBorder}`,
+            border: `1px solid ${msg.type === 'ok' ? 'rgba(31,107,78,0.2)' : C.redBorder}`,
           }}>{msg.text}</div>
         )}
 
@@ -240,7 +255,7 @@ export default function OrderDetailPage() {
                   { label: 'Método',          value: PM[order.payment_method ?? ''] ?? order.payment_method },
                   { label: 'Face total',       value: fmt(order.face_total) },
                   { label: 'Taxa de serviço',  value: fmt(order.service_fee_total) },
-                  { label: 'Taxa processamento', value: fmt(order.payment_fee) },
+                  { label: 'Taxa de processamento', value: fmt(order.payment_fee) },
                   ...(order.coupon_code ? [{ label: `Cupom (${order.coupon_code})`, value: `- ${fmt(order.coupon_discount)}` }] : []),
                 ].map(r => (
                   <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -277,6 +292,18 @@ export default function OrderDetailPage() {
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: '0.875rem', color: C.text, fontWeight: 500 }}>{fmt(t.price)}</p>
                     <p style={{ fontSize: '0.68rem', color: C.muted, fontFamily: 'monospace', marginTop: 2 }}>{t.qr_code.slice(0, 14)}…</p>
+                    {isPaid && !t.cancelled_at && (
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6, justifyContent: 'flex-end' }}>
+                        <button onClick={() => ticketAction(t.id, false)} disabled={busy}
+                          style={{ fontSize: '0.7rem', padding: '3px 9px', border: `1px solid ${C.border}`, borderRadius: 6, background: 'transparent', color: C.muted, cursor: 'pointer' }}>
+                          Cancelar
+                        </button>
+                        <button onClick={() => ticketAction(t.id, true)} disabled={busy}
+                          style={{ fontSize: '0.7rem', padding: '3px 9px', border: 'none', borderRadius: 6, background: C.red, color: '#fff', cursor: 'pointer' }}>
+                          Reembolsar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

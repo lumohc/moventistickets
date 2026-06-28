@@ -6,7 +6,7 @@ export async function generateQRDataURL(text: string): Promise<string> {
     errorCorrectionLevel: 'H',
     margin: 2,
     width: 280,
-    color: { dark: '#1A1D22', light: '#FFFFFF' },
+    color: { dark: '#1A211B', light: '#FFFFFF' },
   })
 }
 

@@ -1,20 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { Suspense } from 'react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', greenDk: '#3d5041', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', greenDk: '#175840', error: '#c0392b',
 }
 
 function LoginForm() {
-  const router = useRouter()
   const params = useSearchParams()
-  const redirect = params.get('redirect') || '/produtor/dashboard'
+  const redirect = params.get('redirect') || '/auth/pos-login'
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -35,8 +34,9 @@ function LoginForm() {
       return
     }
 
-    router.push(redirect)
-    router.refresh()
+    // Navegação completa: /auth/pos-login resolve o destino por papel
+    // (admin → /admin · bilheteiro → /pdv · produtor → /produtor/dashboard).
+    window.location.href = redirect
   }
 
   return (
@@ -44,14 +44,9 @@ function LoginForm() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 48, height: 48, background: C.green, borderRadius: 12,
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, color: '#fff', fontWeight: 700, marginBottom: 12,
-          }}>M</div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
-            Moventis
-          </h1>
+          <a href="/" style={{ display: 'inline-block', marginBottom: 10 }} aria-label="Início">
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
+          </a>
           <p style={{ fontSize: '0.85rem', color: C.muted, marginTop: 4 }}>Portal do Produtor</p>
         </div>
 
@@ -118,6 +113,9 @@ function LoginForm() {
           <p style={{ textAlign: 'center', marginTop: 8, fontSize: '0.85rem', color: C.muted }}>
             Não tem conta?{' '}
             <a href="/produtor/cadastro" style={{ color: C.green, fontWeight: 600 }}>Cadastrar-se</a>
+          </p>
+          <p style={{ textAlign: 'center', marginTop: 14, fontSize: '0.82rem' }}>
+            <a href="/" style={{ color: C.muted, textDecoration: 'none' }}>← Voltar ao site</a>
           </p>
         </div>
       </div>

@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
+import { Clock, CalendarDays } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', greenDk: '#3d5041',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', greenDk: '#175840',
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
@@ -83,7 +84,7 @@ export default async function EventosPage() {
             borderRadius: 12, padding: '14px 20px', marginBottom: 24,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <span style={{ fontSize: '1.2rem' }}>⏳</span>
+            <span style={{ display: 'inline-flex' }}><Clock size={20} strokeWidth={1.5} color="#92610a" /></span>
             <p style={{ fontSize: '0.875rem', color: '#92610a' }}>
               Você poderá criar eventos após a aprovação do seu cadastro.
             </p>
@@ -97,7 +98,7 @@ export default async function EventosPage() {
             borderRadius: 16, padding: '60px 32px', textAlign: 'center',
             boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
           }}>
-            <p style={{ fontSize: '2.5rem', marginBottom: 16 }}>🎭</p>
+            <p style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><CalendarDays size={44} strokeWidth={1.5} color={C.muted} /></p>
             <p style={{ fontSize: '1.05rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>
               Nenhum evento ainda
             </p>

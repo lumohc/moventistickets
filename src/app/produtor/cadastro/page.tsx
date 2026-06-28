@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', greenDk: '#3d5041', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', greenDk: '#175840', error: '#c0392b',
 }
 
 const inputStyle: React.CSSProperties = {
@@ -51,8 +51,9 @@ export default function CadastroPage() {
     setLoading(true)
     setError(null)
 
-    // 1. Cria conta (Auth) + perfil via API. O servidor cria o usuário no Auth
-    //    PRIMEIRO e só então insere o produtor (corrige producers_user_id_fkey).
+    // 1. Cria conta (Auth) + perfil do produtor via API. O servidor cria o
+    //    usuário no Auth PRIMEIRO e só então insere o produtor (evita o erro
+    //    de chave estrangeira producers_user_id_fkey).
     const res = await fetch('/api/produtor/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -88,14 +89,9 @@ export default function CadastroPage() {
       <div style={{ width: '100%', maxWidth: 460 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 48, height: 48, background: C.green, borderRadius: 12,
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, color: '#fff', fontWeight: 700, marginBottom: 12,
-          }}>M</div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
-            Moventis
-          </h1>
+          <a href="/" style={{ display: 'inline-block', marginBottom: 10 }} aria-label="Início">
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
+          </a>
           <p style={{ fontSize: '0.85rem', color: C.muted, marginTop: 4 }}>Cadastro de Produtor</p>
         </div>
 

@@ -2,8 +2,8 @@ import { createSupabaseAdmin } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
 }
 
 function fmt(n: number) {
@@ -41,7 +41,7 @@ export default async function AdminCuponsPage() {
           </div>
           <a
             href="/admin/cupons/novo"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: C.green, color: '#F4F1EB', borderRadius: 8, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: C.green, color: '#F4F3EC', borderRadius: 8, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}
           >
             + Novo cupom
           </a>
@@ -55,7 +55,7 @@ export default async function AdminCuponsPage() {
               <p style={{ fontSize: '0.875rem', color: C.muted, marginBottom: 24 }}>
                 Crie cupons de desconto para vendedores, afiliados ou campanhas.
               </p>
-              <a href="/admin/cupons/novo" style={{ display: 'inline-flex', padding: '10px 20px', background: C.green, color: '#F4F1EB', borderRadius: 8, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+              <a href="/admin/cupons/novo" style={{ display: 'inline-flex', padding: '10px 20px', background: C.green, color: '#F4F3EC', borderRadius: 8, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
                 + Criar primeiro cupom
               </a>
             </div>
@@ -89,7 +89,7 @@ export default async function AdminCuponsPage() {
                       {c.use_count}{c.max_uses ? `/${c.max_uses}` : ''}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
-                      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600, background: c.is_active ? 'rgba(79,102,84,0.1)' : 'rgba(0,0,0,0.06)', color: c.is_active ? C.green : C.muted }}>
+                      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600, background: c.is_active ? 'rgba(31,107,78,0.1)' : 'rgba(0,0,0,0.06)', color: c.is_active ? C.green : C.muted }}>
                         {c.is_active ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>

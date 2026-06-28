@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
+import SalesChart from '@/components/produtor/SalesChart'
+import { Banknote, FileText, CircleCheck } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
 }
 
 function fmt(n: number) {
@@ -45,6 +47,20 @@ export default async function FinanceiroPage() {
   const totalRepasse = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
   const totalTaxas   = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.service_fee_total) + Number(o.payment_fee ?? 0), 0)
 
+  // Série diária (repasse/dia) dos últimos 30 dias para o gráfico.
+  const dayMap = new Map<string, number>()
+  for (const o of paidOrders ?? []) {
+    const day = new Date((o as any).created_at).toISOString().slice(0, 10)
+    dayMap.set(day, (dayMap.get(day) ?? 0) + Number((o as any).face_total))
+  }
+  const chartPoints: { day: string; value: number }[] = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const key = d.toISOString().slice(0, 10)
+    chartPoints.push({ day: key, value: dayMap.get(key) ?? 0 })
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
       <Sidebar />
@@ -60,9 +76,9 @@ export default async function FinanceiroPage() {
         {/* Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
-            { icon: '💰', label: 'Você vai receber',   value: fmt(totalRepasse), highlight: true  },
-            { icon: '🧾', label: 'Taxas Moventis',     value: fmt(totalTaxas),   highlight: false },
-            { icon: '✅', label: 'Pedidos pagos',      value: paidOrders?.length ?? 0, highlight: false },
+            { Icon: Banknote,    label: 'Você vai receber',   value: fmt(totalRepasse), highlight: true  },
+            { Icon: FileText,    label: 'Taxas Moventis',     value: fmt(totalTaxas),   highlight: false },
+            { Icon: CircleCheck, label: 'Pedidos pagos',      value: paidOrders?.length ?? 0, highlight: false },
           ].map(card => (
             <div key={card.label} style={{
               background: card.highlight ? C.green : C.surface,
@@ -70,12 +86,31 @@ export default async function FinanceiroPage() {
               borderRadius: 14, padding: '22px 24px',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
-              <p style={{ fontSize: '1.5rem', marginBottom: 6 }}>{card.icon}</p>
+              <p style={{ marginBottom: 6 }}><card.Icon size={24} strokeWidth={1.5} color={card.highlight ? '#fff' : C.green} /></p>
               <p style={{ fontSize: '1.6rem', fontWeight: 700, color: card.highlight ? '#fff' : C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
               <p style={{ fontSize: '0.78rem', color: card.highlight ? 'rgba(255,255,255,0.75)' : C.muted, marginTop: 2 }}>{card.label}</p>
             </div>
           ))}
         </div>
+
+        {/* Baixar relatórios */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+          <a href="/api/produtor/export?type=vendas" style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, textDecoration: 'none', padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>
+            Baixar vendas (CSV)
+          </a>
+          <a href="/api/produtor/export?type=bordero" style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, textDecoration: 'none', padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>
+            Baixar borderô (CSV)
+          </a>
+        </div>
+
+        {/* Gráfico de vendas (últimos 30 dias) */}
+        {(paidOrders?.length ?? 0) > 0 && (
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 2 }}>Seu repasse por dia</h2>
+            <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 18 }}>Últimos 30 dias</p>
+            <SalesChart points={chartPoints} />
+          </div>
+        )}
 
         {/* Dados bancários */}
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>

@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
   red: '#c0392b', redBg: 'rgba(244,67,54,0.08)', redBorder: 'rgba(244,67,54,0.25)',
 }
 
@@ -30,8 +30,8 @@ function fmtDate(d: string | null) {
 }
 
 const inputStyle = {
-  width: '100%', padding: '8px 10px', border: `1px solid #DDD9D0`,
-  borderRadius: 8, fontSize: '0.875rem', color: '#1A1D22', background: '#F4F1EB',
+  width: '100%', padding: '8px 10px', border: `1px solid #D8DACF`,
+  borderRadius: 8, fontSize: '0.875rem', color: '#1A211B', background: '#F4F3EC',
   outline: 'none', boxSizing: 'border-box' as const,
 }
 
@@ -57,7 +57,7 @@ export default function PDVPage() {
 
   const loadEvents = useCallback(async () => {
     setLoadingEvents(true)
-    const res  = await fetch('/api/admin/pdv')
+    const res  = await fetch('/api/pdv')
     const json = await res.json()
     setEvents(json.data ?? [])
     setLoadingEvents(false)
@@ -99,7 +99,7 @@ export default function PDVPage() {
     setBusy(true)
     setError(null)
 
-    const res  = await fetch('/api/admin/pdv', {
+    const res  = await fetch('/api/pdv', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
@@ -130,14 +130,27 @@ export default function PDVPage() {
     setStep('select-event')
   }
 
-  return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
-      <AdminSidebar />
+  async function logout() {
+    const sb = createSupabaseBrowser()
+    await sb.auth.signOut()
+    window.location.href = '/produtor/login'
+  }
 
-      <main style={{ flex: 1, marginLeft: 220, padding: '40px 36px', maxWidth: 780 }}>
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 14, position: 'sticky', top: 0, zIndex: 10 }}>
+        <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 24 }} />
+        <nav style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
+          <a href="/pdv" style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, color: '#fff', background: C.green }}>Vender</a>
+          <a href="/pdv/checkin" style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, color: C.muted }}>Check-in</a>
+        </nav>
+        <button onClick={logout} style={{ marginLeft: 'auto', fontSize: '0.82rem', color: C.muted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer' }}>Sair</button>
+      </header>
+
+      <main style={{ maxWidth: 780, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>PDV — Venda no balcao</h1>
-          <p style={{ color: C.muted, fontSize: '0.9rem', marginTop: 4 }}>Emita ingressos na hora. So para admin/equipe/bilheteiro.</p>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>PDV — Venda no balcão</h1>
+          <p style={{ color: C.muted, fontSize: '0.9rem', marginTop: 4 }}>Emita ingressos na hora.</p>
         </div>
 
         {/* ── Step 1: Selecionar evento ────────────────────────────── */}
@@ -162,7 +175,7 @@ export default function PDVPage() {
                   cursor: 'pointer',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,102,84,0.04)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(31,107,78,0.04)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <div>
@@ -265,7 +278,7 @@ export default function PDVPage() {
                 disabled={busy}
                 style={{
                   width: '100%', marginTop: 20, padding: '14px',
-                  background: busy ? 'rgba(79,102,84,0.6)' : C.green,
+                  background: busy ? 'rgba(31,107,78,0.6)' : C.green,
                   color: '#fff', border: 'none', borderRadius: 10,
                   fontSize: '1rem', fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer',
                   letterSpacing: '-0.01em',
@@ -303,12 +316,6 @@ export default function PDVPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: '0.68rem', color: C.muted, fontFamily: 'monospace' }}>{t.qr_code.slice(0, 20)}…</p>
-                    <a
-                      href={`/admin/pedidos/${successOrder.order_id}`}
-                      style={{ fontSize: '0.75rem', color: C.green, fontWeight: 600, textDecoration: 'none' }}
-                    >
-                      Ver pedido →
-                    </a>
                   </div>
                 </div>
               ))}

@@ -44,12 +44,12 @@ const event = {
 }
 
 const C = {
-  bg:      '#F4F1EB',
+  bg:      '#F4F3EC',
   surface: '#FFFFFF',
-  border:  '#DDD9D0',
-  text:    '#1A1D22',
-  muted:   'rgba(26,29,34,0.55)',
-  green:   '#4F6654',
+  border:  '#D8DACF',
+  text:    '#1A211B',
+  muted:   'rgba(26,33,27,0.55)',
+  green:   '#1F6B4E',
 }
 
 const S: Record<string, React.CSSProperties> = {
@@ -57,10 +57,10 @@ const S: Record<string, React.CSSProperties> = {
   header:     { background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10 },
   logoTxt:    { fontSize: '1.1rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' },
   logoSpan:   { color: C.green },
-  demoBadge:  { marginLeft: 'auto', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'rgba(79,102,84,0.12)', border: '1px solid rgba(79,102,84,0.3)', color: C.green, padding: '3px 10px', borderRadius: 100 },
+  demoBadge:  { marginLeft: 'auto', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'rgba(31,107,78,0.12)', border: '1px solid rgba(31,107,78,0.3)', color: C.green, padding: '3px 10px', borderRadius: 100 },
   wrap:       { maxWidth: 960, margin: '0 auto', padding: '40px 24px' },
   card:       { background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px', marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' },
-  badge:      { display: 'inline-block', background: 'rgba(79,102,84,0.10)', border: `1px solid rgba(79,102,84,0.25)`, color: C.green, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '4px 12px', borderRadius: 100, marginBottom: 20 },
+  badge:      { display: 'inline-block', background: 'rgba(31,107,78,0.10)', border: `1px solid rgba(31,107,78,0.25)`, color: C.green, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '4px 12px', borderRadius: 100, marginBottom: 20 },
   h1:         { fontSize: '2.2rem', fontWeight: 700, color: C.text, letterSpacing: '-0.03em', marginBottom: 6 },
   sub:        { fontSize: '1rem', color: C.muted, marginBottom: 32 },
   grid4:      { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 },
@@ -76,7 +76,7 @@ const S: Record<string, React.CSSProperties> = {
   priceItem:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${C.border}` },
   priceLbl:   { fontSize: '0.875rem', color: C.muted },
   priceVal:   { fontSize: '0.95rem', fontWeight: 600, color: C.text },
-  feeNote:    { marginTop: 20, padding: 14, background: 'rgba(79,102,84,0.06)', borderRadius: 8, border: '1px solid rgba(79,102,84,0.15)', fontSize: '0.75rem', color: C.muted, lineHeight: 1.6 },
+  feeNote:    { marginTop: 20, padding: 14, background: 'rgba(31,107,78,0.06)', borderRadius: 8, border: '1px solid rgba(31,107,78,0.15)', fontSize: '0.75rem', color: C.muted, lineHeight: 1.6 },
   demoNote:   { background: '#FEF3C7', border: '1px solid #D97706', borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: '0.82rem', color: '#92400E' },
 }
 
@@ -159,7 +159,9 @@ export default function PedroIvoDemoPage() {
 
       <main style={S.page}>
         <header style={S.header}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
+          <a href="/" aria-label="Início" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
+          </a>
           <span style={S.demoBadge}>Demo — mapa de assentos</span>
         </header>
 
@@ -210,7 +212,7 @@ export default function PedroIvoDemoPage() {
                 ))}
               </ul>
               <p style={S.feeNote}>
-                + taxa de serviço por ingresso · PIX R$2 por pedido · Cartão 4,98% — pagos pelo comprador.
+                + taxa de serviço por ingresso · taxa de processamento (PIX R$2/pedido · crédito 4,98% · débito 2,70%) — pagas pelo comprador.
               </p>
             </div>
           </div>

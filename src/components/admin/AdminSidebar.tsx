@@ -2,26 +2,27 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { LayoutDashboard, Building2, CalendarDays, Landmark, Ticket, Banknote, Store, Percent, Settings, LogOut } from 'lucide-react'
 
 const C = {
   bg:      '#0F1115',
-  surface: '#1A1D22',
+  surface: '#1A211B',
   border:  'rgba(255,255,255,0.07)',
-  text:    '#F4F1EB',
+  text:    '#F4F3EC',
   muted:   'rgba(244,241,235,0.40)',
-  green:   '#4F6654',
+  green:   '#1F6B4E',
 }
 
 const NAV = [
-  { href: '/admin',                  label: 'Visão geral',  icon: '◻', exact: true },
-  { href: '/admin/produtores',       label: 'Produtores',   icon: '🏢' },
-  { href: '/admin/eventos',          label: 'Eventos',      icon: '🎭' },
-  { href: '/admin/locais',           label: 'Locais',       icon: '🏛️' },
-  { href: '/admin/pedidos',          label: 'Pedidos',      icon: '🎟️' },
-  { href: '/admin/financeiro',       label: 'Financeiro',   icon: '💰' },
-  { href: '/admin/pdv',              label: 'PDV / Balcao', icon: '#' },
-  { href: '/admin/cupons',           label: 'Cupons',       icon: '%' },
-  { href: '/admin/configuracoes',    label: 'Configuracoes', icon: '⚙' },
+  { href: '/admin',                  label: 'Visão geral',   Icon: LayoutDashboard, exact: true },
+  { href: '/admin/produtores',       label: 'Produtores',    Icon: Building2 },
+  { href: '/admin/eventos',          label: 'Eventos',       Icon: CalendarDays },
+  { href: '/admin/locais',           label: 'Locais',        Icon: Landmark },
+  { href: '/admin/pedidos',          label: 'Pedidos',       Icon: Ticket },
+  { href: '/admin/financeiro',       label: 'Financeiro',    Icon: Banknote },
+  { href: '/pdv',                    label: 'PDV / Balcão',  Icon: Store },
+  { href: '/admin/cupons',           label: 'Cupons',        Icon: Percent },
+  { href: '/admin/configuracoes',    label: 'Configurações', Icon: Settings },
 ]
 
 export default function AdminSidebar() {
@@ -43,12 +44,10 @@ export default function AdminSidebar() {
     }}>
       {/* Logo */}
       <div style={{ padding: '24px 20px 20px', borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div>
-            <img src="/logo-reversed-transparent.svg" alt="Moventis" style={{ height: 48 }} />
-            <p style={{ fontSize: '0.65rem', color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Admin</p>
-          </div>
-        </div>
+        <a href="/admin" style={{ display: 'block', textDecoration: 'none' }} aria-label="Admin">
+          <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 28 }} />
+          <p style={{ fontSize: '0.65rem', color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>Admin</p>
+        </a>
       </div>
 
       {/* Nav */}
@@ -63,13 +62,13 @@ export default function AdminSidebar() {
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 12px', borderRadius: 8, marginBottom: 2,
                 textDecoration: 'none',
-                background: active ? 'rgba(79,102,84,0.18)' : 'transparent',
+                background: active ? 'rgba(31,107,78,0.18)' : 'transparent',
                 color: active ? C.text : C.muted,
                 fontSize: '0.875rem', fontWeight: active ? 600 : 400,
                 transition: 'all 0.15s',
               }}
             >
-              <span style={{ width: 20, textAlign: 'center' }}>{item.icon}</span>
+              <item.Icon size={18} strokeWidth={1.5} />
               {item.label}
             </a>
           )
@@ -98,7 +97,7 @@ export default function AdminSidebar() {
             display: 'flex', alignItems: 'center', gap: 8,
           }}
         >
-          ↩ Sair
+          <LogOut size={15} strokeWidth={1.5} /> Sair
         </button>
       </div>
     </aside>

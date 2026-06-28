@@ -1,15 +1,17 @@
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import type { Metadata } from 'next'
 import { Calendar, MapPin } from 'lucide-react'
+import SiteHeader from '@/components/SiteHeader'
+import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
   title: 'Eventos — Moventis',
-  description: 'Compre ingressos para os melhores eventos de Florianópolis e Santa Catarina.',
+  description: 'Compre ingressos para os melhores eventos.',
 }
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654', esmeralda: '#1F6B4E',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E', esmeralda: '#1F6B4E',
 }
 
 const CAT_LABEL: Record<string, string> = {
@@ -24,7 +26,9 @@ function fmtDate(d?: string | null, t?: string | null) {
     + (t ? ` · ${t.slice(0, 5)}h` : '')
 }
 
-export default async function EventosPage() {
+export default async function EventosPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams
+  const query = (q ?? '').trim().toLowerCase()
   const admin = createSupabaseAdmin()
 
   const { data: events } = await admin
@@ -35,37 +39,29 @@ export default async function EventosPage() {
     .order('event_date', { ascending: true })
 
   const upcoming = (events ?? []).filter((e: any) => {
-    if (!e.event_date) return true
-    return new Date(e.event_date) >= new Date(new Date().toDateString())
+    if (e.event_date && new Date(e.event_date) < new Date(new Date().toDateString())) return false
+    if (query) {
+      const hay = `${e.name ?? ''} ${(e.venues as any)?.name ?? ''} ${(e.venues as any)?.city ?? ''}`.toLowerCase()
+      if (!hay.includes(query)) return false
+    }
+    return true
   })
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
-      {/* Header */}
-      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo-transparent.svg" alt="Moventis" style={{ height: 44 }} />
-        </a>
-        <a href="/produtor/login" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none', padding: '7px 16px', border: `1px solid ${C.border}`, borderRadius: 8 }}>
-          Sou produtor →
-        </a>
-      </header>
+      <SiteHeader />
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 24px' }}>
-        {/* Hero texto */}
-        <div style={{ marginBottom: 48, textAlign: 'center' }}>
-          <h1 style={{ fontSize: '2.4rem', fontWeight: 700, color: C.text, letterSpacing: '-0.03em', marginBottom: 12 }}>
-            Eventos em Santa Catarina
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '34px 24px' }}>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
+            {query ? `Resultados para “${q}”` : 'Eventos'}
           </h1>
-          <p style={{ fontSize: '1.05rem', color: C.muted, maxWidth: 520, margin: '0 auto' }}>
-            Escolha seus lugares, compre online e vá ao show.
-          </p>
         </div>
 
         {/* Nenhum evento */}
         {upcoming.length === 0 && (
           <div style={{ textAlign: 'center', padding: '80px 24px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <img src="/logo-transparent.svg" alt="" style={{ height: 40, opacity: 0.3, marginBottom: 16 }} />
+            <img src="/moventis-icone-v.svg" alt="" style={{ height: 40, opacity: 0.3, marginBottom: 16 }} />
             <p style={{ fontSize: '1.1rem', fontWeight: 600, color: C.text, marginBottom: 8 }}>Nenhum evento disponível</p>
             <p style={{ fontSize: '0.9rem', color: C.muted }}>Novos eventos em breve. Volte logo!</p>
           </div>
@@ -107,7 +103,7 @@ export default async function EventosPage() {
                         height: 140, background: `linear-gradient(135deg, rgba(31,107,78,0.12), rgba(31,107,78,0.05))`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <img src="/logo-transparent.svg" alt="" style={{ maxWidth: 130, maxHeight: 46, opacity: 0.4 }} />
+                        <img src="/moventis-icone-v.svg" alt="" style={{ maxWidth: 130, maxHeight: 46, opacity: 0.4 }} />
                       </div>
                     )}
 
@@ -117,7 +113,7 @@ export default async function EventosPage() {
                         <span style={{
                           fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.08em',
                           textTransform: 'uppercase', color: C.green,
-                          background: 'rgba(79,102,84,0.09)', padding: '3px 10px', borderRadius: 100,
+                          background: 'rgba(31,107,78,0.09)', padding: '3px 10px', borderRadius: 100,
                         }}>
                           {CAT_LABEL[cat] ?? 'Evento'}
                         </span>
@@ -157,7 +153,7 @@ export default async function EventosPage() {
                             <>
                               <p style={{ fontSize: '0.68rem', color: C.muted, marginBottom: 1 }}>a partir de</p>
                               <p style={{ fontSize: '1.1rem', fontWeight: 700, color: C.text }}>
-                                R$ {ev.half_price ? (priceFace / 2).toFixed(2) : priceFace.toFixed(2)}
+                                R$ {(ev.half_price ? priceFace / 2 : priceFace).toFixed(2).replace('.', ',')}
                               </p>
                             </>
                           ) : (
@@ -181,12 +177,7 @@ export default async function EventosPage() {
         )}
       </div>
 
-      {/* Footer mínimo */}
-      <footer style={{ borderTop: `1px solid ${C.border}`, padding: '28px 24px', textAlign: 'center', marginTop: 60 }}>
-        <p style={{ fontSize: '0.8rem', color: C.muted }}>
-          © 2026 Moventis · <a href="/produtor/cadastro" style={{ color: C.green, textDecoration: 'none' }}>Cadastrar meu evento</a>
-        </p>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

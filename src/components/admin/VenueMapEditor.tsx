@@ -1,15 +1,16 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { ChevronUp, ChevronDown, ArrowLeft } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', greenLight: 'rgba(79,102,84,0.08)',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', greenLight: 'rgba(31,107,78,0.08)',
   red: '#dc2626',
 }
 
 const SECTOR_COLORS = [
-  '#4F6654', '#73806A', '#60a5fa', '#22c55e', '#f59e0b',
+  '#1F6B4E', '#73806A', '#60a5fa', '#22c55e', '#f59e0b',
   '#a78bfa', '#f87171', '#34d399', '#fb923c', '#38bdf8',
 ]
 
@@ -147,7 +148,7 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
   return (
     <div>
       {/* Aviso de primeira versão */}
-      <div style={{ padding: '12px 16px', background: 'rgba(79,102,84,0.08)', border: `1px solid rgba(79,102,84,0.25)`, borderRadius: 10, marginBottom: 24, fontSize: '0.82rem', color: C.green }}>
+      <div style={{ padding: '12px 16px', background: 'rgba(31,107,78,0.08)', border: `1px solid rgba(31,107,78,0.25)`, borderRadius: 10, marginBottom: 24, fontSize: '0.82rem', color: C.green }}>
         <strong>Primeira versão para revisão.</strong> Este editor permite configurar setores e ver contagens.
         O editor visual interativo (arrastar poltronas no SVG) chegará na próxima iteração — aguardando feedback da Fabiola.
       </div>
@@ -158,7 +159,7 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
             <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: C.text }}>Setores</h2>
-              <button onClick={addArea} style={{ padding: '6px 14px', background: C.green, color: '#F4F1EB', border: 'none', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={addArea} style={{ padding: '6px 14px', background: C.green, color: '#F4F3EC', border: 'none', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>
                 + Setor
               </button>
             </div>
@@ -188,8 +189,8 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
                       </p>
                     </div>
                     <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, -1) }} title="Mover para cima" style={arrowBtn} disabled={i === 0}>↑</button>
-                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, 1) }} title="Mover para baixo" style={arrowBtn} disabled={i === areas.length - 1}>↓</button>
+                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, -1) }} title="Mover para cima" style={arrowBtn} disabled={i === 0}><ChevronUp size={14} strokeWidth={1.5} /></button>
+                      <button onClick={e => { e.stopPropagation(); moveArea(area.id, 1) }} title="Mover para baixo" style={arrowBtn} disabled={i === areas.length - 1}><ChevronDown size={14} strokeWidth={1.5} /></button>
                     </div>
                   </div>
                 </div>
@@ -218,7 +219,7 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
         <div>
           {!sel ? (
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '60px 32px', textAlign: 'center', color: C.muted }}>
-              <p style={{ fontSize: '1.5rem', marginBottom: 12 }}>←</p>
+              <p style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><ArrowLeft size={24} strokeWidth={1.5} color={C.muted} /></p>
               <p style={{ fontWeight: 600, color: C.text, marginBottom: 6 }}>Selecione um setor</p>
               <p style={{ fontSize: '0.875rem' }}>Ou clique em "+ Setor" para criar um novo.</p>
             </div>
@@ -258,7 +259,7 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {SECTOR_COLORS.map(c => (
                     <button key={c} onClick={() => updateArea(sel.id, { color: c })} style={{
-                      width: 28, height: 28, borderRadius: 6, background: c, border: sel.color === c ? '2px solid #1A1D22' : '2px solid transparent', cursor: 'pointer',
+                      width: 28, height: 28, borderRadius: 6, background: c, border: sel.color === c ? '2px solid #1A211B' : '2px solid transparent', cursor: 'pointer',
                     }} title={c} />
                   ))}
                   <input type="color" value={sel.color} onChange={e => updateArea(sel.id, { color: e.target.value })} style={{ width: 28, height: 28, border: 'none', borderRadius: 6, cursor: 'pointer', padding: 0 }} title="Cor personalizada" />
@@ -314,7 +315,7 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
             />
             {jsonError && <p style={{ color: C.red, fontSize: '0.82rem', marginTop: 8 }}>{jsonError}</p>}
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={applyJson} style={{ padding: '10px 24px', background: C.green, color: '#F4F1EB', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={applyJson} style={{ padding: '10px 24px', background: C.green, color: '#F4F3EC', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
                 Aplicar
               </button>
               <button onClick={() => setJsonMode(false)} style={{ padding: '10px 20px', border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', color: C.muted, cursor: 'pointer' }}>
@@ -330,7 +331,7 @@ export default function VenueMapEditor({ venueId, venueName, initialData }: Prop
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ padding: '12px 32px', background: C.green, color: '#F4F1EB', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
+          style={{ padding: '12px 32px', background: C.green, color: '#F4F3EC', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
         >
           {saving ? 'Salvando…' : 'Salvar mapa'}
         </button>
@@ -367,7 +368,7 @@ function RowsEditor({ area, onChange }: { area: Area; onChange: (p: Partial<Area
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <label style={labelStyle}>Fileiras ({rows.length})</label>
-        <button onClick={addRow} style={{ padding: '4px 12px', background: C.green, color: '#F4F1EB', border: 'none', borderRadius: 6, fontSize: '0.78rem', cursor: 'pointer' }}>+ Fileira</button>
+        <button onClick={addRow} style={{ padding: '4px 12px', background: C.green, color: '#F4F3EC', border: 'none', borderRadius: 6, fontSize: '0.78rem', cursor: 'pointer' }}>+ Fileira</button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
         {rows.map((row, i) => (

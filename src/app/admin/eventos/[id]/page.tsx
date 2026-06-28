@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
   red: '#c0392b', redBg: 'rgba(244,67,54,0.08)', redBorder: 'rgba(244,67,54,0.25)',
 }
 
@@ -26,8 +26,8 @@ function fmtDate(d: string | null) {
 }
 
 const inputStyle = {
-  width: '100%', padding: '8px 10px', border: `1px solid #DDD9D0`,
-  borderRadius: 8, fontSize: '0.875rem', color: '#1A1D22', background: '#F4F1EB',
+  width: '100%', padding: '8px 10px', border: `1px solid #D8DACF`,
+  borderRadius: 8, fontSize: '0.875rem', color: '#1A211B', background: '#F4F3EC',
   outline: 'none', boxSizing: 'border-box' as const,
 }
 
@@ -59,6 +59,12 @@ export default function EventDetailPage() {
   const [ctSeats, setCtSeats] = useState('')
   const [ctType, setCtType]   = useState('inteira')
 
+  // Bilheteiros (operadores de balcão)
+  const [operators, setOperators] = useState<{ id: string; email: string; name: string | null }[]>([])
+  const [opEmail, setOpEmail]       = useState('')
+  const [opPassword, setOpPassword] = useState('')
+  const [opName, setOpName]         = useState('')
+
   function flash(type: 'ok' | 'err', text: string) {
     setMsg({ type, text })
     setTimeout(() => setMsg(null), 4000)
@@ -84,9 +90,41 @@ export default function EventDetailPage() {
     setBlocks(json.data ?? [])
   }, [id])
 
+  const loadOperators = useCallback(async () => {
+    const res  = await fetch(`/api/admin/events/${id}/operators`)
+    const json = await res.json()
+    setOperators(json.data ?? [])
+  }, [id])
+
   useEffect(() => {
-    Promise.all([loadEvent(), loadBlocks()]).finally(() => setLoading(false))
-  }, [loadEvent, loadBlocks])
+    Promise.all([loadEvent(), loadBlocks(), loadOperators()]).finally(() => setLoading(false))
+  }, [loadEvent, loadBlocks, loadOperators])
+
+  async function addOperator() {
+    if (!opEmail.trim() || !opPassword.trim()) { flash('err', 'Informe e-mail e senha do bilheteiro.'); return }
+    setBusy(true)
+    const res  = await fetch(`/api/admin/events/${id}/operators`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: opEmail.trim(), password: opPassword, name: opName.trim() || null }),
+    })
+    const json = await res.json()
+    setBusy(false)
+    if (json.ok) { flash('ok', 'Bilheteiro criado.'); setOpEmail(''); setOpPassword(''); setOpName(''); await loadOperators() }
+    else flash('err', json.error ?? 'Erro ao criar bilheteiro.')
+  }
+
+  async function removeOperator(operatorId: string) {
+    if (!window.confirm('Remover este bilheteiro do evento?')) return
+    setBusy(true)
+    const res  = await fetch(`/api/admin/events/${id}/operators`, {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ operator_id: operatorId }),
+    })
+    const json = await res.json()
+    setBusy(false)
+    if (json.ok) { flash('ok', 'Bilheteiro removido.'); await loadOperators() }
+    else flash('err', json.error ?? 'Erro.')
+  }
 
   async function savePrice() {
     setBusy(true)
@@ -197,9 +235,9 @@ export default function EventDetailPage() {
         {msg && (
           <div style={{
             padding: '10px 16px', borderRadius: 10, marginBottom: 20, fontSize: '0.875rem',
-            background: msg.type === 'ok' ? 'rgba(79,102,84,0.08)' : C.redBg,
+            background: msg.type === 'ok' ? 'rgba(31,107,78,0.08)' : C.redBg,
             color: msg.type === 'ok' ? C.green : C.red,
-            border: `1px solid ${msg.type === 'ok' ? 'rgba(79,102,84,0.2)' : C.redBorder}`,
+            border: `1px solid ${msg.type === 'ok' ? 'rgba(31,107,78,0.2)' : C.redBorder}`,
           }}>{msg.text}</div>
         )}
 
@@ -270,6 +308,44 @@ export default function EventDetailPage() {
                 Emitir cortesia
               </button>
             </div>
+          </section>
+
+          {/* Bilheteiros (operadores de balcão) */}
+          <section style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24 }}>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: C.text, marginBottom: 4 }}>Bilheteiros (balcão)</h2>
+            <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 14 }}>
+              Login só-PDV deste evento: vende no balcão, faz check-in e reenvia ingresso. Não cancela/reembolsa/bloqueia.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { label: 'Nome',            value: opName,     set: setOpName,     type: 'text',  ph: 'Nome do bilheteiro' },
+                { label: 'E-mail de login*', value: opEmail,    set: setOpEmail,    type: 'email', ph: 'balcao-evento@…' },
+                { label: 'Senha*',          value: opPassword, set: setOpPassword, type: 'text',  ph: 'mín. 6 caracteres' },
+              ].map(f => (
+                <div key={f.label}>
+                  <label style={{ fontSize: '0.72rem', color: C.muted, display: 'block', marginBottom: 3 }}>{f.label}</label>
+                  <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={inputStyle} />
+                </div>
+              ))}
+              <button onClick={addOperator} disabled={busy} style={{ padding: '11px', background: C.green, color: '#fff', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginTop: 4 }}>
+                Criar bilheteiro
+              </button>
+            </div>
+            {operators.length > 0 && (
+              <div style={{ marginTop: 16, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+                {operators.map(op => (
+                  <div key={op.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+                    <div>
+                      <p style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text }}>{op.name || op.email}</p>
+                      <p style={{ fontSize: '0.72rem', color: C.muted }}>{op.email}</p>
+                    </div>
+                    <button onClick={() => removeOperator(op.id)} disabled={busy} style={{ fontSize: '0.72rem', color: C.red, background: 'none', border: `1px solid ${C.redBorder}`, borderRadius: 6, padding: '3px 9px', cursor: 'pointer' }}>
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Bloquear assento */}

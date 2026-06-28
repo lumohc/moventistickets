@@ -1,24 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
 import { verifyTicketQr } from '@/lib/ticket-signing'
+import { resolveStaff } from '@/lib/staff'
 
-/** Só equipe Moventis autenticada (tabela admins) faz check-in. Produtor e
- *  anônimo (link + QR) NÃO dão check-in. */
-async function requireAdmin() {
+/** Só equipe Moventis autenticada faz check-in: admin OU operador de balcão
+ *  (bilheteiro) do evento. Produtor e anônimo (link + QR) NÃO dão check-in. */
+async function requireStaff() {
   const sb = await createSupabaseServerClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return null
-  const admin = createSupabaseAdmin()
-  const { data } = await admin.from('admins').select('user_id').eq('user_id', user.id).single()
-  return data ? user : null
+  const staff = await resolveStaff(user.id)
+  if (!staff.isAdmin && staff.operatorEventIds.length === 0) return null
+  return staff
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const operator = await requireAdmin()
-    if (!operator) {
+    const staff = await requireStaff()
+    if (!staff) {
       return NextResponse.json(
-        { valid: false, message: 'Check-in restrito à equipe Moventis. Faça login como administrador.' },
+        { valid: false, message: 'Check-in restrito à equipe Moventis. Faça login como admin ou bilheteiro.' },
         { status: 401 },
       )
     }
@@ -27,6 +28,11 @@ export async function POST(req: NextRequest) {
 
     if (!qr_code || !event_id) {
       return NextResponse.json({ error: 'qr_code e event_id são obrigatórios.' }, { status: 400 })
+    }
+
+    // Operador (bilheteiro) só faz check-in dos eventos a que está vinculado.
+    if (!staff.isAdmin && !staff.operatorEventIds.includes(event_id)) {
+      return NextResponse.json({ valid: false, message: 'Sem permissão para check-in neste evento.' }, { status: 403 })
     }
 
     // Verifica assinatura HMAC + versão antes de tocar no banco.

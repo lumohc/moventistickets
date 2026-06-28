@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import { X, CircleCheck, Ban } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)', green: '#4F6654',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
 }
 
 const STATUS_INFO: Record<string, { label: string; color: string; bg: string }> = {
@@ -158,7 +159,7 @@ export default function AdminProdutoresPage() {
                     padding: '14px 22px', alignItems: 'center',
                     borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none',
                     cursor: 'pointer',
-                    background: isActive ? 'rgba(79,102,84,0.06)' : 'transparent',
+                    background: isActive ? 'rgba(31,107,78,0.06)' : 'transparent',
                     transition: 'background 0.1s',
                   }}
                 >
@@ -188,15 +189,15 @@ export default function AdminProdutoresPage() {
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', position: 'sticky', top: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                 <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text }}>{selected.name}</h2>
-                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, fontSize: '1.2rem', padding: 0 }}>✕</button>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 0, display: 'inline-flex' }} aria-label="Fechar"><X size={20} strokeWidth={1.5} /></button>
               </div>
 
               {msg && (
                 <div style={{
                   padding: '8px 12px', borderRadius: 8, marginBottom: 14, fontSize: '0.8rem',
-                  background: msg.type === 'ok' ? 'rgba(79,102,84,0.08)' : '#fdf2f2',
+                  background: msg.type === 'ok' ? 'rgba(31,107,78,0.08)' : '#fdf2f2',
                   color: msg.type === 'ok' ? C.green : '#c0392b',
-                  border: `1px solid ${msg.type === 'ok' ? 'rgba(79,102,84,0.2)' : '#f5c6cb'}`,
+                  border: `1px solid ${msg.type === 'ok' ? 'rgba(31,107,78,0.2)' : '#f5c6cb'}`,
                 }}>
                   {msg.text}
                 </div>
@@ -259,9 +260,10 @@ export default function AdminProdutoresPage() {
                         flex: 1, padding: '10px 0', background: C.green, color: '#fff',
                         border: 'none', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600,
                         cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}
                     >
-                      ✅ Aprovar
+                      <CircleCheck size={16} strokeWidth={1.5} /> Aprovar
                     </button>
                   )}
                   {selected.status !== 'suspended' && (
@@ -273,9 +275,10 @@ export default function AdminProdutoresPage() {
                         border: '1px solid rgba(244,67,54,0.25)', borderRadius: 8,
                         fontSize: '0.85rem', fontWeight: 600,
                         cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}
                     >
-                      ⛔ Suspender
+                      <Ban size={16} strokeWidth={1.5} /> Suspender
                     </button>
                   )}
                   {selected.status !== 'pending' && (

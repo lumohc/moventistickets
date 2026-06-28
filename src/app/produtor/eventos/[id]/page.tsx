@@ -5,11 +5,12 @@ import { useRouter, useParams } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import Sidebar from '@/components/produtor/Sidebar'
 import PosterUpload from '@/components/produtor/PosterUpload'
+import { Info, CircleCheck } from 'lucide-react'
 
 const C = {
-  bg: '#F4F1EB', surface: '#FFFFFF', border: '#DDD9D0',
-  text: '#1A1D22', muted: 'rgba(26,29,34,0.52)',
-  green: '#4F6654', error: '#c0392b',
+  bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
+  text: '#1A211B', muted: 'rgba(26,33,27,0.52)',
+  green: '#1F6B4E', error: '#c0392b',
 }
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', border: `1px solid ${C.border}`,
@@ -239,9 +240,10 @@ export default function EditarEventoPage() {
         </h1>
 
         {!canEdit && (
-          <div style={{ background: 'rgba(33,150,243,0.08)', border: '1px solid rgba(33,150,243,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: '#1a4a7a' }}>
-            ℹ️ Este evento está {statusInfo.label.toLowerCase()} e não pode ser editado.{' '}
-            {eventStatus === 'pending_review' && 'Aguarde a análise da equipe Moventis.'}
+          <div style={{ background: 'rgba(33,150,243,0.08)', border: '1px solid rgba(33,150,243,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: '#1a4a7a', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+            <Info size={16} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: 2 }} />
+            <span>Este evento está {statusInfo.label.toLowerCase()} e não pode ser editado.{' '}
+            {eventStatus === 'pending_review' && 'Aguarde a análise da equipe Moventis.'}</span>
           </div>
         )}
 
@@ -252,8 +254,8 @@ export default function EditarEventoPage() {
         )}
 
         {success && (
-          <div style={{ background: 'rgba(79,102,84,0.08)', border: '1px solid rgba(79,102,84,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: C.green }}>
-            ✅ Evento salvo com sucesso.
+          <div style={{ background: 'rgba(31,107,78,0.08)', border: '1px solid rgba(31,107,78,0.25)', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: C.green, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <CircleCheck size={16} strokeWidth={1.5} /> Evento salvo com sucesso.
           </div>
         )}
 
