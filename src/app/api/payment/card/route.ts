@@ -184,21 +184,14 @@ export async function POST(req: NextRequest) {
       asaas_payment_id:  asaasPaymentId,
     }).eq('id', order_id)
 
-    // Registra uso do cupom (antes de confirmar, para garantir consistência)
+    // Vincula o cupom ao pedido. O use_count (limite) é contado só no PAGAMENTO
+    // confirmado (confirmOrderAndIssueTickets, chamado logo abaixo) — igual ao PIX.
     if (couponId && coupon_code) {
       await admin.from('coupon_uses').upsert({
         coupon_id:       couponId,
         order_id,
         discount_amount: pricing.couponDiscount,
       }, { onConflict: 'order_id' })
-      await admin.rpc('increment_coupon_use_count', { coupon_id_param: couponId }).catch(() => {
-        // Fallback manual se a função RPC ainda não existir no Supabase
-        admin.from('coupons').select('use_count').eq('id', couponId).single().then(
-          (res: { data: { use_count: number } | null }) => {
-            if (res.data) admin.from('coupons').update({ use_count: (res.data.use_count ?? 0) + 1 }).eq('id', couponId!)
-          }
-        )
-      })
     }
 
     // Cartão é síncrono — confirma imediatamente sem esperar webhook

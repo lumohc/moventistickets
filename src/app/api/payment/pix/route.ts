@@ -175,18 +175,14 @@ export async function POST(req: NextRequest) {
       expires_at:        pixExpiresAt,
     }).eq('id', order_id)
 
-    // Reserva o cupom (uso confirmado só no webhook/confirmação)
+    // Vincula o cupom ao pedido. O use_count (limite) só é contado no PAGAMENTO
+    // confirmado (confirmOrderAndIssueTickets) — PIX abandonado NÃO gasta o cupom.
     if (couponId && coupon_code) {
       await admin.from('coupon_uses').upsert({
         coupon_id:       couponId,
         order_id,
         discount_amount: pricing.couponDiscount,
       }, { onConflict: 'order_id' })
-      // Incrementa use_count via RPC ou fallback manual
-      await admin.rpc('increment_coupon_use_count', { coupon_id_param: couponId }).catch(async () => {
-        const { data: c } = await admin.from('coupons').select('use_count').eq('id', couponId!).single()
-        if (c) await admin.from('coupons').update({ use_count: (c.use_count ?? 0) + 1 }).eq('id', couponId!)
-      })
     }
 
     return NextResponse.json({
