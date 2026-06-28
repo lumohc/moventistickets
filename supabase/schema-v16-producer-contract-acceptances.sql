@@ -28,14 +28,12 @@ create table if not exists producer_contract_acceptances (
 create index if not exists idx_pca_producer on producer_contract_acceptances(producer_id);
 create index if not exists idx_pca_event    on producer_contract_acceptances(event_id);
 
+-- RLS DENY-ALL: liga o RLS e NÃO cria nenhuma policy → anon/authenticated não
+-- leem nem escrevem direto (a evidência/snapshot não fica exposta no client).
+-- Todo acesso é pelo SERVIDOR com service_role (que ignora RLS). O painel
+-- "Meus contratos" lê via endpoint server-side, não pelo supabase-browser.
 alter table producer_contract_acceptances enable row level security;
-
--- Produtor lê só os próprios aceites (painel "Meus contratos").
-drop policy if exists "pca: produtor lê os seus" on producer_contract_acceptances;
-create policy "pca: produtor lê os seus" on producer_contract_acceptances
-  for select using (
-    producer_id in (select id from producers where user_id = auth.uid())
-  );
+revoke all on producer_contract_acceptances from anon, authenticated;
 
 -- ⚠️ GRANT pro service_role (a classe de bug que já nos pegou 3×: tabela nova
 --    sem grant → 42501 "permission denied" e a feature quebra em silêncio).
