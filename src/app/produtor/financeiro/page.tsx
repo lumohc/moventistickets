@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
+import SalesChart from '@/components/produtor/SalesChart'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -45,6 +46,20 @@ export default async function FinanceiroPage() {
   const totalRepasse = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
   const totalTaxas   = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.service_fee_total) + Number(o.payment_fee ?? 0), 0)
 
+  // Série diária (repasse/dia) dos últimos 30 dias para o gráfico.
+  const dayMap = new Map<string, number>()
+  for (const o of paidOrders ?? []) {
+    const day = new Date((o as any).created_at).toISOString().slice(0, 10)
+    dayMap.set(day, (dayMap.get(day) ?? 0) + Number((o as any).face_total))
+  }
+  const chartPoints: { day: string; value: number }[] = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const key = d.toISOString().slice(0, 10)
+    chartPoints.push({ day: key, value: dayMap.get(key) ?? 0 })
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
       <Sidebar />
@@ -76,6 +91,15 @@ export default async function FinanceiroPage() {
             </div>
           ))}
         </div>
+
+        {/* Gráfico de vendas (últimos 30 dias) */}
+        {(paidOrders?.length ?? 0) > 0 && (
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 2 }}>Seu repasse por dia</h2>
+            <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 18 }}>Últimos 30 dias</p>
+            <SalesChart points={chartPoints} />
+          </div>
+        )}
 
         {/* Dados bancários */}
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
