@@ -138,9 +138,13 @@ export default function PDVPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
-      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
-        <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 26 }} />
-        <button onClick={logout} style={{ fontSize: '0.82rem', color: C.muted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer' }}>Sair</button>
+      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 14, position: 'sticky', top: 0, zIndex: 10 }}>
+        <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 24 }} />
+        <nav style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
+          <a href="/pdv" style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, color: '#fff', background: C.green }}>Vender</a>
+          <a href="/pdv/checkin" style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, color: C.muted }}>Check-in</a>
+        </nav>
+        <button onClick={logout} style={{ marginLeft: 'auto', fontSize: '0.82rem', color: C.muted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer' }}>Sair</button>
       </header>
 
       <main style={{ maxWidth: 780, margin: '0 auto', padding: '32px 24px' }}>
