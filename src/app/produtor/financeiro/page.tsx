@@ -92,6 +92,16 @@ export default async function FinanceiroPage() {
           ))}
         </div>
 
+        {/* Baixar relatórios */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+          <a href="/api/produtor/export?type=vendas" style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, textDecoration: 'none', padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>
+            Baixar vendas (CSV)
+          </a>
+          <a href="/api/produtor/export?type=bordero" style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, textDecoration: 'none', padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>
+            Baixar borderô (CSV)
+          </a>
+        </div>
+
         {/* Gráfico de vendas (últimos 30 dias) */}
         {(paidOrders?.length ?? 0) > 0 && (
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>

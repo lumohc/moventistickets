@@ -138,6 +138,21 @@ export default function OrderDetailPage() {
     else flash('err', json.error ?? 'Erro.')
   }
 
+  // Cancela/reembolsa UM ingresso (não o pedido inteiro) → libera a poltrona.
+  async function ticketAction(ticketId: string, refund: boolean) {
+    if (!window.confirm(`${refund ? 'Reembolsar' : 'Cancelar'} este ingresso? A poltrona será liberada e o QR invalidado.`)) return
+    setBusy(true)
+    const res  = await fetch(`/api/admin/tickets/${ticketId}/cancel`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ refund }),
+    })
+    const json = await res.json()
+    setBusy(false)
+    if (json.ok || res.ok) { flash('ok', refund ? 'Ingresso reembolsado.' : 'Ingresso cancelado.'); await load() }
+    else flash('err', json.error ?? 'Erro.')
+  }
+
   if (loading) return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
       <AdminSidebar />
@@ -277,6 +292,18 @@ export default function OrderDetailPage() {
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: '0.875rem', color: C.text, fontWeight: 500 }}>{fmt(t.price)}</p>
                     <p style={{ fontSize: '0.68rem', color: C.muted, fontFamily: 'monospace', marginTop: 2 }}>{t.qr_code.slice(0, 14)}…</p>
+                    {isPaid && !t.cancelled_at && (
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6, justifyContent: 'flex-end' }}>
+                        <button onClick={() => ticketAction(t.id, false)} disabled={busy}
+                          style={{ fontSize: '0.7rem', padding: '3px 9px', border: `1px solid ${C.border}`, borderRadius: 6, background: 'transparent', color: C.muted, cursor: 'pointer' }}>
+                          Cancelar
+                        </button>
+                        <button onClick={() => ticketAction(t.id, true)} disabled={busy}
+                          style={{ fontSize: '0.7rem', padding: '3px 9px', border: 'none', borderRadius: 6, background: C.red, color: '#fff', cursor: 'pointer' }}>
+                          Reembolsar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
