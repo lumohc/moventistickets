@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { LayoutDashboard, CalendarDays, Banknote, User, LogOut } from 'lucide-react'
 
 const C = {
   bg:      '#1A211B',
@@ -14,10 +15,10 @@ const C = {
 }
 
 const NAV = [
-  { href: '/produtor/dashboard',  label: 'Dashboard',   icon: '◻' },
-  { href: '/produtor/eventos',    label: 'Meus eventos', icon: '🎭' },
-  { href: '/produtor/financeiro', label: 'Financeiro',   icon: '💰' },
-  { href: '/produtor/perfil',     label: 'Perfil',       icon: '👤' },
+  { href: '/produtor/dashboard',  label: 'Dashboard',    Icon: LayoutDashboard },
+  { href: '/produtor/eventos',    label: 'Meus eventos', Icon: CalendarDays },
+  { href: '/produtor/financeiro', label: 'Financeiro',   Icon: Banknote },
+  { href: '/produtor/perfil',     label: 'Perfil',       Icon: User },
 ]
 
 export default function Sidebar() {
@@ -39,12 +40,10 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{ padding: '24px 20px 20px', borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div>
-            <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 48 }} />
-            <p style={{ fontSize: '0.65rem', color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Portal do Produtor</p>
-          </div>
-        </div>
+        <a href="/produtor/dashboard" style={{ display: 'block', textDecoration: 'none' }} aria-label="Painel">
+          <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 28 }} />
+          <p style={{ fontSize: '0.65rem', color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>Portal do Produtor</p>
+        </a>
       </div>
 
       {/* Nav */}
@@ -65,7 +64,7 @@ export default function Sidebar() {
                 transition: 'all 0.15s',
               }}
             >
-              <span style={{ fontSize: '1rem', width: 20, textAlign: 'center' }}>{item.icon}</span>
+              <item.Icon size={18} strokeWidth={1.5} />
               {item.label}
             </a>
           )
@@ -83,7 +82,7 @@ export default function Sidebar() {
             display: 'flex', alignItems: 'center', gap: 8,
           }}
         >
-          <span>↩</span> Sair
+          <LogOut size={15} strokeWidth={1.5} /> Sair
         </button>
       </div>
     </aside>

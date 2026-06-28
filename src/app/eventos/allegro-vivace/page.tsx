@@ -62,7 +62,7 @@ export default function AllegroVivacePage() {
     <main style={S.page}>
         <header style={S.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
           </div>
         </header>
 

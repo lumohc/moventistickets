@@ -107,8 +107,8 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
       <main style={{ minHeight: '100vh', background: C.bg }}>
         {/* Header */}
         <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <a href="/eventos" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
           </a>
           <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>← Todos os eventos</a>
         </header>

@@ -44,7 +44,7 @@ export default async function EventosPage() {
       {/* Header */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
         </a>
         <a href="/produtor/login" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none', padding: '7px 16px', border: `1px solid ${C.border}`, borderRadius: 8 }}>
           Sou produtor →

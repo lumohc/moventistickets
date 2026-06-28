@@ -56,9 +56,12 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
       {/* Header */}
       <header style={{
         background: C.surface, borderBottom: `1px solid ${C.border}`,
-        padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10,
+        padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 44 }} />
+        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Início">
+          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
+        </a>
+        <a href="/ingressos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>Meus ingressos</a>
       </header>
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px' }}>

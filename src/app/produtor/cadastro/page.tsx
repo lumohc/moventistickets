@@ -51,52 +51,36 @@ export default function CadastroPage() {
     setLoading(true)
     setError(null)
 
-    const sb = createSupabaseBrowser()
-
-    // 1. Cria o usuário no Supabase Auth
-    const { data: authData, error: authErr } = await sb.auth.signUp({ email, password })
-
-    // Se usuário já existe, tenta fazer login
-    if (authErr?.message?.toLowerCase().includes('already registered') ||
-        authErr?.message?.toLowerCase().includes('user already')) {
-      const { data: loginData, error: loginErr } = await sb.auth.signInWithPassword({ email, password })
-      if (loginErr || !loginData.user) {
-        setError('E-mail já cadastrado. Tente fazer login ou use "Esqueci minha senha".')
-        setLoading(false)
-        return
-      }
-      router.push('/produtor/dashboard')
-      return
-    }
-
-    if (authErr || !authData.user) {
-      setError(authErr?.message || 'Erro ao criar conta.')
-      setLoading(false)
-      return
-    }
-
-    // 2. Cria o perfil do produtor via API (service role, ignora RLS)
+    // 1. Cria conta (Auth) + perfil do produtor via API. O servidor cria o
+    //    usuário no Auth PRIMEIRO e só então insere o produtor (evita o erro
+    //    de chave estrangeira producers_user_id_fkey).
     const res = await fetch('/api/produtor/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user_id:      authData.user.id,
+        email,
+        password,
         name,
         legal_name:   legalName || null,
         document,
-        email,
         phone:        phone || null,
         payment_pref: payPref,
       }),
     })
-
+    const json = await res.json().catch(() => ({}))
     if (!res.ok) {
-      const json = await res.json().catch(() => ({}))
-      setError(json.error || 'Houve um erro ao salvar o perfil. Entre em contato.')
+      setError(json.error || 'Houve um erro ao criar a conta. Tente novamente.')
       setLoading(false)
       return
     }
 
+    // 2. Abre a sessão e vai pro painel.
+    const sb = createSupabaseBrowser()
+    const { error: loginErr } = await sb.auth.signInWithPassword({ email, password })
+    if (loginErr) {
+      router.push('/produtor/login')
+      return
+    }
     router.push('/produtor/dashboard')
   }
 
@@ -105,14 +89,9 @@ export default function CadastroPage() {
       <div style={{ width: '100%', maxWidth: 460 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 48, height: 48, background: C.green, borderRadius: 12,
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, color: '#fff', fontWeight: 700, marginBottom: 12,
-          }}>M</div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
-            Moventis
-          </h1>
+          <a href="/" style={{ display: 'inline-block', marginBottom: 10 }} aria-label="Início">
+            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
+          </a>
           <p style={{ fontSize: '0.85rem', color: C.muted, marginTop: 4 }}>Cadastro de Produtor</p>
         </div>
 
