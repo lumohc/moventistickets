@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
 import { signTicket } from '@/lib/ticket-signing'
-import { sendTicketEmail } from '@/lib/email'
-import { generateQRDataURL } from '@/lib/generate-qr'
+import { sendConfirmationEmailForOrder } from '@/lib/orders'
 
 async function requireAdmin() {
   const sb = await createSupabaseServerClient()
@@ -84,30 +83,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     reissued.push({ seat_name: t.seat_name, group_name: t.group_name, ticket_type: t.ticket_type, qr_code: newQr })
   }
 
-  // 3) Envia os ingressos re-emitidos ao novo titular (best-effort).
+  // 3) Envia a confirmação enriquecida ao novo titular (o pedido já está com o
+  //    buyer_email novo) — mesmo e-mail da compra. Best-effort.
   if (reissued.length > 0) {
     try {
-      const ev = order.events as { name?: string; event_date?: string; event_time?: string; venues?: { name?: string } } | null
-      const dateStr = ev?.event_date
-        ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) +
-          (ev.event_time ? ` às ${String(ev.event_time).slice(0, 5)}` : '')
-        : '—'
-      await sendTicketEmail({
-        to:        new_email,
-        buyerName: new_name,
-        eventName: ev?.name ?? 'Evento',
-        eventDate: dateStr,
-        venueName: ev?.venues?.name ?? '',
-        orderId:   id,
-        tickets: await Promise.all(reissued.map(async (t) => ({
-          seatName:   t.seat_name,
-          groupName:  t.group_name,
-          ticketType: t.ticket_type,
-          holderName: new_name,
-          qrCode:     t.qr_code,
-          qrDataUrl:  await generateQRDataURL(t.qr_code),
-        }))),
-      })
+      await sendConfirmationEmailForOrder(id, { to: new_email })
     } catch (e) {
       console.error('[admin/transfer] envio de e-mail falhou:', e)
     }

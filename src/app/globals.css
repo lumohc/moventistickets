@@ -163,3 +163,9 @@ body {
 }
 /* some quando o modal do mapa está aberto */
 body:has(.lumo-seat-picker-modal.is-open) .mvt-sticky-buy { display: none !important; }
+
+/* ── Página de ingresso: impressão limpa (Salvar como PDF) ── */
+@media print {
+  .no-print { display: none !important; }
+  .ingresso-print-root { background: #fff !important; padding: 0 !important; }
+}

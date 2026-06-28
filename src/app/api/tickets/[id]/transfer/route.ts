@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reissueTicketHolder } from '@/lib/ticket-holder'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
-import { sendTicketEmail } from '@/lib/email'
-import { generateQRDataURL } from '@/lib/generate-qr'
+import { sendTicketDeliveryEmail } from '@/lib/email'
+import { signTicketAccess } from '@/lib/ticket-access'
+import { accessExpFromEvent } from '@/lib/access-token'
 
 function statusFor(code: string): number {
   return code === 'forbidden' ? 403 : code === 'not_found' ? 404 : code === 'invalid' ? 400 : 409
@@ -22,35 +23,33 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   })
   if (!r.ok) return NextResponse.json({ error: r.message }, { status: statusFor(r.code) })
 
-  // Envia o ingresso re-emitido (novo QR) ao novo titular — best-effort.
+  // Notifica o novo titular com o LINK DE ENTREGA do ingresso re-emitido (best-effort).
   try {
     const admin = createSupabaseAdmin()
     const { data: t } = await admin
       .from('tickets')
-      .select('seat_name, group_name, ticket_type, qr_code, holder_name, events(name, event_date, event_time, venues(name))')
+      .select('seat_name, group_name, ticket_type, events(name, event_date, event_time, venue_name, venues(name))')
       .eq('id', id)
       .single()
     if (t) {
-      const ev = t.events as { name?: string; event_date?: string; event_time?: string; venues?: { name?: string } } | null
+      const ev = t.events as { name?: string; event_date?: string; event_time?: string; venue_name?: string; venues?: { name?: string } } | null
       const dateStr = ev?.event_date
         ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) +
           (ev.event_time ? ` às ${String(ev.event_time).slice(0, 5)}` : '')
         : '—'
-      await sendTicketEmail({
-        to:        new_email,
-        buyerName: new_name,
-        eventName: ev?.name ?? 'Evento',
-        eventDate: dateStr,
-        venueName: ev?.venues?.name ?? '',
-        tickets: [{
-          seatName:   t.seat_name,
-          groupName:  t.group_name,
-          ticketType: t.ticket_type,
-          holderName: t.holder_name ?? new_name,
-          qrCode:     t.qr_code,
-          qrDataUrl:  await generateQRDataURL(t.qr_code),
-        }],
-        orderId: r.order_id,
+      const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://moventistickets.com.br'
+      const tok = signTicketAccess(id, accessExpFromEvent(ev?.event_date))
+      const deliveryUrl = tok ? `${SITE}/ingresso/${id}?t=${encodeURIComponent(tok)}` : undefined
+      await sendTicketDeliveryEmail({
+        to:         new_email,
+        holderName: new_name,
+        eventName:  ev?.name ?? 'Evento',
+        eventDate:  dateStr.charAt(0).toUpperCase() + dateStr.slice(1),
+        venueName:  ev?.venues?.name ?? ev?.venue_name ?? '',
+        seatName:   t.seat_name,
+        ticketType: t.ticket_type,
+        deliveryUrl,
+        orderId:    r.order_id,
       })
     }
   } catch (e) {

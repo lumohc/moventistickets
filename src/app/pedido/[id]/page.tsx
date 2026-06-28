@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
-import { verifyAccess } from '@/lib/access-token'
+import { verifyAccess, accessExpFromEvent } from '@/lib/access-token'
+import { signTicketAccess } from '@/lib/ticket-access'
 import { generateQRDataURL } from '@/lib/generate-qr'
 import PixPaymentCard from '@/components/PixPaymentCard'
 import TicketActions from '@/components/pedido/TicketActions'
@@ -68,14 +69,22 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
   // Busca tickets com QR code quando pedido está pago
   const tickets: any[] = []
   if (isPaid) {
+    const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://moventistickets.com.br'
+    const ticketExp = accessExpFromEvent(event?.event_date)
     const { data: tks } = await admin
       .from('tickets')
       .select('id, seat_name, group_name, ticket_type, price, qr_code, holder_name')
       .eq('order_id', id)
+      .is('cancelled_at', null)
       .order('seat_name')
     if (tks) {
       for (const t of tks) {
-        tickets.push({ ...t, qr_image: await generateQRDataURL(t.qr_code) })
+        const tok = signTicketAccess(t.id, ticketExp)
+        tickets.push({
+          ...t,
+          qr_image: await generateQRDataURL(t.qr_code),
+          delivery_url: tok ? `${SITE}/ingresso/${t.id}?t=${encodeURIComponent(tok)}` : null,
+        })
       }
     }
   }
@@ -199,7 +208,7 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
                   <p style={{ marginTop: 8, fontSize: '0.62rem', color: C.muted, fontFamily: 'monospace', wordBreak: 'break-all' }}>
                     {t.qr_code}
                   </p>
-                  <TicketActions ticketId={t.id} buyerEmail={order.buyer_email as string | null} />
+                  <TicketActions ticketId={t.id} buyerEmail={order.buyer_email as string | null} deliveryUrl={t.delivery_url} />
                 </div>
               ))}
             </div>

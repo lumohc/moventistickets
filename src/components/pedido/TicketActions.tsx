@@ -12,23 +12,26 @@ const inp: React.CSSProperties = {
   outline: 'none', boxSizing: 'border-box',
 }
 const btnSec: React.CSSProperties = {
-  flex: 1, padding: '7px 10px', borderRadius: 8, cursor: 'pointer',
+  flex: 1, padding: '7px 10px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
   border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: '0.76rem', fontWeight: 600,
+  textDecoration: 'none', display: 'block',
 }
 const btnPri: React.CSSProperties = {
-  flex: 1, padding: '7px 10px', borderRadius: 8, cursor: 'pointer',
+  flex: 1, padding: '7px 10px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
   border: 'none', background: C.green, color: '#fff', fontSize: '0.76rem', fontWeight: 700,
+  textDecoration: 'none', display: 'block',
 }
 
 export default function TicketActions({
-  ticketId, buyerEmail,
-}: { ticketId: string; buyerEmail: string | null }) {
-  const [mode, setMode] = useState<null | 'edit' | 'transfer'>(null)
-  const [name, setName]   = useState('')
-  const [email, setEmail] = useState('')
-  const [busy, setBusy]   = useState(false)
-  const [err, setErr]     = useState<string | null>(null)
-  const [done, setDone]   = useState<string | null>(null)
+  ticketId, buyerEmail, deliveryUrl,
+}: { ticketId: string; buyerEmail: string | null; deliveryUrl?: string | null }) {
+  const [mode, setMode] = useState<null | 'edit' | 'transfer' | 'send'>(null)
+  const [name, setName]     = useState('')
+  const [email, setEmail]   = useState('')
+  const [busy, setBusy]     = useState(false)
+  const [err, setErr]       = useState<string | null>(null)
+  const [done, setDone]     = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   if (!buyerEmail) return null
 
@@ -57,16 +60,50 @@ export default function TicketActions({
     }
   }
 
+  async function copyLink() {
+    if (!deliveryUrl) return
+    try { await navigator.clipboard.writeText(deliveryUrl); setCopied(true); setTimeout(() => setCopied(false), 1800) }
+    catch { /* navegador sem clipboard — o input fica selecionável */ }
+  }
+
   return (
     <div style={{ marginTop: 10 }}>
       {!mode && (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => { setMode('edit'); setErr(null); setDone(null) }} style={btnSec}>Editar nome</button>
-          <button onClick={() => { setMode('transfer'); setErr(null); setDone(null) }} style={btnSec}>Transferir</button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {deliveryUrl && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <a href={deliveryUrl} target="_blank" rel="noopener noreferrer" style={btnPri}>Baixar PDF</a>
+              <button onClick={() => { setMode('send'); setErr(null); setDone(null) }} style={btnSec}>Enviar</button>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => { setMode('edit'); setErr(null); setDone(null) }} style={btnSec}>Editar nome</button>
+            <button onClick={() => { setMode('transfer'); setErr(null); setDone(null) }} style={btnSec}>Transferir</button>
+          </div>
         </div>
       )}
 
-      {mode && (
+      {mode === 'send' && (
+        <div style={{ textAlign: 'left' }}>
+          <p style={{ fontSize: '0.74rem', color: C.muted, margin: '0 0 8px', lineHeight: 1.5 }}>
+            Mande este ingresso pra quem vai usar. A pessoa abre, vê o QR e baixa — <strong>sem reemitir</strong>.
+          </p>
+          <input readOnly value={deliveryUrl ?? ''} onFocus={e => e.currentTarget.select()} style={{ ...inp, fontSize: '0.72rem' }} />
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button onClick={copyLink} style={btnPri}>{copied ? 'Copiado!' : 'Copiar link'}</button>
+            <a href={`https://wa.me/?text=${encodeURIComponent('Seu ingresso: ' + (deliveryUrl ?? ''))}`} target="_blank" rel="noopener noreferrer" style={btnSec}>WhatsApp</a>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <a href={`mailto:?subject=${encodeURIComponent('Seu ingresso')}&body=${encodeURIComponent('Aqui está seu ingresso: ' + (deliveryUrl ?? ''))}`} style={btnSec}>E-mail</a>
+            <button onClick={() => { setMode(null); setCopied(false) }} style={btnSec}>Voltar</button>
+          </div>
+          <p style={{ fontSize: '0.68rem', color: C.muted, margin: '8px 0 0' }}>
+            Vai trocar quem vai? Use <strong>Transferir</strong> (reemite o QR e invalida o antigo).
+          </p>
+        </div>
+      )}
+
+      {(mode === 'edit' || mode === 'transfer') && (
         <div style={{ textAlign: 'left' }}>
           <input value={name} onChange={e => setName(e.target.value)}
             placeholder={mode === 'edit' ? 'Novo nome do titular' : 'Nome do novo titular'} style={inp} />
