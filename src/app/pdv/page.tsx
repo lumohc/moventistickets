@@ -143,6 +143,7 @@ export default function PDVPage() {
         <nav style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
           <a href="/pdv" style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, color: '#fff', background: C.green }}>Vender</a>
           <a href="/pdv/checkin" style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, color: C.muted }}>Check-in</a>
+          <a href="/pdv/reenviar" style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, color: C.muted }}>Reenviar</a>
         </nav>
         <button onClick={logout} style={{ marginLeft: 'auto', fontSize: '0.82rem', color: C.muted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer' }}>Sair</button>
       </header>

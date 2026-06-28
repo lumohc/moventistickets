@@ -92,6 +92,7 @@ export default function PdvCheckinPage() {
         <nav style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
           <a href="/pdv" style={linkStyle(false)}>Vender</a>
           <a href="/pdv/checkin" style={linkStyle(true)}>Check-in</a>
+          <a href="/pdv/reenviar" style={linkStyle(false)}>Reenviar</a>
         </nav>
         <button onClick={logout} style={{ marginLeft: 'auto', fontSize: '0.82rem', color: C.muted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer' }}>Sair</button>
       </header>
