@@ -95,15 +95,22 @@ export async function confirmOrderAndIssueTickets(orderId: string): Promise<Conf
   // Cupom: conta o uso (use_count / limite) SÓ AGORA, no pagamento confirmado —
   // PIX abandonado não consome o cupom. Idempotente: a função retorna
   // 'already_paid' antes daqui se já estava pago, então roda 1x por pedido.
+  // NÃO bloqueia a entrega (o cliente já pagou): qualquer falha aqui só loga.
+  // (O builder do supabase-js não tem .catch — por isso try/catch + checar {error}.)
   if (order.coupon_code) {
-    const { data: cu } = await admin
-      .from('coupon_uses').select('coupon_id').eq('order_id', order.id).maybeSingle()
-    const couponId = (cu as { coupon_id?: string } | null)?.coupon_id
-    if (couponId) {
-      await admin.rpc('increment_coupon_use_count', { coupon_id_param: couponId }).catch(async () => {
-        const { data: c } = await admin.from('coupons').select('use_count').eq('id', couponId).single()
-        if (c) await admin.from('coupons').update({ use_count: (c.use_count ?? 0) + 1 }).eq('id', couponId)
-      })
+    try {
+      const { data: cu } = await admin
+        .from('coupon_uses').select('coupon_id').eq('order_id', order.id).maybeSingle()
+      const couponId = (cu as { coupon_id?: string } | null)?.coupon_id
+      if (couponId) {
+        const { error: rpcErr } = await admin.rpc('increment_coupon_use_count', { coupon_id_param: couponId })
+        if (rpcErr) {
+          const { data: c } = await admin.from('coupons').select('use_count').eq('id', couponId).single()
+          if (c) await admin.from('coupons').update({ use_count: (c.use_count ?? 0) + 1 }).eq('id', couponId)
+        }
+      }
+    } catch (e) {
+      console.error('[orders] falha ao contar uso do cupom (não bloqueia a entrega):', e)
     }
   }
 
