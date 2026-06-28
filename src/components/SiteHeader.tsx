@@ -84,7 +84,9 @@ export default function SiteHeader() {
           <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 24 }} />
         </a>
 
-        <form onSubmit={submit} style={{ flex: '0 1 300px', position: 'relative', minWidth: 0 }}>
+        <div style={{ flex: 1 }} />
+
+        <form onSubmit={submit} style={{ flex: '0 1 260px', position: 'relative', minWidth: 0 }}>
           <Search size={15} color="#8a948b" strokeWidth={1.8} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             value={q}
@@ -101,15 +103,14 @@ export default function SiteHeader() {
           )}
         </form>
 
-        <div style={{ flex: 1 }} />
-
         <nav style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+          {!authed && <a href="/ingressos" style={navLink}>Entrar</a>}
           <a href={cartId ? `/checkout?session=${cartId}` : '/eventos'} aria-label="Carrinho" style={iconLink} title="Carrinho">
             <ShoppingCart size={20} strokeWidth={1.6} />
             {cartCount > 0 && <span style={badge}>{cartCount}</span>}
           </a>
 
-          {authed ? (
+          {authed && (
             <div ref={menuRef} style={{ position: 'relative' }}>
               <button onClick={() => setMenuOpen(o => !o)} aria-label="Conta" style={iconLink} title="Conta">
                 <User size={20} strokeWidth={1.6} />
@@ -122,8 +123,6 @@ export default function SiteHeader() {
                 </div>
               )}
             </div>
-          ) : (
-            <a href="/ingressos" style={navLink}>Entrar</a>
           )}
         </nav>
       </div>

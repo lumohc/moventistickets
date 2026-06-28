@@ -4,7 +4,7 @@ import './seat-picker.css'
 
 export const metadata: Metadata = {
   title: 'Moventis',
-  description: 'Compra de ingressos online com escolha de assento. Teatro, dança, música e mais em Santa Catarina.',
+  description: 'Compra de ingressos online com escolha de assento. Teatro, dança, música e mais.',
 }
 
 export const viewport: Viewport = {

@@ -4,7 +4,7 @@ import SiteHeader from '@/components/SiteHeader'
 import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
-  title: 'Moventis — Ingressos para eventos em Santa Catarina',
+  title: 'Moventis — Ingressos para eventos',
   description: 'Compre ingressos online para teatro, dança, música e mais. Escolha seu assento, pague via PIX ou cartão.',
 }
 
@@ -39,7 +39,7 @@ export default async function HomePage() {
 
       <section style={{ padding: '34px 24px 0', maxWidth: 1100, margin: '0 auto', width: '100%', flex: 1, boxSizing: 'border-box' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 24 }}>
-          Eventos em Santa Catarina
+          Próximos eventos
         </h1>
 
         {upcoming.length === 0 ? (

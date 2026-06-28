@@ -62,8 +62,7 @@ export default function TermosPage() {
             <p>Além do valor de face do ingresso (definido pelo produtor), a Moventis cobra:</p>
             <ul style={{ paddingLeft: 24, marginTop: 8 }}>
               <li style={{ marginBottom: 4 }}><strong>Taxa de serviço</strong>: o maior valor entre R$ 5,00 e 10% do valor do ingresso, por ingresso adquirido;</li>
-              <li style={{ marginBottom: 4 }}><strong>Taxa de pagamento PIX</strong>: R$ 2,00 por pedido;</li>
-              <li><strong>Taxa de pagamento cartão de crédito</strong>: 4,98% sobre o total do pedido.</li>
+              <li><strong>Taxa de processamento</strong>: PIX R$ 2,00 por pedido; cartão de crédito 4,98% sobre o total do pedido; cartão de débito 2,70% sobre o total do pedido.</li>
             </ul>
             <p style={{ marginTop: 12 }}>As taxas são exibidas de forma clara antes da confirmação da compra e <strong>não são reembolsáveis</strong>, salvo nos casos previstos na cláusula 5.</p>
 

@@ -207,7 +207,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
               )}
 
               <div style={{ marginTop: 20, padding: 14, background: 'rgba(31,107,78,0.06)', borderRadius: 8, border: '1px solid rgba(31,107,78,0.15)', fontSize: '0.75rem', color: C.muted, lineHeight: 1.6 }}>
-                + taxa de serviço por ingresso · PIX R$2 por pedido · Cartão 4,98% — pagos pelo comprador.
+                + taxa de serviço por ingresso · taxa de processamento (PIX R$2/pedido · crédito 4,98% · débito 2,70%) — pagas pelo comprador.
               </div>
 
               {producer?.name && (

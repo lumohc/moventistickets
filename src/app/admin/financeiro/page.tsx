@@ -58,7 +58,7 @@ export default async function AdminFinanceiroPage() {
             { icon: '🎟️', label: 'Pedidos pagos',      value: paid.length },
             { icon: '💵', label: 'Volume face (R$)',    value: fmt(totalFace) },
             { icon: '💰', label: 'Taxa de serviço',     value: fmt(totalService) },
-            { icon: '💳', label: 'Taxa de pagamento',   value: fmt(totalPayment) },
+            { icon: '💳', label: 'Taxa de processamento', value: fmt(totalPayment) },
             { icon: '📊', label: 'Volume total bruto',  value: fmt(totalGross) },
           ].map(card => (
             <div key={card.label} style={{

@@ -216,7 +216,7 @@ function buildEmailHtml(params: TicketEmailParams): string {
           <td style="background:#1A211B;border-radius:0 0 16px 16px;padding:20px 32px;text-align:center;">
             <p style="margin:0 0 6px;font-size:12px;color:rgba(244,241,235,0.5);">Pedido <strong style="color:rgba(244,241,235,0.8);">#${params.orderId}</strong></p>
             <p style="margin:0;font-size:11px;color:rgba(244,241,235,0.35);">
-              Moventis Tickets · Florianópolis/SC · <a href="https://moventistickets.com.br" style="color:rgba(31,107,78,0.8);text-decoration:none;">moventistickets.com.br</a>
+              Moventis Tickets · <a href="https://moventistickets.com.br" style="color:rgba(31,107,78,0.8);text-decoration:none;">moventistickets.com.br</a>
             </p>
           </td>
         </tr>

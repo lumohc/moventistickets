@@ -6,7 +6,7 @@ import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
   title: 'Eventos — Moventis',
-  description: 'Compre ingressos para os melhores eventos de Florianópolis e Santa Catarina.',
+  description: 'Compre ingressos para os melhores eventos.',
 }
 
 const C = {
@@ -54,7 +54,7 @@ export default async function EventosPage({ searchParams }: { searchParams: Prom
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '34px 24px' }}>
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>
-            {query ? `Resultados para “${q}”` : 'Eventos em Santa Catarina'}
+            {query ? `Resultados para “${q}”` : 'Eventos'}
           </h1>
         </div>
 

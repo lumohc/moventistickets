@@ -240,7 +240,7 @@ export default function OrderDetailPage() {
                   { label: 'Método',          value: PM[order.payment_method ?? ''] ?? order.payment_method },
                   { label: 'Face total',       value: fmt(order.face_total) },
                   { label: 'Taxa de serviço',  value: fmt(order.service_fee_total) },
-                  { label: 'Taxa processamento', value: fmt(order.payment_fee) },
+                  { label: 'Taxa de processamento', value: fmt(order.payment_fee) },
                   ...(order.coupon_code ? [{ label: `Cupom (${order.coupon_code})`, value: `- ${fmt(order.coupon_discount)}` }] : []),
                 ].map(r => (
                   <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

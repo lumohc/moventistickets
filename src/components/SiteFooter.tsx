@@ -2,21 +2,21 @@ import { QrCode, CreditCard } from 'lucide-react'
 
 const ES = '#1F6B4E', ESD = '#175840', LINHO = '#F4F3EC', ARGILA = '#C29A74'
 
-const col: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 9 }
-const head: React.CSSProperties = { fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: ARGILA, marginBottom: 4 }
+const col: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 }
+const head: React.CSSProperties = { fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: ARGILA, marginBottom: 2 }
 const link: React.CSSProperties = { color: 'rgba(244,243,236,0.85)', textDecoration: 'none', fontSize: '0.85rem' }
 
 /** Rodapé institucional (marketplace): colunas + pagamento + redes + linha legal. */
 export default function SiteFooter() {
   return (
-    <footer style={{ background: ES, color: LINHO, marginTop: 48 }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px 20px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: 22 }}>
+    <footer style={{ background: ES, color: LINHO, marginTop: 28 }}>
+      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '16px 20px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
           {/* Marca */}
           <div style={col}>
-            <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 24, marginBottom: 6 }} />
-            <p style={{ fontSize: '0.8rem', color: 'rgba(244,243,236,0.7)', lineHeight: 1.6, margin: 0 }}>
-              Ingressos para eventos em Santa Catarina.
+            <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 22, marginBottom: 4 }} />
+            <p style={{ fontSize: '0.8rem', color: 'rgba(244,243,236,0.7)', lineHeight: 1.5, margin: 0 }}>
+              Ingressos para os melhores eventos.
             </p>
           </div>
 
@@ -62,9 +62,9 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        {/* Linha legal */}
-        <div style={{ borderTop: `1px solid ${ESD}`, marginTop: 20, padding: '12px 0 16px', fontSize: '0.74rem', color: 'rgba(244,243,236,0.6)', lineHeight: 1.6 }}>
-          © 2026 Moventis · Pedro Neves Araujo (MEI) · CNPJ 61.153.718/0001-02 · Florianópolis/SC
+        {/* Linha legal — razão social / CNPJ ficam nos Termos */}
+        <div style={{ borderTop: `1px solid ${ESD}`, marginTop: 12, padding: '10px 0 14px', fontSize: '0.74rem', color: 'rgba(244,243,236,0.55)' }}>
+          © 2026 Moventis · <a href="/termos" style={{ color: 'rgba(244,243,236,0.7)', textDecoration: 'none' }}>Termos de Uso</a>
         </div>
       </div>
     </footer>
