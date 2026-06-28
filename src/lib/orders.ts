@@ -5,6 +5,7 @@ import { sendTicketEmail } from '@/lib/email'
 import { generateQRDataURL } from '@/lib/generate-qr'
 import { signTicket } from '@/lib/ticket-signing'
 import { signAccess, accessExpFromEvent } from '@/lib/access-token'
+import { cancelWindow, freeUntilLabel } from '@/lib/refund'
 
 interface OrderSeat {
   seat_id: string
@@ -260,16 +261,8 @@ function buildCalendarUrl(ev: EventForEmail | null | undefined, venueName: strin
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${fmt(startTotal)}/${fmt(endTotal)}&ctz=America/Sao_Paulo&location=${loc}`
 }
 
-/**
- * Data-limite do cancelamento grátis (regra do bloco 5): min(compra + 7 dias,
- * evento − 48h). Retorna undefined se já passou (sem janela).
- */
+/** Data-limite do cancelamento grátis pro e-mail (regra única em lib/refund). */
 function computeCancelFreeUntil(createdAt: string | null, eventDate?: string, eventTime?: string): string | undefined {
-  if (!createdAt || !eventDate) return undefined
-  const purchaseDeadline = new Date(new Date(createdAt).getTime() + 7 * 24 * 3600 * 1000)
-  const evDateTime = new Date(`${eventDate}T${eventTime ? String(eventTime).slice(0, 8) : '00:00:00'}-03:00`)
-  const eventDeadline = new Date(evDateTime.getTime() - 48 * 3600 * 1000)
-  const deadline = purchaseDeadline < eventDeadline ? purchaseDeadline : eventDeadline
-  if (deadline.getTime() <= Date.now()) return undefined
-  return deadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', timeZone: 'America/Sao_Paulo' })
+  const w = cancelWindow(createdAt, eventDate, eventTime)
+  return w.eligible ? (freeUntilLabel(w.freeUntil) ?? undefined) : undefined
 }

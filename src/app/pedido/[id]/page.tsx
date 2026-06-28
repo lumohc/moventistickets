@@ -2,9 +2,11 @@ import { notFound } from 'next/navigation'
 import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
 import { verifyAccess, accessExpFromEvent } from '@/lib/access-token'
 import { signTicketAccess } from '@/lib/ticket-access'
+import { cancelWindow, freeUntilLabel } from '@/lib/refund'
 import { generateQRDataURL } from '@/lib/generate-qr'
 import PixPaymentCard from '@/components/PixPaymentCard'
 import TicketActions from '@/components/pedido/TicketActions'
+import CancelOrderButton from '@/components/pedido/CancelOrderButton'
 import { CheckCircle2, Clock, XCircle, Ticket, Calendar, MapPin, Lock } from 'lucide-react'
 
 const C = {
@@ -65,6 +67,10 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
   const isExpired  = order.status === 'expired' || order.status === 'cancelled'
   const seats      = (order.seats as any[]) ?? []
   const event      = order.events as any
+
+  // Janela de cancelamento self-service (≤7d da compra E ≥48h do evento).
+  const cw = cancelWindow(order.created_at as string, event?.event_date, event?.event_time)
+  const cancelFreeUntilStr = freeUntilLabel(cw.freeUntil)
 
   // Busca tickets com QR code quando pedido está pago
   const tickets: any[] = []
@@ -306,6 +312,17 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
             <span style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text }}>{fmt(Number(order.total))}</span>
           </div>
         </div>
+
+        {/* Cancelamento self-service (só pago + dentro da janela) */}
+        {isPaid && cw.eligible && cancelFreeUntilStr && (
+          <div style={{
+            background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 16, padding: 24, marginBottom: 20,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+          }}>
+            <CancelOrderButton orderId={id} token={t ?? null} refundAmount={fmt(Number(order.total))} freeUntil={cancelFreeUntilStr} />
+          </div>
+        )}
 
         {/* Número do pedido */}
         <p style={{ textAlign: 'center', fontSize: '0.75rem', color: C.muted }}>

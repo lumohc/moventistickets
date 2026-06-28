@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
-import { sendCancellationEmail } from '@/lib/email'
+import { refundAndCancelOrder } from '@/lib/refund'
 
 async function requireAdmin() {
   const sb = await createSupabaseServerClient()
@@ -11,92 +11,17 @@ async function requireAdmin() {
   return data ? user : null
 }
 
-async function refundAsaasPayment(paymentId: string, value?: number): Promise<{ refundId?: string; error?: string }> {
-  const asaasKey = process.env.ASAAS_API_KEY
-  if (!asaasKey || asaasKey === 'PREENCHER') return { error: 'Asaas não configurado.' }
-
-  const baseUrl = process.env.ASAAS_BASE_URL ?? 'https://sandbox.asaas.com/api/v3'
-  const body: Record<string, unknown> = {}
-  if (value != null) body.value = value
-
-  const res = await fetch(`${baseUrl}/payments/${paymentId}/refund`, {
-    method:  'POST',
-    headers: { 'access_token': asaasKey, 'Content-Type': 'application/json' },
-    body:    JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    return { error: (err as any)?.errors?.[0]?.description ?? `Asaas ${res.status}` }
-  }
-  const data = await res.json()
-  return { refundId: data.id }
-}
-
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireAdmin()
   if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
   const { id } = await params
   const { reason, partial_value } = await req.json().catch(() => ({}))
-  const admin = createSupabaseAdmin()
 
-  const { data: order } = await admin
-    .from('orders')
-    .select('id, status, total, asaas_payment_id, refunded_at, buyer_email, buyer_name, events(name, event_date)')
-    .eq('id', id)
-    .single()
-
-  if (!order) return NextResponse.json({ error: 'Pedido não encontrado.' }, { status: 404 })
-  if (order.status !== 'paid') {
-    return NextResponse.json({ error: 'Só é possível reembolsar pedidos pagos.' }, { status: 409 })
-  }
-  if (order.refunded_at) {
-    return NextResponse.json({ error: 'Pedido já reembolsado.' }, { status: 409 })
-  }
-
-  const now = new Date().toISOString()
-  let refundAsaasId: string | null = null
-
-  // Tenta estorno via Asaas (se pago via gateway)
-  if (order.asaas_payment_id) {
-    const result = await refundAsaasPayment(
-      order.asaas_payment_id,
-      partial_value ? Number(partial_value) : undefined,
-    )
-    if (result.error) {
-      return NextResponse.json({ error: `Erro Asaas: ${result.error}` }, { status: 422 })
-    }
-    refundAsaasId = result.refundId ?? null
-  }
-
-  // Marca como reembolsado + cancela no sistema
-  await admin.from('orders').update({
-    status:        'cancelled',
-    refunded_at:   now,
-    refund_reason: reason ?? null,
-    refund_asaas_id: refundAsaasId,
-    cancelled_at:  now,
-    cancellation_reason: reason ?? 'Reembolso',
-  }).eq('id', id)
-
-  await admin.from('tickets').update({
-    cancelled_at:        now,
-    cancellation_reason: reason ?? 'Reembolso',
-  }).eq('order_id', id).is('cancelled_at', null)
-
-  // Avisa o cliente do reembolso (best-effort — não reverte o que já foi feito).
-  if (order.buyer_email) {
-    const ev = order.events as { name?: string; event_date?: string } | null
-    void sendCancellationEmail({
-      to:        order.buyer_email as string,
-      buyerName: (order.buyer_name as string) ?? 'Cliente',
-      eventName: ev?.name ?? 'Evento',
-      eventDate: ev?.event_date ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : undefined,
-      orderId:   id,
-      kind:      'refund',
-      reason:    reason ?? undefined,
-    }).catch((e) => console.error('[refund] e-mail de reembolso falhou:', e))
-  }
-
-  return NextResponse.json({ ok: true, refunded_at: now, refund_asaas_id: refundAsaasId })
+  const r = await refundAndCancelOrder(id, {
+    reason,
+    partialValue: partial_value != null ? Number(partial_value) : undefined,
+  })
+  if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status })
+  return NextResponse.json({ ok: true, refunded_at: r.refunded_at, refund_asaas_id: r.refund_asaas_id, already: r.already ?? false })
 }
