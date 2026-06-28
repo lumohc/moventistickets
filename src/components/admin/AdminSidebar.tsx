@@ -20,7 +20,7 @@ const NAV = [
   { href: '/admin/locais',           label: 'Locais',        Icon: Landmark },
   { href: '/admin/pedidos',          label: 'Pedidos',       Icon: Ticket },
   { href: '/admin/financeiro',       label: 'Financeiro',    Icon: Banknote },
-  { href: '/admin/pdv',              label: 'PDV / Balcão',  Icon: Store },
+  { href: '/pdv',                    label: 'PDV / Balcão',  Icon: Store },
   { href: '/admin/cupons',           label: 'Cupons',        Icon: Percent },
   { href: '/admin/configuracoes',    label: 'Configurações', Icon: Settings },
 ]

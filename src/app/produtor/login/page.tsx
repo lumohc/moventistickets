@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { Suspense } from 'react'
 
@@ -12,9 +12,8 @@ const C = {
 }
 
 function LoginForm() {
-  const router = useRouter()
   const params = useSearchParams()
-  const redirect = params.get('redirect') || '/produtor/dashboard'
+  const redirect = params.get('redirect') || '/auth/pos-login'
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -35,8 +34,9 @@ function LoginForm() {
       return
     }
 
-    router.push(redirect)
-    router.refresh()
+    // Navegação completa: /auth/pos-login resolve o destino por papel
+    // (admin → /admin · bilheteiro → /pdv · produtor → /produtor/dashboard).
+    window.location.href = redirect
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -57,7 +57,7 @@ export default function PDVPage() {
 
   const loadEvents = useCallback(async () => {
     setLoadingEvents(true)
-    const res  = await fetch('/api/admin/pdv')
+    const res  = await fetch('/api/pdv')
     const json = await res.json()
     setEvents(json.data ?? [])
     setLoadingEvents(false)
@@ -99,7 +99,7 @@ export default function PDVPage() {
     setBusy(true)
     setError(null)
 
-    const res  = await fetch('/api/admin/pdv', {
+    const res  = await fetch('/api/pdv', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
@@ -130,14 +130,23 @@ export default function PDVPage() {
     setStep('select-event')
   }
 
-  return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
-      <AdminSidebar />
+  async function logout() {
+    const sb = createSupabaseBrowser()
+    await sb.auth.signOut()
+    window.location.href = '/produtor/login'
+  }
 
-      <main style={{ flex: 1, marginLeft: 220, padding: '40px 36px', maxWidth: 780 }}>
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
+        <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 26 }} />
+        <button onClick={logout} style={{ fontSize: '0.82rem', color: C.muted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer' }}>Sair</button>
+      </header>
+
+      <main style={{ maxWidth: 780, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>PDV — Venda no balcao</h1>
-          <p style={{ color: C.muted, fontSize: '0.9rem', marginTop: 4 }}>Emita ingressos na hora. So para admin/equipe/bilheteiro.</p>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>PDV — Venda no balcão</h1>
+          <p style={{ color: C.muted, fontSize: '0.9rem', marginTop: 4 }}>Emita ingressos na hora.</p>
         </div>
 
         {/* ── Step 1: Selecionar evento ────────────────────────────── */}
@@ -303,12 +312,6 @@ export default function PDVPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: '0.68rem', color: C.muted, fontFamily: 'monospace' }}>{t.qr_code.slice(0, 20)}…</p>
-                    <a
-                      href={`/admin/pedidos/${successOrder.order_id}`}
-                      style={{ fontSize: '0.75rem', color: C.green, fontWeight: 600, textDecoration: 'none' }}
-                    >
-                      Ver pedido →
-                    </a>
                   </div>
                 </div>
               ))}

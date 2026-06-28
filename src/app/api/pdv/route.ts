@@ -4,14 +4,20 @@ import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-
 import { confirmOrderAndIssueTickets } from '@/lib/orders'
 import { priceOrder, type PaymentMethod } from '@/lib/pricing'
 import { validateCoupon } from '@/lib/coupon-utils'
+import { resolveStaff, type Staff } from '@/lib/staff'
 
-async function requireAdmin() {
+// PDV: equipe Moventis — admin OU operador de balcão (bilheteiro). O operador só
+// opera os eventos a que está vinculado (box_office_operators).
+async function requireBoxOffice() {
   const sb = await createSupabaseServerClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return null
-  const admin = createSupabaseAdmin()
-  const { data } = await admin.from('admins').select('user_id').eq('user_id', user.id).single()
-  return data ? user : null
+  const staff = await resolveStaff(user.id)
+  if (!staff.isAdmin && staff.operatorEventIds.length === 0) return null
+  return { user, staff }
+}
+function canEvent(staff: Staff, eventId: string): boolean {
+  return staff.isAdmin || staff.operatorEventIds.includes(eventId)
 }
 
 /**
@@ -19,13 +25,15 @@ async function requireAdmin() {
  * Lista eventos publicados disponíveis para o PDV.
  */
 export async function GET(req: NextRequest) {
-  const user = await requireAdmin()
-  if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+  const ctx = await requireBoxOffice()
+  if (!ctx) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+  const { staff } = ctx
 
   const admin = createSupabaseAdmin()
   const eventId = req.nextUrl.searchParams.get('event_id')
 
   if (eventId) {
+    if (!canEvent(staff, eventId)) return NextResponse.json({ error: 'Evento não permitido.' }, { status: 403 })
     // Detalhes do evento (incluindo assentos disponíveis via reservations/tickets)
     const { data: event } = await admin
       .from('events')
@@ -62,12 +70,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data: event, unavailable: [...unavailable] })
   }
 
-  // Lista eventos disponíveis para venda no PDV
-  const { data: events } = await admin
+  // Lista eventos disponíveis para venda no PDV (operador: só os seus eventos).
+  let q = admin
     .from('events')
     .select('id, name, event_date, price_face, venues(name)')
     .in('status', ['published', 'approved'])
     .order('event_date', { ascending: true })
+  if (!staff.isAdmin) q = q.in('id', staff.operatorEventIds)
+  const { data: events } = await q
 
   return NextResponse.json({ data: events ?? [] })
 }
@@ -83,8 +93,9 @@ export async function GET(req: NextRequest) {
  *   coupon_code?
  */
 export async function POST(req: NextRequest) {
-  const user = await requireAdmin()
-  if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+  const ctx = await requireBoxOffice()
+  if (!ctx) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+  const { user, staff } = ctx
 
   const body = await req.json().catch(() => ({}))
   const {
@@ -116,6 +127,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (!event) return NextResponse.json({ error: 'Evento não encontrado.' }, { status: 404 })
+  if (!canEvent(staff, event_id)) return NextResponse.json({ error: 'Evento não permitido.' }, { status: 403 })
 
   // Cortesia = sem cobrança
   const isCourtesy = payment_method === 'courtesy'
