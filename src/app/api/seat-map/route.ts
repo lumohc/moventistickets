@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
           db.from('reservations').select('seat_id, ticket_type')
             .eq('event_id', event.id).gt('expires_at', now) as unknown as PromiseLike<{ data: Reserved[] | null }>,
           db.from('tickets').select('seat_id, ticket_type, group_id, group_name')
-            .eq('event_id', event.id) as unknown as PromiseLike<{ data: Sold[] | null }>,
+            .eq('event_id', event.id).is('cancelled_at', null) as unknown as PromiseLike<{ data: Sold[] | null }>,
           db.from('orders').select('seats')
             .eq('event_id', event.id).eq('status', 'pending_payment')
             .gt('expires_at', now) as unknown as PromiseLike<{ data: Pending[] | null }>,

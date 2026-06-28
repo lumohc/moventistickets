@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     // Busca o ticket pelo ID (extraído do QR assinado).
     const { data: ticket, error } = await admin
       .from('tickets')
-      .select('id, event_id, seat_id, seat_name, group_name, ticket_type, price, qr_version, holder_name, checked_in_at, orders(status, buyer_name, buyer_email)')
+      .select('id, event_id, seat_id, seat_name, group_name, ticket_type, price, qr_version, holder_name, cancelled_at, checked_in_at, orders(status, buyer_name, buyer_email)')
       .eq('id', sigCheck.ticketId)
       .single()
 
@@ -40,6 +40,11 @@ export async function POST(req: NextRequest) {
     // Evento correto?
     if (ticket.event_id !== event_id) {
       return NextResponse.json({ valid: false, message: 'Ingresso não pertence a este evento.' }, { status: 403 })
+    }
+
+    // Cancelado / reembolsado → recusa (a poltrona pode ter sido revendida).
+    if (ticket.cancelled_at) {
+      return NextResponse.json({ valid: false, cancelled: true, message: 'Ingresso cancelado/reembolsado.' }, { status: 409 })
     }
 
     // QR re-emitido: a versão do QR apresentado é diferente da versão atual do
