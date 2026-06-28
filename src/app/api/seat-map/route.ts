@@ -4,19 +4,11 @@ import { getVenueData } from '@/lib/venue-map'
 
 const GROUP_META: Record<string, {
   group_name: string; variation_full_id: number; variation_half_id: number
-  price_full: number; price_half: number
 }> = {
-  plateia:  { group_name: 'Plateia (Térreo)',         variation_full_id: 1, variation_half_id: 2, price_full: 50, price_half: 25 },
-  frisa_fe: { group_name: 'Frisa Esquerda (2º Piso)', variation_full_id: 5, variation_half_id: 6, price_full: 50, price_half: 25 },
-  frisa_fd: { group_name: 'Frisa Direita (2º Piso)',  variation_full_id: 7, variation_half_id: 8, price_full: 50, price_half: 25 },
-  balcao:   { group_name: 'Balcão (3º Piso)',         variation_full_id: 3, variation_half_id: 4, price_full: 50, price_half: 25 },
-}
-
-const FALLBACK_PRICES: Record<string, number> = {
-  'plateia|inteira': 50, 'plateia|meia-entrada': 25,
-  'balcao|inteira':  50, 'balcao|meia-entrada':  25,
-  'frisa_fe|inteira': 50, 'frisa_fe|meia-entrada': 25,
-  'frisa_fd|inteira': 50, 'frisa_fd|meia-entrada': 25,
+  plateia:  { group_name: 'Plateia (Térreo)',         variation_full_id: 1, variation_half_id: 2 },
+  frisa_fe: { group_name: 'Frisa Esquerda (2º Piso)', variation_full_id: 5, variation_half_id: 6 },
+  frisa_fd: { group_name: 'Frisa Direita (2º Piso)',  variation_full_id: 7, variation_half_id: 8 },
+  balcao:   { group_name: 'Balcão (3º Piso)',         variation_full_id: 3, variation_half_id: 4 },
 }
 
 async function safe<T>(thenable: PromiseLike<T>, fallback: T, ms = 3000): Promise<T> {
@@ -38,6 +30,7 @@ type EventRow = {
 type Reserved  = { seat_id: string; ticket_type: string }
 type Sold      = { seat_id: string; ticket_type: string; group_id: string; group_name: string }
 type Pending   = { seats: { seat_id: string }[] | null }
+type Blocked   = { seat_id: string }
 
 export async function GET(request: NextRequest) {
   const productId = request.nextUrl.searchParams.get('product_id')
@@ -49,6 +42,7 @@ export async function GET(request: NextRequest) {
   let reserved: Reserved[]   = []
   let sold: Sold[]            = []
   let pending: Pending[]     = []
+  let blocked: Blocked[]     = []
 
   try {
     const db  = createServerClient()
@@ -64,8 +58,8 @@ export async function GET(request: NextRequest) {
     event = evtWrap.data
 
     if (event?.id) {
-      const [resWrap, soldWrap, pendWrap] = await safe<[
-        { data: Reserved[] | null }, { data: Sold[] | null }, { data: Pending[] | null }
+      const [resWrap, soldWrap, pendWrap, blkWrap] = await safe<[
+        { data: Reserved[] | null }, { data: Sold[] | null }, { data: Pending[] | null }, { data: Blocked[] | null }
       ]>(
         Promise.all([
           db.from('reservations').select('seat_id, ticket_type')
@@ -75,14 +69,17 @@ export async function GET(request: NextRequest) {
           db.from('orders').select('seats')
             .eq('event_id', event.id).eq('status', 'pending_payment')
             .gt('expires_at', now) as unknown as PromiseLike<{ data: Pending[] | null }>,
+          db.from('seat_blocks').select('seat_id')
+            .eq('event_id', event.id) as unknown as PromiseLike<{ data: Blocked[] | null }>,
         ]) as unknown as PromiseLike<[
-          { data: Reserved[] | null }, { data: Sold[] | null }, { data: Pending[] | null }
+          { data: Reserved[] | null }, { data: Sold[] | null }, { data: Pending[] | null }, { data: Blocked[] | null }
         ]>,
-        [{ data: null }, { data: null }, { data: null }]
+        [{ data: null }, { data: null }, { data: null }, { data: null }]
       )
       reserved = resWrap.data  ?? []
       sold     = soldWrap.data ?? []
       pending  = pendWrap.data ?? []
+      blocked  = blkWrap.data  ?? []
     }
   } catch { /* continua com fallback vazio */ }
 
@@ -90,7 +87,9 @@ export async function GET(request: NextRequest) {
   const venueSlug = (event?.venues as any)?.slug ?? null
   const venueData = venueSlug ? getVenueData(venueSlug) : null
 
-  // Preços: prioridade prices JSON > price_face > fallback hardcoded
+  // Preço SEMPRE do evento: mapa de preços (prices JSON) > price_face. SEM fallback
+  // hardcoded — grupo sem preço configurado fica indisponível (não vendável), pra
+  // nunca cobrar um valor errado calado.
   const hasPricesMap = event?.prices != null && Object.keys(event.prices).length > 0
   const prices: Record<string, number> = hasPricesMap
     ? event!.prices!
@@ -105,7 +104,7 @@ export async function GET(request: NextRequest) {
             'frisa_fd|inteira': full,  'frisa_fd|meia-entrada': half,
           }
         })()
-      : FALLBACK_PRICES
+      : {}
 
   const eventName = event?.name ?? 'Evento'
 
@@ -113,14 +112,20 @@ export async function GET(request: NextRequest) {
   let vid = 1
   Object.entries(prices).forEach(([key, price]) => { variation_lookup[key] = { variation_id: vid++, price } })
 
-  const groupSeats = Object.entries(GROUP_META).map(([group_id, meta]) => ({
-    id: '', group_id, group_name: meta.group_name,
-    price_full: prices[`${group_id}|inteira`] ?? meta.price_full,
-    price_half: prices[`${group_id}|meia-entrada`] ?? meta.price_half,
-    variation_full_id: meta.variation_full_id,
-    variation_half_id: meta.variation_half_id,
-    status: 'available', reserved_by: '',
-  }))
+  const groupSeats = Object.entries(GROUP_META).map(([group_id, meta]) => {
+    const priceFull = prices[`${group_id}|inteira`]
+    const priceHalf = prices[`${group_id}|meia-entrada`]
+    return {
+      id: '', group_id, group_name: meta.group_name,
+      price_full: priceFull ?? 0,
+      price_half: priceHalf ?? 0,
+      variation_full_id: meta.variation_full_id,
+      variation_half_id: meta.variation_half_id,
+      // Sem preço configurado → indisponível (fail loud; nunca cobra errado).
+      status: priceFull != null ? 'available' : 'unavailable',
+      reserved_by: '',
+    }
+  })
 
   const reservedSeats = reserved.map(r => ({
     id: r.seat_id, group_id: '', group_name: '',
@@ -140,6 +145,13 @@ export async function GET(request: NextRequest) {
     status: 'sold', reserved_by: '',
   }))
 
+  // Poltronas BLOQUEADAS pelo admin (cortesia/reservado/manutenção): não vendáveis.
+  const blockedSeats = blocked.map(b => ({
+    id: b.seat_id, group_id: '', group_name: '',
+    price_full: 0, price_half: 0, variation_full_id: 0, variation_half_id: 0,
+    status: 'sold', reserved_by: 'blocked',
+  }))
+
   return NextResponse.json({
     status: 'success',
     data: {
@@ -152,7 +164,7 @@ export async function GET(request: NextRequest) {
       venue_id:        venueSlug ?? 'teatro-alvaro-de-carvalho',
       seat_model:      { id: 1, name: venueSlug ?? 'teatro-alvaro-de-carvalho' },
       variation_lookup,
-      seats:           [...groupSeats, ...reservedSeats, ...pendingSeats, ...soldSeats],
+      seats:           [...groupSeats, ...reservedSeats, ...pendingSeats, ...soldSeats, ...blockedSeats],
       venue:           venueData ?? null,
     }
   })

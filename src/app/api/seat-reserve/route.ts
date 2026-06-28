@@ -37,6 +37,16 @@ export async function POST(request: NextRequest) {
 
     const eventId = evtWrap.data.id
 
+    // Poltrona BLOQUEADA pelo admin (cortesia/reservado/manutenção) → não vende.
+    // Defesa em código (vale já no deploy); a v13 também bloqueia dentro do
+    // reserve_seat de forma atômica sob concorrência.
+    const blkWrap = await safe(
+      db.from('seat_blocks').select('id').eq('event_id', eventId).eq('seat_id', seat_id as string).limit(1),
+    )
+    if ((blkWrap?.data as { id: string }[] | null)?.length) {
+      return NextResponse.json({ status: 'error', message: 'Poltrona indisponível' }, { status: 409 })
+    }
+
     // Reserva ATÔMICA via função no banco (anti dupla-reserva sob concorrência).
     // A função insere ou assume reserva VENCIDA atomicamente; recusa se ativa/vendida.
     const rpcWrap = await safe(

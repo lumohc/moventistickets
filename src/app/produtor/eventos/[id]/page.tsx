@@ -224,19 +224,6 @@ export default function EditarEventoPage() {
             <span style={{ color: C.text, fontWeight: 600 }}>Editar evento</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {(eventStatus === 'published' || eventStatus === 'approved') && (
-              <a
-                href={`/produtor/eventos/${id}/checkin`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 16px', background: C.green, color: '#fff',
-                  borderRadius: 8, textDecoration: 'none',
-                  fontSize: '0.8rem', fontWeight: 600,
-                }}
-              >
-                📱 Check-in
-              </a>
-            )}
             <span style={{
               display: 'inline-block', padding: '4px 12px', borderRadius: 100,
               fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.04em',

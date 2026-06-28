@@ -189,6 +189,9 @@ export default function EventDetailPage() {
             {event?.name ?? 'Evento'}
           </h1>
           {event?.venues && <p style={{ fontSize: '0.85rem', color: C.muted, marginTop: 2 }}>{event.venues.name} · {fmtDate(event.event_date)}</p>}
+          <a href={`/admin/eventos/${id}/checkin`} style={{ display: 'inline-block', marginTop: 12, padding: '8px 18px', background: C.green, color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>
+            Check-in (validar ingressos)
+          </a>
         </div>
 
         {msg && (
