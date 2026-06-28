@@ -171,24 +171,6 @@ export async function sendCancellationEmail(params: CancellationEmailParams): Pr
   await deliverEmail(params.to, subject, html, [], `cancel order=${params.orderId} to=${params.to} kind=${params.kind}`)
 }
 
-export interface TicketDeliveryEmailParams {
-  to:           string
-  holderName:   string
-  eventName:    string
-  eventDate:    string
-  venueName:    string
-  seatName:     string
-  ticketType:   string
-  deliveryUrl?: string
-  orderId:      string
-}
-
-/** E-mail "você recebeu um ingresso" — usado na transferência de titular. */
-export async function sendTicketDeliveryEmail(p: TicketDeliveryEmailParams): Promise<void> {
-  const html = buildDeliveryHtml(p)
-  await deliverEmail(p.to, `Você recebeu um ingresso — ${p.eventName}`, html, [], `delivery order=${p.orderId} to=${p.to}`)
-}
-
 const brl = (n: number) => 'R$ ' + n.toFixed(2).replace('.', ',')
 
 /** Cabeçalho com o banner (img) — fallback pro nome se a img for bloqueada. */
@@ -355,47 +337,6 @@ export function buildCancellationHtml(p: CancellationEmailParams): string {
             </p>
           </td>
         </tr>
-        ${emailFooter(p.orderId)}
-      </table>
-    </td></tr>
-  </table>
-</body></html>`
-}
-
-export function buildDeliveryHtml(p: TicketDeliveryEmailParams): string {
-  return `<!DOCTYPE html>
-<html lang="pt-BR">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F3EC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F3EC;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-        ${bannerHeader()}
-        <tr>
-          <td style="background:#ffffff;padding:30px 32px 22px;border-left:1px solid #D8DACF;border-right:1px solid #D8DACF;">
-            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1A211B;letter-spacing:-0.02em;">Você recebeu um ingresso!</h1>
-            <p style="margin:0;font-size:15px;color:rgba(26,33,27,0.6);line-height:1.6;">
-              Olá, <strong style="color:#1A211B;">${p.holderName}</strong>. Um ingresso foi colocado no seu nome. Acesse abaixo para ver o QR e apresentar na entrada.
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#ffffff;padding:0 32px 22px;border-left:1px solid #D8DACF;border-right:1px solid #D8DACF;">
-            <div style="background:#F4F3EC;border:1px solid #D8DACF;border-radius:12px;padding:18px 20px;">
-              <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#1A211B;">${p.eventName}</p>
-              <p style="margin:0;font-size:13px;color:rgba(26,33,27,0.6);">${p.eventDate}</p>
-              <p style="margin:8px 0 0;font-size:14px;font-weight:600;color:#1A211B;">${p.venueName}</p>
-              <p style="margin:6px 0 0;font-size:13px;color:rgba(26,33,27,0.6);">${p.seatName} · ${capitalize(p.ticketType)}</p>
-            </div>
-          </td>
-        </tr>
-        ${p.deliveryUrl ? `
-        <tr>
-          <td style="background:#ffffff;padding:0 32px 30px;border-left:1px solid #D8DACF;border-right:1px solid #D8DACF;text-align:center;">
-            <a href="${p.deliveryUrl}" style="display:inline-block;background:#1F6B4E;color:#F4F3EC;text-decoration:none;font-size:15px;font-weight:700;padding:15px 34px;border-radius:10px;">Ver meu ingresso</a>
-            <p style="margin:10px 0 0;font-size:12px;color:rgba(26,33,27,0.5);line-height:1.5;">Apresente o QR na entrada (na tela ou impresso). Chegue com antecedência.</p>
-          </td>
-        </tr>` : ''}
         ${emailFooter(p.orderId)}
       </table>
     </td></tr>

@@ -119,7 +119,7 @@ export default function TicketActions({
           </div>
           {mode === 'transfer' && (
             <p style={{ fontSize: '0.68rem', color: C.muted, margin: '8px 0 0' }}>
-              O QR antigo deixa de valer e enviamos o novo ingresso por e-mail ao novo titular.
+              O QR antigo deixa de valer. Depois, use <strong>Enviar</strong> pra mandar o ingresso novo ao titular — você mesmo repassa o link.
             </p>
           )}
         </div>

@@ -1,4 +1,5 @@
 import SeatPickerWidget from '@/components/mapa/SeatPickerWidget'
+import StickyBuyBar from '@/components/evento/StickyBuyBar'
 
 export const metadata = {
   title: 'Allegro Vivace — Moventis',
@@ -58,8 +59,6 @@ const S = {
 }
 
 export default function AllegroVivacePage() {
-  const minStr = [...event.prices].map(p => p.value)
-    .sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10))[0]
   return (
     <main style={S.page}>
         <header style={S.header}>
@@ -90,10 +89,6 @@ export default function AllegroVivacePage() {
             </div>
 
             <p style={S.desc}>{event.description}</p>
-
-            <div style={{ marginTop: 20 }}>
-              <a href="#comprar" className="mvt-top-cta">Escolher poltronas →</a>
-            </div>
           </div>
 
           <div id="comprar" className="resp-cols-2" style={{ scrollMarginTop: 16 }}>
@@ -124,10 +119,7 @@ export default function AllegroVivacePage() {
           </div>
         </div>
 
-        <a href="#comprar" className="mvt-sticky-buy">
-          <span className="mvt-sticky-buy__price">a partir de <strong>{minStr}</strong></span>
-          <span className="mvt-sticky-buy__btn">Escolher poltronas</span>
-        </a>
+        <StickyBuyBar label="Escolher poltronas" />
     </main>
   )
 }

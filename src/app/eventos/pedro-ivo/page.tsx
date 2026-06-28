@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import venueData from '@/data/venue-pedro-ivo.json'
+import StickyBuyBar from '@/components/evento/StickyBuyBar'
 
 const AREAS = ['mezanino', 'plateia', 'frisa_s', 'frisa_t', 'frisa_u', 'frisa_v']
 
@@ -149,8 +150,6 @@ const prices = [
 ]
 
 export default function PedroIvoDemoPage() {
-  const minStr = [...prices].map(p => p.value)
-    .sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10))[0]
   return (
     <>
       <script
@@ -192,10 +191,6 @@ export default function PedroIvoDemoPage() {
             </div>
 
             <p style={S.desc}>{event.description}</p>
-
-            <div style={{ marginTop: 20 }}>
-              <a href="#comprar" className="mvt-top-cta">Escolher poltronas →</a>
-            </div>
           </div>
 
           <div id="comprar" className="resp-cols-2" style={{ scrollMarginTop: 16 }}>
@@ -224,10 +219,7 @@ export default function PedroIvoDemoPage() {
           </div>
         </div>
 
-        <a href="#comprar" className="mvt-sticky-buy">
-          <span className="mvt-sticky-buy__price">a partir de <strong>{minStr}</strong></span>
-          <span className="mvt-sticky-buy__btn">Escolher poltronas</span>
-        </a>
+        <StickyBuyBar label="Escolher poltronas" />
       </main>
     </>
   )

@@ -4,6 +4,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-server'
 import { getVenueData } from '@/lib/venue-map'
 import SeatPickerWidget from '@/components/mapa/SeatPickerWidget'
 import TicketGeralWidget from '@/components/evento/TicketGeralWidget'
+import StickyBuyBar from '@/components/evento/StickyBuyBar'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -93,16 +94,6 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
     })
   }
 
-  // Preço mínimo ("a partir de") pro CTA do topo + a barra sticky de compra.
-  const priceValues: number[] = []
-  if (priceFace) {
-    priceValues.push(priceFace)
-    if (event.half_price) priceValues.push(priceFace / 2)
-  } else if (event.prices && typeof event.prices === 'object') {
-    Object.values(event.prices as Record<string, number>).forEach(v => priceValues.push(Number(v)))
-  }
-  const minPrice = priceValues.length ? Math.min(...priceValues) : null
-  const minPriceStr = minPrice != null ? `R$ ${minPrice.toFixed(2).replace('.', ',')}` : null
   const canBuy = hasMap || !!priceFace
   const ctaLabel = hasMap ? 'Escolher poltronas' : 'Comprar ingressos'
 
@@ -160,13 +151,6 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
                 </div>
               ))}
             </div>
-
-            {/* CTA de compra logo no topo — decisão rápida (mobile vira full-width) */}
-            {canBuy && (
-              <div style={{ marginTop: 20 }}>
-                <a href="#comprar" className="mvt-top-cta">{ctaLabel} →</a>
-              </div>
-            )}
 
             {event.description && (
               <p style={{ fontSize: '0.95rem', color: C.muted, lineHeight: 1.7, marginTop: 20 }}>{event.description}</p>
@@ -245,15 +229,8 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
             </div>
           </div>
         </div>
-        {/* Barra de compra sticky no rodapé (só mobile) — some quando o mapa abre */}
-        {canBuy && (
-          <a href="#comprar" className="mvt-sticky-buy">
-            <span className="mvt-sticky-buy__price">
-              {minPriceStr ? <>a partir de <strong>{minPriceStr}</strong></> : 'Garanta seu ingresso'}
-            </span>
-            <span className="mvt-sticky-buy__btn">{ctaLabel}</span>
-          </a>
-        )}
+        {/* Barra de compra sticky no rodapé (só mobile) — abre o mapa; some quando aberto */}
+        {canBuy && <StickyBuyBar label={ctaLabel} />}
       </main>
     </>
   )
