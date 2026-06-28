@@ -34,16 +34,13 @@ export default function CheckinPage() {
   const [stats, setStats]     = useState({ ok: 0, duplicate: 0, invalid: 0 })
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Foca no input ao abrir
   useEffect(() => { inputRef.current?.focus() }, [])
 
-  // Aceita QR colado/escaneado automaticamente (quando muda e tem conteúdo)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function handleInputChange(val: string) {
     setInput(val)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    // Auto-submit quando detecta um código completo (começa com MVT:)
     if (val.startsWith('MVT:') && val.length > 10) {
       debounceRef.current = setTimeout(() => {
         handleScan(val)
@@ -89,14 +86,12 @@ export default function CheckinPage() {
       setResult({ status: 'invalid', message: 'Erro de conexão.' })
     }
 
-    // Limpa resultado após 4 segundos
     setTimeout(() => setResult({ status: 'idle' }), 4000)
   }
 
   const StatusBanner = () => {
     if (result.status === 'idle') return (
       <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: '32px', textAlign: 'center', color: C.muted, marginBottom: 20 }}>
-        <p style={{ fontSize: '2.5rem', marginBottom: 8 }}>📱</p>
         <p style={{ fontWeight: 600, color: C.text, marginBottom: 4 }}>Aguardando ingresso</p>
         <p style={{ fontSize: '0.85rem' }}>Aponte a câmera do leitor ou cole o código abaixo</p>
       </div>
@@ -104,48 +99,32 @@ export default function CheckinPage() {
 
     if (result.status === 'loading') return (
       <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: '32px', textAlign: 'center', marginBottom: 20 }}>
-        <p style={{ fontSize: '1.8rem', marginBottom: 8 }}>⏳</p>
         <p style={{ color: C.muted }}>Validando…</p>
       </div>
     )
 
     if (result.status === 'ok') return (
       <div style={{ background: 'rgba(79,102,84,0.08)', border: '2px solid #4F6654', borderRadius: 16, padding: '28px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ fontSize: '3rem', flexShrink: 0 }}>✅</div>
-          <div>
-            <p style={{ fontSize: '1.2rem', fontWeight: 700, color: C.green, marginBottom: 4 }}>Ingresso válido!</p>
-            <p style={{ fontWeight: 600, color: C.text }}>{result.ticket?.seat_name} — {result.ticket?.group_name}</p>
-            <p style={{ fontSize: '0.85rem', color: C.muted }}>{capitalize(result.ticket?.ticket_type ?? '')} · {result.ticket?.buyer_name}</p>
-          </div>
-        </div>
+        <p style={{ fontSize: '1.2rem', fontWeight: 700, color: C.green, marginBottom: 4 }}>Ingresso válido</p>
+        <p style={{ fontWeight: 600, color: C.text }}>{result.ticket?.seat_name} — {result.ticket?.group_name}</p>
+        <p style={{ fontSize: '0.85rem', color: C.muted }}>{capitalize(result.ticket?.ticket_type ?? '')} · {result.ticket?.holder_name ?? result.ticket?.buyer_name}</p>
       </div>
     )
 
     if (result.status === 'duplicate') return (
       <div style={{ background: 'rgba(255,193,7,0.08)', border: '2px solid #ffc107', borderRadius: 16, padding: '28px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ fontSize: '3rem', flexShrink: 0 }}>⚠️</div>
-          <div>
-            <p style={{ fontSize: '1.2rem', fontWeight: 700, color: C.yellow, marginBottom: 4 }}>Já utilizado!</p>
-            <p style={{ fontWeight: 600, color: C.text }}>{result.ticket?.seat_name} — {result.ticket?.buyer_name}</p>
-            <p style={{ fontSize: '0.85rem', color: C.muted }}>
-              Check-in realizado às {new Date(result.checked_in_at).toLocaleTimeString('pt-BR')}
-            </p>
-          </div>
-        </div>
+        <p style={{ fontSize: '1.2rem', fontWeight: 700, color: C.yellow, marginBottom: 4 }}>Já utilizado</p>
+        <p style={{ fontWeight: 600, color: C.text }}>{result.ticket?.seat_name} — {result.ticket?.buyer_name}</p>
+        <p style={{ fontSize: '0.85rem', color: C.muted }}>
+          Check-in realizado às {new Date(result.checked_in_at).toLocaleTimeString('pt-BR')}
+        </p>
       </div>
     )
 
     if (result.status === 'invalid') return (
       <div style={{ background: 'rgba(192,57,43,0.06)', border: '2px solid #c0392b', borderRadius: 16, padding: '28px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ fontSize: '3rem', flexShrink: 0 }}>❌</div>
-          <div>
-            <p style={{ fontSize: '1.2rem', fontWeight: 700, color: C.red, marginBottom: 4 }}>Inválido</p>
-            <p style={{ fontSize: '0.9rem', color: C.muted }}>{result.message}</p>
-          </div>
-        </div>
+        <p style={{ fontSize: '1.2rem', fontWeight: 700, color: C.red, marginBottom: 4 }}>Inválido</p>
+        <p style={{ fontSize: '0.9rem', color: C.muted }}>{result.message}</p>
       </div>
     )
 
@@ -154,20 +133,18 @@ export default function CheckinPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
-      {/* Header */}
       <header style={{ background: '#0F1115', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 28, height: 28, background: C.green, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#fff', fontWeight: 700 }}>M</div>
           <span style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>Check-in</span>
         </div>
-        <Link href={`/produtor/eventos/${eventId}`} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>
+        <Link href={`/admin/eventos/${eventId}`} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>
           ← Voltar
         </Link>
       </header>
 
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '28px 20px' }}>
 
-        {/* Estatísticas */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'Entradas',    value: stats.ok,        color: C.green },
@@ -181,10 +158,8 @@ export default function CheckinPage() {
           ))}
         </div>
 
-        {/* Banner de status */}
         <StatusBanner />
 
-        {/* Input manual / leitura de QR */}
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, marginBottom: 20 }}>
           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: C.text, marginBottom: 10 }}>
             Código do ingresso (cole ou escaneie)
@@ -226,7 +201,6 @@ export default function CheckinPage() {
           </p>
         </div>
 
-        {/* Histórico */}
         {history.length > 0 && (
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24 }}>
             <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: C.text, marginBottom: 14 }}>
@@ -238,9 +212,7 @@ export default function CheckinPage() {
                 padding: '8px 0',
                 borderBottom: i < history.length - 1 ? `1px solid ${C.border}` : 'none',
               }}>
-                <span style={{ fontSize: '1rem' }}>
-                  {h.status === 'ok' ? '✅' : h.status === 'duplicate' ? '⚠️' : '❌'}
-                </span>
+                <span style={{ flexShrink: 0, width: 8, height: 8, borderRadius: 999, background: h.status === 'ok' ? C.green : h.status === 'duplicate' ? C.yellow : C.red }} />
                 <span style={{ flex: 1, fontSize: '0.875rem', color: C.text, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {h.label}
                 </span>

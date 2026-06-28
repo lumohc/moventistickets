@@ -1,36 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { serviceFee, paymentFee } from '@/lib/fees'
 import { priceOrder } from '@/lib/pricing'
-
-const PRICES: Record<string, number> = {
-  'plateia|inteira':       50,
-  'plateia|meia-entrada':  25,
-  'balcao|inteira':        50,
-  'balcao|meia-entrada':   25,
-  'frisa_fe|inteira':      50,
-  'frisa_fe|meia-entrada': 25,
-  'frisa_fd|inteira':      50,
-  'frisa_fd|meia-entrada': 25,
-}
 
 async function safe<T>(p: PromiseLike<T>, ms = 4000): Promise<T | null> {
   return new Promise((resolve) => {
     const t = setTimeout(() => resolve(null), ms)
     p.then(v => { clearTimeout(t); resolve(v) }, () => { clearTimeout(t); resolve(null) })
   })
-}
-
-function checkoutUrl(token: string, seats: unknown[], total: number, face: number, fee: number, exp: string) {
-  const params = new URLSearchParams({
-    token,
-    seats: JSON.stringify(seats),
-    total: String(total),
-    face:  String(face),
-    fee:   String(fee),
-    exp,
-  })
-  return `/checkout?${params}`
 }
 
 export async function POST(request: NextRequest) {
@@ -44,22 +20,9 @@ export async function POST(request: NextRequest) {
   }
 
   type SeatIn = { seat_id: string; seat_name: string; group_id: string; group_name: string; ticket_type: string; kind: string }
-  const seatsArr = seats as SeatIn[]
-
-  const enriched = seatsArr.map(s => ({
-    ...s,
-    // Preço uniforme: R$50 inteira / R$25 meia. Fallback por tipo cobre
-    // qualquer setor (antes caía em R$80 fixo, que cobrava errado).
-    price: PRICES[`${s.group_id}|${s.ticket_type}`] ?? (s.ticket_type === 'meia-entrada' ? 25 : 50),
-  }))
-
-  const face         = parseFloat(enriched.reduce((a, s) => a + s.price, 0).toFixed(2))
-  const serviceTotal = parseFloat(enriched.reduce((a, s) => a + serviceFee(s.price), 0).toFixed(2))
-  const subtotal     = face + serviceTotal
-  const payFee       = paymentFee(subtotal, 'pix')
-  const total        = parseFloat((subtotal + payFee).toFixed(2))
-  const expiresAt    = new Date(Date.now() + 15 * 60 * 1000).toISOString()
-  const token        = reservation_token as string
+  const seatsArr  = seats as SeatIn[]
+  const token     = reservation_token as string
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
 
   try {
     const db = createServerClient()
@@ -68,20 +31,15 @@ export async function POST(request: NextRequest) {
       db.from('events').select('id, prices, price_face, half_price, fee_exempt').eq('product_id', product_id).eq('is_active', true).single()
     )
 
+    // Preço SÓ vem do evento no banco. Sem Supabase / sem evento → falha alto.
+    // Nunca segue com preço chutado (antes caía em R$50/R$25 silencioso).
     if (!evtWrap?.data) {
-      // Supabase indisponível — passa dados via URL
-      return NextResponse.json({
-        status:       'success',
-        redirect_url: checkoutUrl(token, enriched, total, face, serviceTotal, expiresAt),
-        total,
-        expires_at:   expiresAt,
-      })
+      return NextResponse.json({ status: 'error', message: 'Não foi possível confirmar o preço agora. Tente novamente.' }, { status: 503 })
     }
 
-    const event = evtWrap.data
+    const event = evtWrap.data as { id: string; prices: Record<string, number> | null; price_face: number | null; half_price: boolean | null; fee_exempt?: boolean }
 
-    // Idempotência: se este token já gerou um pedido (clique duplo / reenvio do
-    // formulário), devolve o MESMO pedido em vez de criar outro.
+    // Idempotência: se este token já gerou um pedido, devolve o MESMO.
     const dupWrap = await safe(
       db.from('reservations').select('order_id').eq('token', token).not('order_id', 'is', null).limit(1),
     )
@@ -95,34 +53,43 @@ export async function POST(request: NextRequest) {
         status: 'success',
         session_id: existingOrderId,
         redirect_url: `/checkout?session=${existingOrderId}`,
-        total: ord?.total ?? total,
+        total: ord?.total ?? 0,
         expires_at: ord?.expires_at ?? expiresAt,
       })
     }
 
-    // Preço REAL do evento: mapa de preços (se houver) → price_face → fallback.
-    // Mesma lógica do seat-map, pra checkout e mapa baterem (antes chumbava 50/25).
-    const ev = event as { id: string; prices: Record<string, number> | null; price_face: number | null; half_price: boolean | null; fee_exempt?: boolean }
-    const hasPriceMap = ev.prices != null && Object.keys(ev.prices).length > 0
-    const priceFor = (group_id: string, ticket_type: string): number => {
+    // Preço REAL do evento: mapa de preços (se houver) → price_face. SEM fallback.
+    const hasPriceMap = event.prices != null && Object.keys(event.prices).length > 0
+    const priceFor = (group_id: string, ticket_type: string): number | null => {
       if (hasPriceMap) {
-        const p = ev.prices![`${group_id}|${ticket_type}`]
+        const p = event.prices![`${group_id}|${ticket_type}`]
         if (p != null) return Number(p)
       }
-      if (ev.price_face != null && Number(ev.price_face) > 0) {
-        const full = Number(ev.price_face)
-        return ticket_type === 'meia-entrada' && ev.half_price ? full / 2 : full
+      if (event.price_face != null && Number(event.price_face) > 0) {
+        const full = Number(event.price_face)
+        return ticket_type === 'meia-entrada' && event.half_price ? full / 2 : full
       }
-      return PRICES[`${group_id}|${ticket_type}`] ?? (ticket_type === 'meia-entrada' ? 25 : 50)
+      return null
     }
 
-    const finalSeats = enriched.map(s => ({ ...s, price: priceFor(s.group_id, s.ticket_type) }))
+    const finalSeats: Array<SeatIn & { price: number }> = []
+    for (const s of seatsArr) {
+      const price = priceFor(s.group_id, s.ticket_type)
+      if (price == null || !(price > 0)) {
+        // Fail loud: setor/tipo sem preço configurado. NUNCA chuta um valor.
+        return NextResponse.json({
+          status: 'error',
+          message: 'Este evento ainda não tem preço configurado para a poltrona escolhida. Não foi possível continuar.',
+        }, { status: 409 })
+      }
+      finalSeats.push({ ...s, price })
+    }
 
     // Totais pelo motor financeiro único (consistente com payment/pix), respeitando fee_exempt.
     const pricing = priceOrder({
       ticketFaces: finalSeats.map(s => s.price),
       method: 'pix',
-      feeExempt: ev.fee_exempt === true,
+      feeExempt: event.fee_exempt === true,
     })
 
     const orderWrap = await safe(
@@ -140,12 +107,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (!orderWrap?.data) {
-      return NextResponse.json({
-        status:       'success',
-        redirect_url: checkoutUrl(token, finalSeats, pricing.buyerTotal, pricing.faceTotal, pricing.serviceFeeTotal, expiresAt),
-        total:        pricing.buyerTotal,
-        expires_at:   expiresAt,
-      })
+      return NextResponse.json({ status: 'error', message: 'Não foi possível iniciar o pedido. Tente novamente.' }, { status: 503 })
     }
 
     const orderId = orderWrap.data.id
@@ -165,11 +127,6 @@ export async function POST(request: NextRequest) {
       expires_at:   expiresAt,
     })
   } catch {
-    return NextResponse.json({
-      status:       'success',
-      redirect_url: checkoutUrl(token, enriched, total, face, serviceTotal, expiresAt),
-      total,
-      expires_at:   expiresAt,
-    })
+    return NextResponse.json({ status: 'error', message: 'Erro ao iniciar o pedido. Tente novamente.' }, { status: 500 })
   }
 }

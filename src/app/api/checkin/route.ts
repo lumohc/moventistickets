@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseAdmin } from '@/lib/supabase-server'
+import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
 import { verifyTicketQr } from '@/lib/ticket-signing'
+
+/** Só equipe Moventis autenticada (tabela admins) faz check-in. Produtor e
+ *  anônimo (link + QR) NÃO dão check-in. */
+async function requireAdmin() {
+  const sb = await createSupabaseServerClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return null
+  const admin = createSupabaseAdmin()
+  const { data } = await admin.from('admins').select('user_id').eq('user_id', user.id).single()
+  return data ? user : null
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const operator = await requireAdmin()
+    if (!operator) {
+      return NextResponse.json(
+        { valid: false, message: 'Check-in restrito à equipe Moventis. Faça login como administrador.' },
+        { status: 401 },
+      )
+    }
+
     const { qr_code, event_id } = await req.json()
 
     if (!qr_code || !event_id) {
