@@ -330,8 +330,35 @@ body.lumo-seat-picker-active .product .summary span.price {
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   background: #0b1220;
   border-top: 1px solid #1e293b;
+  display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+}
+.lumo-seat-picker__bottom-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
+/* Chips das poltronas selecionadas (remover pelo X) */
+.lumo-seat-picker__chips {
+  display: flex; gap: 6px;
+  overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.lumo-seat-picker__chips:empty { display: none; }
+.lumo-seat-picker__chips::-webkit-scrollbar { display: none; }
+.lumo-seat-picker__chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 5px 4px 11px;
+  background: #1e293b; color: #f1f5f9;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap; flex-shrink: 0;
+}
+.lumo-seat-picker__chip-x {
+  background: rgba(255,255,255,0.12); border: none; color: #f1f5f9;
+  width: 18px; height: 18px; border-radius: 50%;
+  font-size: 13px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.lumo-seat-picker__chip-x:hover { background: #f43f5e; }
 .lumo-seat-picker__selection-info { flex: 1; min-width: 0; }
 .lumo-seat-picker__selection-count {
   font-size: 13px;

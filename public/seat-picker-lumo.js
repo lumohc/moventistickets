@@ -100,11 +100,14 @@
       +   '</div>'
       + '</div>'
       + '<footer class="lumo-seat-picker__bottom-bar">'
-      +   '<div class="lumo-seat-picker__selection-info">'
-      +     '<p class="lumo-seat-picker__selection-count">Toque nas poltronas pra selecionar</p>'
-      +     '<p class="lumo-seat-picker__selection-total">' + self.config.currencySymbol + ' 0,00</p>'
+      +   '<div class="lumo-seat-picker__chips"></div>'
+      +   '<div class="lumo-seat-picker__bottom-row">'
+      +     '<div class="lumo-seat-picker__selection-info">'
+      +       '<p class="lumo-seat-picker__selection-count">Toque nas poltronas pra selecionar</p>'
+      +       '<p class="lumo-seat-picker__selection-total">' + self.config.currencySymbol + ' 0,00</p>'
+      +     '</div>'
+      +     '<button type="button" class="lumo-seat-picker__cta" disabled>Continuar</button>'
       +   '</div>'
-      +   '<button type="button" class="lumo-seat-picker__cta" disabled>Continuar</button>'
       + '</footer>';
     document.body.appendChild(modal);
     self.dom.modal = modal;
@@ -112,6 +115,7 @@
     self.dom.svg = modal.querySelector('.lumo-seat-picker__map');
     self.dom.selectionCount = modal.querySelector('.lumo-seat-picker__selection-count');
     self.dom.selectionTotal = modal.querySelector('.lumo-seat-picker__selection-total');
+    self.dom.chips = modal.querySelector('.lumo-seat-picker__chips');
     self.dom.continueBtn = modal.querySelector('.lumo-seat-picker__cta');
 
     var sheet = document.createElement('div');
@@ -399,10 +403,26 @@
       self.state.selection.delete(seat.key);
       gEl.classList.remove('lumo-seat-picker__seat-group--selected');
     } else {
+      seat._gEl = gEl;                          // guarda o grupo SVG pra remover pelo X no resumo
       self.state.selection.set(seat.key, seat);
       gEl.classList.add('lumo-seat-picker__seat-group--selected');
     }
     self._updateBottomBar();
+  };
+
+  /** Remove uma poltrona pelo X no resumo (sem precisar achá-la no mapa). */
+  LumoSeatPicker.prototype._deselectSeat = function (key) {
+    var self = this;
+    var seat = self.state.selection.get(key);
+    if (!seat) return;
+    if (seat._gEl) seat._gEl.classList.remove('lumo-seat-picker__seat-group--selected');
+    self.state.selection.delete(key);
+    self._updateBottomBar();
+  };
+
+  LumoSeatPicker.prototype._seatLabel = function (seat) {
+    var lbl = (seat.row_label || '') + (seat.num != null ? seat.num : '');
+    return lbl || seat.area_name || 'Poltrona';
   };
 
   LumoSeatPicker.prototype._updateBottomBar = function () {
@@ -418,6 +438,22 @@
       count + ' poltronas selecionadas';
     self.dom.selectionTotal.textContent = self.config.currencySymbol + ' ' + total.toFixed(2).replace('.', ',');
     self.dom.continueBtn.disabled = count === 0;
+
+    // Chips das poltronas selecionadas, cada uma com X pra remover na hora.
+    if (self.dom.chips) {
+      self.dom.chips.innerHTML = '';
+      self.state.selection.forEach(function (seat) {
+        var label = self._seatLabel(seat);
+        var chip = document.createElement('span');
+        chip.className = 'lumo-seat-picker__chip';
+        chip.innerHTML = '<span>' + escapeHtml(label) + '</span>'
+          + '<button type="button" class="lumo-seat-picker__chip-x" aria-label="Remover ' + escapeAttr(label) + '">×</button>';
+        chip.querySelector('.lumo-seat-picker__chip-x').addEventListener('click', function () {
+          self._deselectSeat(seat.key);
+        });
+        self.dom.chips.appendChild(chip);
+      });
+    }
   };
 
   LumoSeatPicker.prototype._openSheet = function () {

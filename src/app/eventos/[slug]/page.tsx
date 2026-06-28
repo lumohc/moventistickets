@@ -93,6 +93,19 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
     })
   }
 
+  // Preço mínimo ("a partir de") pro CTA do topo + a barra sticky de compra.
+  const priceValues: number[] = []
+  if (priceFace) {
+    priceValues.push(priceFace)
+    if (event.half_price) priceValues.push(priceFace / 2)
+  } else if (event.prices && typeof event.prices === 'object') {
+    Object.values(event.prices as Record<string, number>).forEach(v => priceValues.push(Number(v)))
+  }
+  const minPrice = priceValues.length ? Math.min(...priceValues) : null
+  const minPriceStr = minPrice != null ? `R$ ${minPrice.toFixed(2).replace('.', ',')}` : null
+  const canBuy = hasMap || !!priceFace
+  const ctaLabel = hasMap ? 'Escolher poltronas' : 'Comprar ingressos'
+
   return (
     <>
       {/* Injeta dados do venue para o seat picker */}
@@ -113,7 +126,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
           <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>← Todos os eventos</a>
         </header>
 
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px' }}>
+        <div className="mvt-evento-content" style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px' }}>
           {/* Hero */}
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px', marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -148,13 +161,27 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
               ))}
             </div>
 
+            {/* CTA de compra logo no topo — decisão rápida (mobile vira full-width) */}
+            {canBuy && (
+              <div style={{ marginTop: 20 }}>
+                <a href="#comprar" className="mvt-top-cta">{ctaLabel} →</a>
+              </div>
+            )}
+
             {event.description && (
-              <p style={{ fontSize: '0.95rem', color: C.muted, lineHeight: 1.7, marginTop: 4 }}>{event.description}</p>
+              <p style={{ fontSize: '0.95rem', color: C.muted, lineHeight: 1.7, marginTop: 20 }}>{event.description}</p>
             )}
           </div>
 
-          {/* Layout: mapa + preços */}
-          <div className={hasMap || priceFace ? 'resp-cols-2' : ''} style={{ display: 'grid', gridTemplateColumns: hasMap ? '1fr 300px' : '1fr', gap: 24, alignItems: 'start' }}>
+          {/* Layout: mapa + preços. SEM gridTemplateColumns inline (vencia o
+              media query) — no mobile o .resp-cols-2 empilha (1 coluna). */}
+          <div
+            id="comprar"
+            className={hasMap ? 'resp-cols-2' : ''}
+            style={hasMap
+              ? { scrollMarginTop: 16 }
+              : { display: 'grid', gridTemplateColumns: '1fr', gap: 24, alignItems: 'start', scrollMarginTop: 16 }}
+          >
             {/* Mapa de assentos ou ingresso geral */}
             {hasMap ? (
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '32px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
@@ -218,6 +245,15 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
             </div>
           </div>
         </div>
+        {/* Barra de compra sticky no rodapé (só mobile) — some quando o mapa abre */}
+        {canBuy && (
+          <a href="#comprar" className="mvt-sticky-buy">
+            <span className="mvt-sticky-buy__price">
+              {minPriceStr ? <>a partir de <strong>{minPriceStr}</strong></> : 'Garanta seu ingresso'}
+            </span>
+            <span className="mvt-sticky-buy__btn">{ctaLabel}</span>
+          </a>
+        )}
       </main>
     </>
   )
