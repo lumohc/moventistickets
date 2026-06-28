@@ -10,8 +10,8 @@ const link: React.CSSProperties = { color: 'rgba(244,243,236,0.85)', textDecorat
 export default function SiteFooter() {
   return (
     <footer style={{ background: ES, color: LINHO, marginTop: 48 }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 20px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 28 }}>
+      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px 20px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: 22 }}>
           {/* Marca */}
           <div style={col}>
             <img src="/moventis-wordmark-mono-linho.svg" alt="Moventis" style={{ height: 24, marginBottom: 6 }} />
@@ -63,7 +63,7 @@ export default function SiteFooter() {
         </div>
 
         {/* Linha legal */}
-        <div style={{ borderTop: `1px solid ${ESD}`, marginTop: 32, padding: '18px 0 24px', fontSize: '0.74rem', color: 'rgba(244,243,236,0.6)', lineHeight: 1.6 }}>
+        <div style={{ borderTop: `1px solid ${ESD}`, marginTop: 20, padding: '12px 0 16px', fontSize: '0.74rem', color: 'rgba(244,243,236,0.6)', lineHeight: 1.6 }}>
           © 2026 Moventis · Pedro Neves Araujo (MEI) · CNPJ 61.153.718/0001-02 · Florianópolis/SC
         </div>
       </div>
