@@ -9,7 +9,9 @@
 -- ══════════════════════════════════════════════════════════════════════════════
 
 create table if not exists producer_contract_acceptances (
-  id                uuid primary key default uuid_generate_v4(),
+  id                uuid primary key default gen_random_uuid(),
+  -- on delete cascade: se o produtor for deletado, a evidência some — ok porque
+  -- contract_snapshot + producer_name/doc já guardam o conteúdo do aceite.
   producer_id       uuid not null references producers(id) on delete cascade,
   event_id          uuid references events(id) on delete set null,
   contract_model    text not null check (contract_model in ('A','B')),
