@@ -189,17 +189,14 @@ export async function POST(req: NextRequest) {
 
   if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
 
-  // Registra uso do cupom
+  // Vincula o cupom ao pedido. O use_count (limite) é contado DENTRO do
+  // confirmOrderAndIssueTickets (chamado logo abaixo) — evita contar 2x.
   if (couponId && coupon_code) {
     await admin.from('coupon_uses').upsert({
       coupon_id:       couponId,
       order_id:        orderId,
       discount_amount: pricing.couponDiscount,
     }, { onConflict: 'order_id' })
-    await admin.rpc('increment_coupon_use_count', { coupon_id_param: couponId }).catch(async () => {
-      const { data: c } = await admin.from('coupons').select('use_count').eq('id', couponId!).single()
-      if (c) await admin.from('coupons').update({ use_count: (c.use_count ?? 0) + 1 }).eq('id', couponId!)
-    })
   }
 
   // PDV = confirmação síncrona

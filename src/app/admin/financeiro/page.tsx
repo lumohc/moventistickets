@@ -38,9 +38,11 @@ export default async function AdminFinanceiroPage() {
   const totalPayment  = paid.reduce((s: number, o: any) => s + Number(o.payment_fee), 0)
   const totalGross    = paid.reduce((s: number, o: any) => s + Number(o.total), 0)
 
-  // Por método de pagamento
+  // Por método de pagamento (payment_method: pix | credit_card | debit_card |
+  // card (legado) | pdv_cash | pdv_card). Antes só 'card' contava → crédito/débito sumiam.
   const byPix  = paid.filter((o: any) => o.payment_method === 'pix')
-  const byCard = paid.filter((o: any) => o.payment_method === 'card')
+  const byCard = paid.filter((o: any) => ['credit_card', 'debit_card', 'card'].includes(o.payment_method))
+  const byPdv  = paid.filter((o: any) => ['pdv_cash', 'pdv_card'].includes(o.payment_method))
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -74,10 +76,11 @@ export default async function AdminFinanceiroPage() {
         </div>
 
         {/* Split por método */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 16, marginBottom: 32 }}>
           {[
-            { icon: '📲', label: 'PIX',    count: byPix.length,  vol: byPix.reduce((s: number, o: any) => s + Number(o.total), 0)  },
-            { icon: '💳', label: 'Cartão', count: byCard.length, vol: byCard.reduce((s: number, o: any) => s + Number(o.total), 0) },
+            { icon: '📲', label: 'PIX',          count: byPix.length,  vol: byPix.reduce((s: number, o: any) => s + Number(o.total), 0)  },
+            { icon: '💳', label: 'Cartão',       count: byCard.length, vol: byCard.reduce((s: number, o: any) => s + Number(o.total), 0) },
+            { icon: '🏛️', label: 'Balcão (PDV)', count: byPdv.length,  vol: byPdv.reduce((s: number, o: any) => s + Number(o.total), 0)  },
           ].map(m => (
             <div key={m.label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
               <p style={{ fontSize: '1.2rem', marginBottom: 4 }}>{m.icon}</p>
