@@ -51,13 +51,15 @@ export default function PosterUpload({ eventId, currentUrl, onUploaded }: Props)
 
     const { data: { publicUrl } } = sb.storage.from('posters').getPublicUrl(path)
 
-    // Salva a URL no evento
-    const { error: updateErr } = await sb
-      .from('events')
-      .update({ poster_url: publicUrl })
-      .eq('id', eventId)
+    // Salva a URL no evento via server (escrita em events é service_role)
+    const res = await fetch(`/api/produtor/events/${eventId}/poster`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ poster_url: publicUrl }),
+    })
+    const json = await res.json().catch(() => ({}))
 
-    if (updateErr) {
+    if (!res.ok || !json.ok) {
       setError('Imagem enviada mas não foi possível salvar no evento.')
     } else {
       setPreview(publicUrl)

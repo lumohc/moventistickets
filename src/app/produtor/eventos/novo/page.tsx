@@ -152,7 +152,10 @@ export default function NovoEventoPage() {
       const { error: upErr } = await sb.storage.from('posters').upload(path, artFile, { upsert: true, contentType: artFile.type })
       if (!upErr) {
         const { data: { publicUrl } } = sb.storage.from('posters').getPublicUrl(path)
-        await sb.from('events').update({ poster_url: publicUrl }).eq('id', eventId)
+        await fetch(`/api/produtor/events/${eventId}/poster`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ poster_url: publicUrl }),
+        })
       }
     } catch { /* arte é best-effort */ }
   }
