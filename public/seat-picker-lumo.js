@@ -88,6 +88,15 @@
     window.addEventListener('pagehide', function () {
       if (!self.state.submitting) self._releaseAll(true);
     });
+
+    // Voltou pra aba (troca de app no celular / outra aba) → atualiza o mapa NA HORA,
+    // sem esperar o próximo ciclo (o setInterval é estrangulado em aba de fundo).
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && !self.state.submitting
+          && self.dom.modal && self.dom.modal.classList.contains('is-open')) {
+        self._pollMap();
+      }
+    });
   };
 
   LumoSeatPicker.prototype._buildModal = function () {
@@ -523,7 +532,7 @@
   LumoSeatPicker.prototype._startPolling = function () {
     var self = this;
     self._stopPolling();
-    self.state.pollTimer = setInterval(function () { self._pollMap(); }, 3000);
+    self.state.pollTimer = setInterval(function () { self._pollMap(); }, 1500);
   };
   LumoSeatPicker.prototype._stopPolling = function () {
     if (this.state.pollTimer) { clearInterval(this.state.pollTimer); this.state.pollTimer = null; }
