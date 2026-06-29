@@ -22,7 +22,7 @@ const menuItem: React.CSSProperties = {
 
 /**
  * Header institucional (faixa esmeralda). `search` controla a barra de busca
- * (desligada no seat-map/checkout). "Cadastrar evento" no topo (desktop) e no
+ * (desligada no seat-map/checkout). "Publique seu evento" no topo (desktop) e no
  * menu (mobile) leva ao Portal do Produtor.
  */
 export default function SiteHeader({ search = true }: { search?: boolean }) {
@@ -108,9 +108,9 @@ export default function SiteHeader({ search = true }: { search?: boolean }) {
         )}
 
         <nav style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-          {/* Cadastrar evento — desktop inline (discreto) */}
+          {/* Publique seu evento — desktop inline (discreto) */}
           <a href="/produtor/login" className="mvt-hd-desk" style={{ ...navLink, alignItems: 'center', gap: 6, display: 'inline-flex' }}>
-            <CalendarPlus size={16} strokeWidth={1.8} /> Cadastrar evento
+            <CalendarPlus size={16} strokeWidth={1.8} /> Publique seu evento
           </a>
           {!authed && <a href="/ingressos" className="mvt-hd-desk" style={navLink}>Entrar</a>}
 
@@ -127,7 +127,7 @@ export default function SiteHeader({ search = true }: { search?: boolean }) {
             </button>
             {menuOpen && (
               <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', background: '#fff', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', minWidth: 190, overflow: 'hidden', zIndex: 60 }}>
-                <a href="/produtor/login" className="mvt-hd-mob" style={{ ...menuItem, borderBottom: '1px solid #EFEBE0' }}><CalendarPlus size={15} strokeWidth={1.6} /> Cadastrar evento</a>
+                <a href="/produtor/login" className="mvt-hd-mob" style={{ ...menuItem, borderBottom: '1px solid #EFEBE0' }}><CalendarPlus size={15} strokeWidth={1.6} /> Publique seu evento</a>
                 {authed ? (
                   <>
                     <a href="/produtor/dashboard" style={{ ...menuItem, borderBottom: '1px solid #EFEBE0' }}><LayoutDashboard size={15} strokeWidth={1.6} /> Painel</a>

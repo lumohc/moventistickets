@@ -54,6 +54,24 @@ function splitDatetime(dt: string): { date: string; time: string } {
   return { date: date ?? '', time: time ?? '' }
 }
 
+const pad2 = (n: number) => String(n).padStart(2, '0')
+function fmtLocal(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+// Padrões do sistema (produtor não preenche):
+//  - abertura das portas = 1h antes do início (norma do teatro)
+//  - encerramento das vendas = início + duração + 30 min (vende até o fim)
+function autoDoorsOpen(dt: string): string | null {
+  if (!dt) return null
+  const d = new Date(dt); if (Number.isNaN(d.getTime())) return null
+  d.setHours(d.getHours() - 1); return fmtLocal(d)
+}
+function autoSaleEnd(dt: string, durationMin: number): string | null {
+  if (!dt) return null
+  const d = new Date(dt); if (Number.isNaN(d.getTime())) return null
+  d.setMinutes(d.getMinutes() + (durationMin || 0) + 30); return fmtLocal(d)
+}
+
 export default function NovoEventoPage() {
   const router = useRouter()
   const [loading, setLoading]   = useState(false)
@@ -76,13 +94,13 @@ export default function NovoEventoPage() {
   const [venueId, setVenueId]         = useState('')
   const [otherVenue, setOtherVenue]   = useState('')       // nome digitado quando "Outro"
   const [eventDatetime, setEventDatetime] = useState('')   // datetime-local → split em date+time
-  const [doorsOpen, setDoorsOpen]     = useState('')       // timestamptz (coluna v3)
-  const [salesOpenAt, setSalesOpenAt] = useState('')       // sales_open_at já existe no schema
-  const [saleEnd, setSaleEnd]         = useState('')       // sale_end (coluna v3)
+  const [salesOpenAt, setSalesOpenAt] = useState('')       // sales_open_at (opcional)
   const [duration, setDuration]       = useState('')
-  const [priceFace, setPriceFace]     = useState('')       // price_face (coluna v3)
-  const [halfPrice, setHalfPrice]     = useState(true)     // half_price (coluna v3)
-  const [producerNotes, setProducerNotes] = useState('')   // producer_notes (coluna v3)
+  const [priceFace, setPriceFace]     = useState('')       // price_face (inteira)
+  const [producerNotes, setProducerNotes] = useState('')   // producer_notes
+  const [artFile, setArtFile]         = useState<File | null>(null)   // arte do evento
+  const [artPreview, setArtPreview]   = useState<string | null>(null)
+  const [artError, setArtError]       = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -116,6 +134,29 @@ export default function NovoEventoPage() {
     load()
   }, [router])
 
+  function handleArtFile(file: File) {
+    setArtError(null)
+    if (!file.type.startsWith('image/')) { setArtError('Envie uma imagem (JPG, PNG ou WebP).'); return }
+    if (file.size > 5 * 1024 * 1024) { setArtError('A imagem deve ter no máximo 5 MB.'); return }
+    setArtFile(file)
+    setArtPreview(URL.createObjectURL(file))
+  }
+
+  // Sobe a arte DEPOIS de criar o evento (precisa do id). Best-effort: não bloqueia.
+  async function uploadArt(eventId: string) {
+    if (!artFile) return
+    try {
+      const sb = createSupabaseBrowser()
+      const ext = (artFile.name.split('.').pop() || 'jpg').toLowerCase()
+      const path = `${eventId}/poster.${ext}`
+      const { error: upErr } = await sb.storage.from('posters').upload(path, artFile, { upsert: true, contentType: artFile.type })
+      if (!upErr) {
+        const { data: { publicUrl } } = sb.storage.from('posters').getPublicUrl(path)
+        await sb.from('events').update({ poster_url: publicUrl }).eq('id', eventId)
+      }
+    } catch { /* arte é best-effort */ }
+  }
+
   async function save(asDraft: boolean) {
     if (!producerId) return
     setLoading(true)
@@ -139,12 +180,12 @@ export default function NovoEventoPage() {
       venue_id:       realVenueId,
       event_date:     eventDate || null,
       event_time:     eventTime || null,
-      doors_open:     doorsOpen || null,
+      doors_open:     autoDoorsOpen(eventDatetime),
       sales_open_at:  salesOpenAt || null,
-      sale_end:       saleEnd || null,
+      sale_end:       autoSaleEnd(eventDatetime, duration ? parseInt(duration) : 0),
       duration_min:   duration ? parseInt(duration) : null,
       price_face:     priceFace ? parseFloat(priceFace.replace(',', '.')) : null,
-      half_price:     halfPrice,
+      half_price:     true,
       producer_notes: notes || null,
       status:         asDraft ? 'draft' : 'pending_review',
       // Legado — obrigatório no schema v1 (provisório)
@@ -169,6 +210,7 @@ export default function NovoEventoPage() {
       return
     }
 
+    await uploadArt(data.id)
     router.push(`/produtor/eventos/${data.id}`)
   }
 
@@ -196,17 +238,18 @@ export default function NovoEventoPage() {
           venue_id: (venueId && venueId !== '__outro__') ? venueId : null,
           venue_name_other: venueId === '__outro__' ? otherVenue.trim() : null,
           event_date: eventDate || null, event_time: eventTime || null,
-          doors_open: doorsOpen || null, sales_open_at: salesOpenAt || null,
-          sale_end: saleEnd || null,
+          doors_open: autoDoorsOpen(eventDatetime), sales_open_at: salesOpenAt || null,
+          sale_end: autoSaleEnd(eventDatetime, duration ? parseInt(duration) : 0),
           duration_min: duration ? parseInt(duration) : null,
           price_face: priceFace ? parseFloat(priceFace.replace(',', '.')) : null,
-          half_price: halfPrice, producer_notes: producerNotes.trim() || null,
+          half_price: true, producer_notes: producerNotes.trim() || null,
         },
       }),
     })
     const json = await res.json().catch(() => ({}))
+    if (!res.ok || !json.ok) { setLoading(false); setError(json.error || 'Não foi possível enviar o evento.'); setShowAceite(false); return }
+    await uploadArt(json.event_id)
     setLoading(false)
-    if (!res.ok || !json.ok) { setError(json.error || 'Não foi possível enviar o evento.'); setShowAceite(false); return }
     router.push(`/produtor/eventos/${json.event_id}`)
   }
 
@@ -238,9 +281,20 @@ export default function NovoEventoPage() {
         <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 8 }}>
           Criar novo evento
         </h1>
-        <p style={{ color: C.muted, fontSize: '0.9rem', marginBottom: 32 }}>
+        <p style={{ color: C.muted, fontSize: '0.9rem', marginBottom: 20 }}>
           Preencha as informações. Você pode salvar como rascunho e editar antes de enviar para aprovação.
         </p>
+
+        {/* Antes de começar — o que ter em mãos */}
+        <div style={{ background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.20)', borderRadius: 12, padding: '16px 20px', marginBottom: 28 }}>
+          <p style={{ fontSize: '0.875rem', fontWeight: 700, color: C.text, marginBottom: 8 }}>Antes de começar</p>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: '0.82rem', color: C.muted, lineHeight: 1.7 }}>
+            <li><strong>Arte do evento:</strong> 1600×900 px (16:9), JPG, até ~1 MB (cartaz/quadrado também serve).</li>
+            <li><strong>Meia-entrada:</strong> sai automática (50% da inteira) — você não marca nada.</li>
+            <li><strong>Vendas:</strong> abrem quando a Moventis publica e vão até o fim do evento. <strong>Portas:</strong> 1h antes.</li>
+            <li>Depois de enviar, a equipe Moventis revisa e ativa a venda (normalmente em até 24h).</li>
+          </ul>
+        </div>
 
         {error && (
           <div style={{ background: '#fdf2f2', border: '1px solid #f5c6cb', borderRadius: 10, padding: '12px 18px', marginBottom: 24, fontSize: '0.875rem', color: C.error }}>
@@ -284,6 +338,22 @@ export default function NovoEventoPage() {
                 placeholder="Descreva o evento, elenco, ficha técnica…"
               />
             </div>
+
+            <div style={rowStyle}>
+              <label style={labelStyle}>Arte do evento</label>
+              {artPreview && (
+                <img src={artPreview} alt="Prévia da arte" style={{ width: '100%', maxHeight: 220, objectFit: 'contain', background: '#0D1117', borderRadius: 10, border: `1px solid ${C.border}`, marginBottom: 10 }} />
+              )}
+              <input
+                type="file" accept="image/jpeg,image/png,image/webp"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleArtFile(f) }}
+                style={{ fontSize: '0.85rem', color: C.text }}
+              />
+              <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 6 }}>
+                Recomendado: <strong>1600×900 px (16:9), JPG, até ~1 MB</strong>. Cartaz vertical ou quadrado também funciona — exibimos a arte inteira sobre um fundo borrado.
+              </p>
+              {artError && <p style={{ fontSize: '0.78rem', color: C.error, marginTop: 4 }}>{artError}</p>}
+            </div>
           </section>
 
           {/* ── 2. Local e data ── */}
@@ -318,23 +388,14 @@ export default function NovoEventoPage() {
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 18 }}>
-              <div>
-                <label style={labelStyle}>Data e hora do evento *</label>
-                <input
-                  type="datetime-local" required value={eventDatetime}
-                  onChange={e => setEventDatetime(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Abertura das portas</label>
-                <input
-                  type="datetime-local" value={doorsOpen}
-                  onChange={e => setDoorsOpen(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
+            <div style={rowStyle}>
+              <label style={labelStyle}>Data e hora do evento *</label>
+              <input
+                type="datetime-local" required value={eventDatetime}
+                onChange={e => setEventDatetime(e.target.value)}
+                style={{ ...inputStyle, maxWidth: 280 }}
+              />
+              <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 6 }}>As portas abrem <strong>1h antes</strong> (padrão do teatro) — você não precisa preencher.</p>
             </div>
 
             <div style={rowStyle}>
@@ -365,37 +426,25 @@ export default function NovoEventoPage() {
                   inputMode="decimal"
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 2 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox" checked={halfPrice}
-                    onChange={e => setHalfPrice(e.target.checked)}
-                    style={{ width: 16, height: 16, accentColor: C.green }}
-                  />
-                  <span style={{ fontSize: '0.875rem', color: C.text }}>
-                    Oferece meia-entrada (50%)
-                  </span>
-                </label>
+              <div>
+                <label style={labelStyle}>Meia-entrada (automática)</label>
+                <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', background: '#f3f1e8' }}>
+                  <strong style={{ color: C.text }}>
+                    {priceFace ? 'R$ ' + ((parseFloat(priceFace.replace(',', '.')) || 0) / 2).toFixed(2).replace('.', ',') : 'R$ 0,00'}
+                  </strong>
+                  <span style={{ fontSize: '0.78rem', color: C.muted, marginLeft: 8 }}>= 50% da inteira</span>
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 0 }}>
-              <div>
-                <label style={labelStyle}>Início das vendas</label>
-                <input
-                  type="datetime-local" value={salesOpenAt}
-                  onChange={e => setSalesOpenAt(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Encerramento das vendas</label>
-                <input
-                  type="datetime-local" value={saleEnd}
-                  onChange={e => setSaleEnd(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
+            <div style={rowStyle}>
+              <label style={labelStyle}>Início das vendas</label>
+              <input
+                type="datetime-local" value={salesOpenAt}
+                onChange={e => setSalesOpenAt(e.target.value)}
+                style={{ ...inputStyle, maxWidth: 280 }}
+              />
+              <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 6 }}>Em branco = abre assim que a Moventis publicar. As vendas vão <strong>até o fim do evento</strong> — você não precisa definir o encerramento.</p>
             </div>
           </section>
 
@@ -493,7 +542,7 @@ export default function NovoEventoPage() {
                 <span style={{ fontSize: '0.8rem', color: C.text }}>Usar minha própria equipe de leitura (zera o staff de portaria)</span>
               </label>
               <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 10, lineHeight: 1.6 }}>
-                Eventos de até 2 horas não têm custo de atendimento. Esta é uma estimativa pela capacidade — a equipe final é fechada 48h antes, pela venda real.
+                A equipe presencial da Moventis é oferecida a partir de <strong>100 ingressos vendidos online</strong>. Eventos de até 2 horas não têm custo de atendimento. Estimativa pela capacidade — a equipe final é fechada 48h antes, pela venda real.
               </p>
             </div>
 

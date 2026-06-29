@@ -39,7 +39,7 @@ export default function SiteFooter() {
           <div style={col}>
             <span style={head}>Para produtores</span>
             <a href="/produtor/login" style={link}>Portal do Produtor</a>
-            <a href="/produtor/cadastro" style={link}>Criar evento</a>
+            <a href="/produtor/cadastro" style={link}>Publique seu evento</a>
           </div>
 
           <div style={col}>

@@ -11,7 +11,7 @@ export type ContractModel = 'A' | 'B'
 
 export const CONTRACT_VERSIONS: Record<ContractModel, string> = {
   A: 'A-v1-2026-06',
-  B: 'B-v1-2026-06',
+  B: 'B-v2-2026-06',   // v2: equipe presencial a partir de 100 ingressos vendidos online
 }
 
 export interface ContractModelMeta {
@@ -54,7 +54,8 @@ O Produtor é o único responsável pelo evento, incluindo: realização, data, 
 Fornecer a plataforma de venda, processar pagamentos pelos provedores (Asaas/Stripe), emitir os ingressos com QR Code assinado e disponibilizar o painel de acompanhamento.
 
 Atendimento presencial (equipe Moventis):
-a) A Moventis disponibiliza 1 (um) bilheteiro para atendimento e venda no balcão (PDV) no dia do evento.
+O atendimento presencial da equipe Moventis (bilheteiro e staff de portaria) é oferecido a partir de 100 (cem) ingressos vendidos online. Abaixo desse volume, o atendimento presencial fica a cargo do Produtor.
+a) A partir de 100 ingressos vendidos online, a Moventis disponibiliza 1 (um) bilheteiro para atendimento e venda no balcão (PDV) no dia do evento.
 b) A Moventis disponibiliza Staff de portaria para atendimento ao público e leitura de ingressos (check-in), dimensionado em no máximo 250 ingressos por pessoa (até 250 → 1; 251–500 → 2; 501–750 → 3; +1 a cada 250), apurado 48 (quarenta e oito) horas antes do evento. Alternativamente, o Produtor pode fornecer a própria equipe para a leitura dos ingressos, sem qualquer custo adicional.
 c) Eventos de até 2 (duas) horas de duração não geram custo para o Produtor: o atendimento da equipe Moventis (bilheteiro e staff de portaria), incluídas 1 (uma) hora antes e 1 (uma) hora depois, é custeado pela Moventis.
 d) Em eventos de maior duração, o Produtor paga, por colaborador, descontado do repasse, conforme a duração do evento: acima de 2h e até 4h: R$ 100,00; acima de 4h e até 8h (diária — teto): R$ 150,00; acima de 8h: R$ 150,00 + R$ 35,00 por hora adicional.
