@@ -1,17 +1,15 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
-import SalesChart from '@/components/produtor/SalesChart'
-import { Banknote, FileText, CircleCheck } from 'lucide-react'
+import { summarizeSales, type SalesOrder } from '@/lib/sales-summary'
+import { Banknote, Ticket, Gift } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
   text: '#1A211B', muted: 'rgba(26,33,27,0.52)', green: '#1F6B4E',
 }
 
-function fmt(n: number) {
-  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
+const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default async function FinanceiroPage() {
   const sb = await createSupabaseServerClient()
@@ -27,98 +25,111 @@ export default async function FinanceiroPage() {
     .single()
   if (!producer) redirect('/produtor/cadastro')
 
-  // Busca pedidos pagos de todos os eventos do produtor
-  const { data: eventIds } = await admin
-    .from('events')
-    .select('id')
-    .eq('producer_id', producer.id)
-
-  const ids = (eventIds ?? []).map((e: any) => e.id)
+  const { data: eventRows } = await admin.from('events').select('id').eq('producer_id', producer.id)
+  const ids = (eventRows ?? []).map((e: any) => e.id)
 
   const { data: paidOrders } = ids.length > 0
     ? await admin
         .from('orders')
-        .select('face_total, service_fee_total, payment_fee, total, created_at, event_id, events(name)')
+        .select('id, status, face_total, total, created_at, buyer_name, buyer_email, seats, event_id, events(name)')
         .in('event_id', ids)
         .eq('status', 'paid')
         .order('created_at', { ascending: false })
     : { data: [] }
 
-  const totalRepasse = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
-
-  // Série diária (repasse/dia) dos últimos 30 dias para o gráfico.
-  const dayMap = new Map<string, number>()
-  for (const o of paidOrders ?? []) {
-    const day = new Date((o as any).created_at).toISOString().slice(0, 10)
-    dayMap.set(day, (dayMap.get(day) ?? 0) + Number((o as any).face_total))
-  }
-  const chartPoints: { day: string; value: number }[] = []
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    chartPoints.push({ day: key, value: dayMap.get(key) ?? 0 })
-  }
+  const s = summarizeSales((paidOrders ?? []) as SalesOrder[], null)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
       <Sidebar />
-
       <main style={{ flex: 1, marginLeft: 220, padding: '40px 36px' }}>
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>
-          Financeiro
-        </h1>
-        <p style={{ color: C.muted, fontSize: '0.9rem', marginBottom: 32 }}>
-          Resumo consolidado de todos os seus eventos.
-        </p>
+        <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>Financeiro</h1>
+        <p style={{ color: C.muted, fontSize: '0.9rem', marginBottom: 28 }}>Resumo consolidado de todos os seus eventos.</p>
 
-        {/* Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
-          {[
-            { Icon: Banknote,    label: 'Você vai receber',   value: fmt(totalRepasse), highlight: true  },
-            { Icon: CircleCheck, label: 'Pedidos pagos',      value: paidOrders?.length ?? 0, highlight: false },
-          ].map(card => (
-            <div key={card.label} style={{
-              background: card.highlight ? C.green : C.surface,
-              border: `1px solid ${card.highlight ? C.green : C.border}`,
-              borderRadius: 14, padding: '22px 24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-            }}>
-              <p style={{ marginBottom: 6 }}><card.Icon size={24} strokeWidth={1.5} color={card.highlight ? '#fff' : C.green} /></p>
-              <p style={{ fontSize: '1.6rem', fontWeight: 700, color: card.highlight ? '#fff' : C.text, letterSpacing: '-0.02em' }}>{card.value}</p>
-              <p style={{ fontSize: '0.78rem', color: card.highlight ? 'rgba(255,255,255,0.75)' : C.muted, marginTop: 2 }}>{card.label}</p>
+        {/* 2 cartões: ingresso vem antes do dinheiro na leitura */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 28 }}>
+          <div style={{ background: C.green, border: `1px solid ${C.green}`, borderRadius: 14, padding: '22px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <p style={{ marginBottom: 6 }}><Banknote size={24} strokeWidth={1.5} color="#fff" /></p>
+            <p style={{ fontSize: '1.7rem', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>{fmt(s.receitaFace)}</p>
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.78)', marginTop: 2 }}>Você vai receber</p>
+            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>face, sem as taxas · repasse após o evento</p>
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '22px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <p style={{ marginBottom: 6 }}><Ticket size={24} strokeWidth={1.5} color={C.green} /></p>
+            <p style={{ fontSize: '1.7rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>{s.vendidos}</p>
+            <p style={{ fontSize: '0.78rem', color: C.muted, marginTop: 2 }}>Ingressos vendidos</p>
+            <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 2 }}>em {s.compras} compra{s.compras !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+
+        {/* Por tipo */}
+        {s.byType.length > 0 && (
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden', marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 0.9fr 1fr', padding: '10px 18px', fontSize: '0.72rem', color: C.muted, background: '#f8f7f4', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <span>Por tipo</span><span style={{ textAlign: 'right' }}>Vendidos</span><span style={{ textAlign: 'right' }}>Face</span><span style={{ textAlign: 'right' }}>Total</span>
             </div>
-          ))}
-        </div>
-
-        {/* Baixar relatórios */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
-          <a href="/api/produtor/export?type=vendas" style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, textDecoration: 'none', padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>
-            Baixar vendas (CSV)
-          </a>
-          <a href="/api/produtor/export?type=bordero" style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, textDecoration: 'none', padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>
-            Baixar borderô (CSV)
-          </a>
-        </div>
-
-        {/* Gráfico de vendas (últimos 30 dias) */}
-        {(paidOrders?.length ?? 0) > 0 && (
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 2 }}>Seu repasse por dia</h2>
-            <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 18 }}>Últimos 30 dias</p>
-            <SalesChart points={chartPoints} />
+            {s.byType.map(r => (
+              <div key={r.key} style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 0.9fr 1fr', padding: '11px 18px', fontSize: '0.875rem', color: r.isCortesia ? C.muted : C.text, borderTop: `1px solid ${C.border}` }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{r.isCortesia && <Gift size={13} strokeWidth={1.6} />}{r.label}</span>
+                <span style={{ textAlign: 'right' }}>{r.count}</span>
+                <span style={{ textAlign: 'right' }}>{fmt(r.face)}</span>
+                <span style={{ textAlign: 'right' }}>{r.isCortesia ? '—' : fmt(r.total)}</span>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Dados bancários */}
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+        {/* Downloads */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+          <a href="/api/produtor/export?type=vendas" style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, textDecoration: 'none', padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>Baixar vendas (CSV)</a>
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: C.muted, padding: '9px 16px', border: `1px solid ${C.border}`, borderRadius: 9, background: C.surface }}>Borderô (PDF) — após fechar as vendas</span>
+        </div>
+
+        {/* Últimas compras — 1 linha por compra, cortesias fora */}
+        {s.realOrders.length > 0 && (
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden', marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <div style={{ padding: '16px 22px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text }}>Últimas compras</h2>
+              <span style={{ fontSize: '0.8rem', color: C.muted }}>{s.compras} compra{s.compras !== 1 ? 's' : ''} · {s.vendidos} ingresso{s.vendidos !== 1 ? 's' : ''}</span>
+            </div>
+            {s.realOrders.slice(0, 20).map((o: any, i: number) => {
+              const seats = (o.seats as any[]) ?? []
+              const nSeats = seats.length
+              const poltronas = seats.map(x => x.seat_name).filter(Boolean).join(', ')
+              return (
+                <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '13px 22px', borderBottom: i < Math.min(s.realOrders.length, 20) - 1 ? `1px solid ${C.border}` : 'none' }}>
+                  <div>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text }}>{o.buyer_name || '—'}</p>
+                    <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 1 }}>
+                      {(o.events as any)?.name ? `${(o.events as any).name} · ` : ''}{nSeats} ingresso{nSeats !== 1 ? 's' : ''}{poltronas ? ` · ${poltronas}` : ''}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 700, color: C.green }}>{fmt(Number(o.face_total))}</p>
+                    <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 1 }}>seu repasse</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Cortesias — fora do feed do dinheiro */}
+        {s.cortesias > 0 && (
+          <div style={{ marginBottom: 24, padding: '12px 18px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, fontSize: '0.8rem', color: C.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Gift size={15} strokeWidth={1.6} /> {s.cortesias} cortesias emitidas — não entram no repasse, aparecem só no borderô.
+          </div>
+        )}
+
+        {/* Dados de repasse */}
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
           <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 16 }}>Dados de repasse</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
             {[
-              { label: 'Preferência',   value: producer.payment_pref === 'split' ? 'Split automático (Asaas)' : 'Transferência bancária (TED/PIX)' },
-              { label: 'Banco',         value: producer.bank_name    ?? '—' },
-              { label: 'Agência',       value: producer.bank_agency  ?? '—' },
-              { label: 'Conta',         value: producer.bank_account ?? '—' },
+              { label: 'Preferência', value: producer.payment_pref === 'split' ? 'Split automático (Asaas)' : 'Transferência (TED/PIX)' },
+              { label: 'Banco', value: producer.bank_name ?? '—' },
+              { label: 'Agência', value: producer.bank_agency ?? '—' },
+              { label: 'Conta', value: producer.bank_account ?? '—' },
             ].map(r => (
               <div key={r.label}>
                 <p style={{ fontSize: '0.75rem', color: C.muted, marginBottom: 2 }}>{r.label}</p>
@@ -126,40 +137,11 @@ export default async function FinanceiroPage() {
               </div>
             ))}
           </div>
-          <p style={{ fontSize: '0.78rem', color: C.muted, marginTop: 20 }}>
-            Para atualizar seus dados bancários, entre em contato com a equipe Moventis.
-          </p>
+          <p style={{ fontSize: '0.78rem', color: C.muted, marginTop: 18 }}>Para atualizar seus dados bancários, fale com a equipe Moventis.</p>
         </div>
 
-        {/* Extrato recente */}
-        {paidOrders && paidOrders.length > 0 && (
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <div style={{ padding: '16px 24px', borderBottom: `1px solid ${C.border}` }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text }}>Últimas transações</h2>
-            </div>
-            {paidOrders.slice(0, 20).map((o: any, i: number) => (
-              <div key={i} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '12px 24px',
-                borderBottom: i < Math.min(paidOrders.length, 20) - 1 ? `1px solid ${C.border}` : 'none',
-              }}>
-                <div>
-                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text }}>{(o.events as any)?.name ?? '—'}</p>
-                  <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 1 }}>
-                    {new Date(o.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: C.green }}>{fmt(Number(o.face_total))}</p>
-                  <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 1 }}>seu repasse</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
         {(!paidOrders || paidOrders.length === 0) && (
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: C.muted, fontSize: '0.9rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '44px 24px', textAlign: 'center', color: C.muted, fontSize: '0.9rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
             Nenhuma venda registrada ainda.
           </div>
         )}

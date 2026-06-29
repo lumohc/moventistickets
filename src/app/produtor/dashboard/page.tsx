@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
-import { Hand, Info, CalendarDays, CircleCheck, Banknote } from 'lucide-react'
+import { summarizeSales, type SalesOrder } from '@/lib/sales-summary'
+import { Hand, Info, CalendarDays, Ticket, Banknote } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -40,17 +41,12 @@ export default async function DashboardPage() {
     await admin.from('events').select('id').eq('producer_id', producer.id)
   ).data?.map((e: any) => e.id) ?? []
 
-  const { count: totalOrders } = await admin
-    .from('orders')
-    .select('id', { count: 'exact', head: true })
-    .in('event_id', producerEventIds)
-    .eq('status', 'paid')
-
-  const { data: revenueRows } = producerEventIds.length > 0
-    ? await admin.from('orders').select('face_total').in('event_id', producerEventIds).eq('status', 'paid')
+  const { data: paidRows } = producerEventIds.length > 0
+    ? await admin.from('orders').select('status, face_total, total, seats').in('event_id', producerEventIds).eq('status', 'paid')
     : { data: [] }
 
-  const totalReceita = (revenueRows ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
+  const summary = summarizeSales((paidRows ?? []) as SalesOrder[], null)
+  const totalReceita = summary.receitaFace
 
   const suspended = producer.status === 'suspended'
 
@@ -93,7 +89,7 @@ export default async function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
             { label: 'Eventos criados',  value: totalEvents  ?? 0, Icon: CalendarDays },
-            { label: 'Vendas confirmadas', value: totalOrders ?? 0, Icon: CircleCheck },
+            { label: 'Ingressos vendidos', value: summary.vendidos, Icon: Ticket },
             { label: 'A receber (face)',  value: fmt(totalReceita),  Icon: Banknote },
           ].map(stat => (
             <div key={stat.label} style={{
