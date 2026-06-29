@@ -32,25 +32,25 @@ type Sold      = { seat_id: string; ticket_type: string; group_id: string; group
 type Pending   = { seats: { seat_id: string }[] | null }
 type Blocked   = { seat_id: string }
 
-export async function GET(request: NextRequest) {
-  const productId = request.nextUrl.searchParams.get('product_id')
-  // Token do cliente: reservas com este token são DELE (não mostrar como "reservada
-  // por outro" pra ele mesmo). Habilita a trava ao vivo sem confundir o próprio hold.
-  const myToken = request.nextUrl.searchParams.get('reservation_token')
-  if (!productId) {
-    return NextResponse.json({ status: 'error', message: 'product_id obrigatório' }, { status: 400 })
-  }
+/**
+ * Cache curto (1s) do estado das poltronas. No pico do on-sale, dezenas/centenas
+ * de polls no mesmo segundo viram 1 ida ao banco (em vez de 4 queries por poll).
+ * A trava no clique continua ATÔMICA no banco (reserve_seat) — o cache só acelera
+ * o REFRESH VISUAL do mapa; nunca causa dupla-venda (o hold valida no banco).
+ */
+type SeatData = { event: EventRow | null; reserved: Reserved[]; sold: Sold[]; pending: Pending[]; blocked: Blocked[] }
+const seatCache = new Map<string, { val: SeatData; exp: number }>()
+const SEAT_CACHE_MS = 1000
+
+async function getSeatData(productId: string): Promise<SeatData> {
+  const hit = seatCache.get(productId)
+  if (hit && hit.exp > Date.now()) return hit.val
 
   let event: EventRow | null = null
-  let reserved: Reserved[]   = []
-  let sold: Sold[]            = []
-  let pending: Pending[]     = []
-  let blocked: Blocked[]     = []
-
+  let reserved: Reserved[] = [], sold: Sold[] = [], pending: Pending[] = [], blocked: Blocked[] = []
   try {
     const db  = createServerClient()
     const now = new Date().toISOString()
-
     const evtWrap = await safe<{ data: EventRow | null }>(
       db.from('events')
         .select('id, name, prices, price_face, half_price, venue_id, venues(slug)')
@@ -59,7 +59,6 @@ export async function GET(request: NextRequest) {
       { data: null }
     )
     event = evtWrap.data
-
     if (event?.id) {
       const [resWrap, soldWrap, pendWrap, blkWrap] = await safe<[
         { data: Reserved[] | null }, { data: Sold[] | null }, { data: Pending[] | null }, { data: Blocked[] | null }
@@ -84,7 +83,24 @@ export async function GET(request: NextRequest) {
       pending  = pendWrap.data ?? []
       blocked  = blkWrap.data  ?? []
     }
-  } catch { /* continua com fallback vazio */ }
+  } catch { /* fallback vazio */ }
+
+  const val: SeatData = { event, reserved, sold, pending, blocked }
+  seatCache.set(productId, { val, exp: Date.now() + SEAT_CACHE_MS })
+  return val
+}
+
+export async function GET(request: NextRequest) {
+  const productId = request.nextUrl.searchParams.get('product_id')
+  // Token do cliente: reservas com este token são DELE (não mostrar como "reservada
+  // por outro" pra ele mesmo). Habilita a trava ao vivo sem confundir o próprio hold.
+  const myToken = request.nextUrl.searchParams.get('reservation_token')
+  if (!productId) {
+    return NextResponse.json({ status: 'error', message: 'product_id obrigatório' }, { status: 400 })
+  }
+
+  // Estado das poltronas com cache de 1s (alívio de carga no on-sale).
+  const { event, reserved, sold, pending, blocked } = await getSeatData(productId)
 
   // Venue data: busca pelo slug do venue associado ao evento
   const venueSlug = (event?.venues as any)?.slug ?? null
