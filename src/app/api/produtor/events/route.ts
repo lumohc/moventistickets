@@ -123,9 +123,9 @@ export async function POST(req: NextRequest) {
       slug:           `ev-${ts}`,
       venue_name:     venueName,
       city,
-      prices:         priceFace
-        ? { 'plateia|inteira': priceFace, ...(ev.half_price !== false ? { 'plateia|meia-entrada': priceFace / 2 } : {}) }
-        : {},
+      // Preço ÚNICO pro mapa inteiro: prices vazio → seat-map usa price_face em
+      // todos os setores (inteira + meia). Preço por área = Fase B.
+      prices:         {},
     })
     .select('id')
     .single()

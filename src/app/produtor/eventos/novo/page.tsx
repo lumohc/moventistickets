@@ -152,12 +152,9 @@ export default function NovoEventoPage() {
       slug:           `ev-${Date.now()}`,
       venue_name:     venueName,
       city:           venueCity,
-      prices:         priceFace
-        ? {
-            [`plateia|inteira`]: parseFloat(priceFace.replace(',', '.')),
-            ...(halfPrice ? { [`plateia|meia-entrada`]: parseFloat(priceFace.replace(',', '.')) / 2 } : {}),
-          }
-        : {},
+      // Preço ÚNICO pro mapa inteiro: prices vazio → o seat-map usa price_face em
+      // TODOS os setores (plateia/frisa/balcão), inteira + meia. (Preço por área = Fase B.)
+      prices:         {},
     }
 
     const { data, error: err } = await sb
