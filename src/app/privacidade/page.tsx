@@ -68,7 +68,7 @@ export default function PrivacidadePage() {
             <p>Utilizamos seus dados para:</p>
             <ul style={{ paddingLeft: 24, marginTop: 8 }}>
               <li style={{ marginBottom: 4 }}>processar e confirmar a compra de ingressos;</li>
-              <li style={{ marginBottom: 4 }}>enviar o ingresso digital com QR code por e-mail;</li>
+              <li style={{ marginBottom: 4 }}>enviar o ingresso digital com QR code somente ao e-mail do comprador;</li>
               <li style={{ marginBottom: 4 }}>realizar o check-in no evento (validação do QR code);</li>
               <li style={{ marginBottom: 4 }}>efetuar repasses financeiros aos produtores;</li>
               <li style={{ marginBottom: 4 }}>prevenir fraudes e chargebacks;</li>
@@ -145,7 +145,7 @@ export default function PrivacidadePage() {
             <p style={{ marginTop: 12 }}>Após o prazo, os dados são anonimizados ou excluídos de forma segura.</p>
           </Section>
 
-          <Section title="7. Cookies">
+          <Section id="cookies" title="7. Cookies">
             <p>Utilizamos cookies essenciais para o funcionamento da plataforma (manutenção de sessão, segurança). Não utilizamos cookies de rastreamento publicitário de terceiros.</p>
             <p style={{ marginTop: 12 }}>Você pode desativar cookies nas configurações do seu navegador, mas isso pode afetar o funcionamento do site.</p>
           </Section>
@@ -218,9 +218,9 @@ export default function PrivacidadePage() {
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section style={{ marginBottom: 36 }}>
+    <section id={id} style={{ marginBottom: 36, scrollMarginTop: 20 }}>
       <h2 style={{
         fontSize: '1.1rem', fontWeight: 700, color: '#1A211B',
         letterSpacing: '-0.02em', marginBottom: 14,

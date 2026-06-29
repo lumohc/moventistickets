@@ -192,8 +192,15 @@ export default function EditarEventoPage() {
 
   async function handleSubmitForReview() {
     setSaving(true)
-    const sb = createSupabaseBrowser()
-    await sb.from('events').update({ status: 'pending_review' }).eq('id', id)
+    setError(null)
+    // Via API (server) pra disparar o aviso de WhatsApp pra equipe Moventis.
+    const res  = await fetch(`/api/produtor/events/${id}/submit`, { method: 'POST' })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok || !json.ok) {
+      setError(json.error || 'Não foi possível enviar para análise.')
+      setSaving(false)
+      return
+    }
     router.push('/produtor/eventos')
   }
 

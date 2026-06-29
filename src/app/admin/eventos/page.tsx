@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
-import { X, CircleCheck, Undo2, Megaphone, CircleX, Flag } from 'lucide-react'
+import { X, Undo2, Megaphone, CircleX, Flag } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -265,14 +265,14 @@ export default function AdminEventosPage() {
               <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
                 <p style={{ fontSize: '0.75rem', fontWeight: 600, color: C.text, marginBottom: 10 }}>Fluxo de aprovação</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {selected.status === 'pending_review' && (
+                  {(selected.status === 'pending_review' || selected.status === 'approved') && (
                     <>
                       <button
-                        onClick={() => updateStatus(selected.id, 'approved')}
+                        onClick={() => updateStatus(selected.id, 'published')}
                         disabled={saving}
                         style={{ padding: '11px', background: C.green, color: '#fff', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                       >
-                        <CircleCheck size={16} strokeWidth={1.5} /> Aprovar evento
+                        <Megaphone size={16} strokeWidth={1.5} /> Publicar / Ativar venda
                       </button>
                       <button
                         onClick={() => updateStatus(selected.id, 'draft')}
@@ -282,15 +282,6 @@ export default function AdminEventosPage() {
                         <Undo2 size={15} strokeWidth={1.5} /> Devolver para o produtor (rascunho)
                       </button>
                     </>
-                  )}
-                  {selected.status === 'approved' && (
-                    <button
-                      onClick={() => updateStatus(selected.id, 'published')}
-                      disabled={saving}
-                      style={{ padding: '11px', background: C.green, color: '#fff', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                    >
-                      <Megaphone size={16} strokeWidth={1.5} /> Publicar na plataforma
-                    </button>
                   )}
                   {(selected.status === 'published' || selected.status === 'approved') && (
                     <button

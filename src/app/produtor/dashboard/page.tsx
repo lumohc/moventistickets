@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
-import { Hand, Clock, CalendarDays, CircleCheck, Banknote } from 'lucide-react'
+import { Hand, Info, CalendarDays, CircleCheck, Banknote } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -52,6 +52,8 @@ export default async function DashboardPage() {
 
   const totalReceita = (revenueRows ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
 
+  const suspended = producer.status === 'suspended'
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
       <Sidebar />
@@ -63,26 +65,25 @@ export default async function DashboardPage() {
             Olá, {producer.name.split(' ')[0]} <Hand size={22} strokeWidth={1.5} color={C.green} />
           </h1>
           <p style={{ color: C.muted, fontSize: '0.9rem', marginTop: 4 }}>
-            {producer.status === 'pending'
-              ? 'Sua conta está em análise. Você poderá publicar eventos após a aprovação.'
-              : producer.status === 'approved'
-              ? 'Conta aprovada — pronto para criar eventos.'
-              : 'Conta suspensa. Entre em contato com o suporte.'}
+            {suspended
+              ? 'Conta suspensa. Entre em contato com o suporte.'
+              : 'Pronto para criar eventos.'}
           </p>
         </div>
 
-        {/* Status banner */}
-        {producer.status === 'pending' && (
+        {/* Como funciona a publicação */}
+        {!suspended && (
           <div style={{
-            background: 'rgba(255,193,7,0.08)', border: '1px solid rgba(255,193,7,0.3)',
+            background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.20)',
             borderRadius: 12, padding: '14px 20px', marginBottom: 28,
-            display: 'flex', alignItems: 'center', gap: 12,
+            display: 'flex', alignItems: 'flex-start', gap: 12,
           }}>
-            <span style={{ display: 'inline-flex' }}><Clock size={20} strokeWidth={1.5} color="#92610a" /></span>
+            <span style={{ display: 'inline-flex', marginTop: 1 }}><Info size={18} strokeWidth={1.5} color={C.green} /></span>
             <div>
-              <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#92610a' }}>Cadastro em análise</p>
-              <p style={{ fontSize: '0.8rem', color: '#a07020', marginTop: 2 }}>
-                Nossa equipe está revisando seu cadastro. Você receberá um e-mail em até 24h.
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text }}>Como funciona a publicação</p>
+              <p style={{ fontSize: '0.8rem', color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+                Você cria o evento na hora. Antes de ir à venda, a equipe Moventis dá uma conferida e ativa —
+                normalmente em até 24h. Você é avisado quando ele entra no ar.
               </p>
             </div>
           </div>
@@ -118,19 +119,19 @@ export default async function DashboardPage() {
             Próximos passos
           </h2>
           <p style={{ fontSize: '0.875rem', color: C.muted, marginBottom: 20 }}>
-            {producer.status === 'approved'
-              ? 'Crie seu primeiro evento e comece a vender ingressos.'
-              : 'Após aprovação, você poderá criar eventos.'}
+            {suspended
+              ? 'Sua conta está suspensa. Fale com o suporte para reativar.'
+              : 'Crie seu evento e comece a vender ingressos.'}
           </p>
           <a
             href="/produtor/eventos/novo"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '12px 24px', background: producer.status === 'approved' ? C.green : C.muted,
+              padding: '12px 24px', background: suspended ? C.muted : C.green,
               color: '#fff', borderRadius: 10, textDecoration: 'none',
               fontSize: '0.9rem', fontWeight: 600,
-              pointerEvents: producer.status === 'approved' ? 'auto' : 'none',
-              opacity: producer.status === 'approved' ? 1 : 0.5,
+              pointerEvents: suspended ? 'none' : 'auto',
+              opacity: suspended ? 0.5 : 1,
             }}
           >
             + Criar evento

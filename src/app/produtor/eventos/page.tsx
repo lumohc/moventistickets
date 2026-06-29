@@ -44,7 +44,7 @@ export default async function EventosPage() {
     .eq('producer_id', producer.id)
     .order('created_at', { ascending: false })
 
-  const canCreate = producer.status === 'approved'
+  const canCreate = producer.status !== 'suspended'
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -77,16 +77,16 @@ export default async function EventosPage() {
           </a>
         </div>
 
-        {/* Conta pendente */}
+        {/* Conta suspensa */}
         {!canCreate && (
           <div style={{
-            background: 'rgba(255,193,7,0.08)', border: '1px solid rgba(255,193,7,0.3)',
+            background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.25)',
             borderRadius: 12, padding: '14px 20px', marginBottom: 24,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <span style={{ display: 'inline-flex' }}><Clock size={20} strokeWidth={1.5} color="#92610a" /></span>
-            <p style={{ fontSize: '0.875rem', color: '#92610a' }}>
-              Você poderá criar eventos após a aprovação do seu cadastro.
+            <span style={{ display: 'inline-flex' }}><Clock size={20} strokeWidth={1.5} color="#7a1a1a" /></span>
+            <p style={{ fontSize: '0.875rem', color: '#7a1a1a' }}>
+              Sua conta está suspensa. Fale com o suporte para reativar.
             </p>
           </div>
         )}

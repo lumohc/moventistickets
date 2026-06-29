@@ -56,7 +56,7 @@ export default function TermosPage() {
             <p>A compra é concluída após o pagamento confirmado. Enquanto o pagamento estiver pendente, os assentos ficam reservados por até <strong>15 minutos</strong>. Após esse prazo sem confirmação, a reserva é liberada automaticamente.</p>
 
             <SubTitle>4.2 Ingresso digital</SubTitle>
-            <p>Após a confirmação do pagamento, o ingresso digital com QR code exclusivo é enviado para o e-mail informado na compra. O QR code é individual por assento e serve como único documento de acesso ao evento. Guarde-o com segurança — a Moventis não se responsabiliza por ingressos compartilhados indevidamente.</p>
+            <p>Após a confirmação do pagamento, o ingresso digital com QR code exclusivo é enviado <strong>somente para o e-mail do comprador</strong> informado na compra. Toda comunicação da Moventis (confirmação, ingresso, avisos) é endereçada apenas ao comprador — nunca a terceiros. O QR code é individual por assento e serve como único documento de acesso ao evento. Guarde-o com segurança — a Moventis não se responsabiliza por ingressos compartilhados indevidamente.</p>
 
             <SubTitle>4.3 Taxas</SubTitle>
             <p>Além do valor de face do ingresso (definido pelo produtor), a Moventis cobra:</p>
@@ -69,9 +69,16 @@ export default function TermosPage() {
             <SubTitle>4.4 Direito de arrependimento</SubTitle>
             <p>Nos termos do artigo 49 do Código de Defesa do Consumidor, o comprador pode cancelar a compra realizada remotamente em até <strong>7 dias corridos</strong> da data da compra, desde que o evento ainda não tenha ocorrido. Nesse caso, o valor de face do ingresso será reembolsado. As taxas de serviço e de pagamento não são reembolsáveis.</p>
             <p style={{ marginTop: 12 }}>O pedido de arrependimento deve ser feito por e-mail para <strong>contato@moventistickets.com.br</strong> com o número do pedido.</p>
+
+            <SubTitle id="entrega">4.5 Entregar é diferente de transferir</SubTitle>
+            <p><strong>Entregar</strong> é você, comprador, repassar o ingresso (link ou PDF) a quem vai usá-lo — feito por você, pelos seus próprios meios. A Moventis <strong>não</strong> envia e-mail ao destinatário: o ingresso e os avisos continuam chegando apenas no seu e-mail.</p>
+            <p style={{ marginTop: 12 }}><strong>Transferir a titularidade</strong> é alterar o nome do titular do ingresso, solicitado à Moventis. Mesmo nesse caso, o novo titular <strong>não</strong> recebe e-mail da Moventis — o reenvio do ingresso continua sendo feito pelo comprador, pelo recurso "Enviar". Em qualquer hipótese, todas as comunicações da Moventis permanecem no e-mail do comprador.</p>
+
+            <SubTitle id="meia-entrada">4.6 Meia-entrada</SubTitle>
+            <p>Quando oferecida pelo produtor, a meia-entrada segue a legislação aplicável (Lei nº 12.933/2013 e normas correlatas): têm direito estudantes, idosos (60 anos ou mais), pessoas com deficiência e seus acompanhantes, jovens de baixa renda e demais beneficiários previstos em lei, mediante apresentação de documento comprobatório válido na entrada do evento. A oferta e a quantidade de ingressos de meia-entrada por evento são definidas pelo produtor, respeitados os limites legais.</p>
           </Section>
 
-          <Section title="5. Cancelamento, alteração e reembolso">
+          <Section id="reembolso" title="5. Cancelamento, alteração e reembolso">
             <SubTitle>5.1 Cancelamento pelo produtor</SubTitle>
             <p>Se o evento for cancelado pelo produtor, o comprador tem direito ao reembolso integral do valor pago, incluindo taxas. A Moventis fará o reembolso em até <strong>10 dias úteis</strong> após a confirmação do cancelamento pelo produtor.</p>
 
@@ -163,9 +170,9 @@ export default function TermosPage() {
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section style={{ marginBottom: 36 }}>
+    <section id={id} style={{ marginBottom: 36, scrollMarginTop: 20 }}>
       <h2 style={{
         fontSize: '1.1rem', fontWeight: 700, color: '#1A211B',
         letterSpacing: '-0.02em', marginBottom: 14,
@@ -178,9 +185,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function SubTitle({ children }: { children: React.ReactNode }) {
+function SubTitle({ children, id }: { children: React.ReactNode; id?: string }) {
   return (
-    <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1A211B', marginTop: 20, marginBottom: 8 }}>
+    <h3 id={id} style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1A211B', marginTop: 20, marginBottom: 8, scrollMarginTop: 20 }}>
       {children}
     </h3>
   )

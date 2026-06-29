@@ -74,7 +74,10 @@ export async function POST(req: NextRequest) {
       email,
       phone:        phone || null,
       payment_pref: payment_pref || 'bank_transfer',
-      status:       'pending',
+      // Sem aprovação de cadastro: o produtor já cria eventos na hora. O controle
+      // passa a ser por evento (todo evento entra 'em análise' e só vai à venda
+      // quando a Moventis ativa no admin).
+      status:       'approved',
     }).select('id').single()
 
     if (error) {

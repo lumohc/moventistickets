@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin, createSupabaseServerClient } from '@/lib/supabase-server'
 import { renderContract, CONTRACT_VERSIONS, type ContractModel } from '@/lib/contract'
 import { sendContractEmail } from '@/lib/email'
+import { notifyNewEvent } from '@/lib/whatsapp'
 import { publicBaseUrl } from '@/lib/base-url'
 
 /**
@@ -24,8 +25,8 @@ export async function POST(req: NextRequest) {
     .eq('user_id', user.id)
     .single()
 
-  if (!producer || producer.status !== 'approved') {
-    return NextResponse.json({ error: 'Produtor não aprovado.' }, { status: 403 })
+  if (!producer || producer.status === 'suspended') {
+    return NextResponse.json({ error: 'Conta suspensa. Fale com o suporte.' }, { status: 403 })
   }
 
   const body = await req.json().catch(() => ({}))
@@ -147,6 +148,14 @@ export async function POST(req: NextRequest) {
       acceptedAt: acceptedAtLabel,
     }).catch((e) => console.error('[produtor/events] e-mail do contrato falhou:', e))
   }
+
+  // 4) Avisa a equipe Moventis por WhatsApp (best-effort — não bloqueia).
+  void notifyNewEvent({
+    eventName:    String(ev.name).trim(),
+    producerName: producer.name || producerName,
+    eventDate:    ev.event_date || null,
+    reviewUrl:    `${base}/admin/eventos`,
+  }).catch((e) => console.error('[produtor/events] aviso WhatsApp falhou:', e))
 
   return NextResponse.json({ ok: true, event_id: created.id, acceptance_id: acc.id })
 }

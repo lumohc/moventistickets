@@ -118,6 +118,26 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
         </header>
 
         <div className="mvt-evento-content" style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px' }}>
+          {/* Arte do evento (banner/hero) — arte inteira sobre fundo borrado,
+              aceita qualquer proporção (16:9, cartaz vertical, quadrado) sem cortar. */}
+          {event.poster_url && (
+            <div style={{
+              position: 'relative', width: '100%', aspectRatio: '16 / 9',
+              borderRadius: 16, overflow: 'hidden', marginBottom: 24,
+              border: `1px solid ${C.border}`, background: '#0D1117',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+            }}>
+              <img
+                src={event.poster_url} alt="" aria-hidden="true"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(28px) brightness(0.65)', transform: 'scale(1.12)' }}
+              />
+              <img
+                src={event.poster_url} alt={`Arte de ${event.name}`}
+                style={{ position: 'relative', width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+              />
+            </div>
+          )}
+
           {/* Hero */}
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px', marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -218,7 +238,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
               )}
 
               <div style={{ marginTop: 20, padding: 14, background: 'rgba(31,107,78,0.06)', borderRadius: 8, border: '1px solid rgba(31,107,78,0.15)', fontSize: '0.75rem', color: C.muted, lineHeight: 1.6 }}>
-                + taxa de serviço por ingresso · taxa de processamento (PIX R$2/pedido · crédito 4,98% · débito 2,70%) — pagas pelo comprador.
+                + taxa de serviço por ingresso e taxa de processamento, pagas pelo comprador. O valor da taxa de processamento aparece no checkout, conforme a forma de pagamento.
               </div>
 
               {producer?.name && (

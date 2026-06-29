@@ -213,7 +213,7 @@ export default function PedroIvoDemoPage() {
                 ))}
               </ul>
               <p style={S.feeNote}>
-                + taxa de serviço por ingresso · taxa de processamento (PIX R$2/pedido · crédito 4,98% · débito 2,70%) — pagas pelo comprador.
+                + taxa de serviço por ingresso e taxa de processamento, pagas pelo comprador. O valor da taxa de processamento aparece no checkout, conforme a forma de pagamento.
               </p>
             </div>
           </div>

@@ -92,10 +92,26 @@ body {
   .resp-header { padding: 14px 16px !important; }
 }
 
-/* Sidebar do portal → esconde no mobile (toggle futuro) */
+/* ── Portal do produtor → menu hambúrguer no mobile ──
+   Desktop: sidebar fixa de 220px (inline). Mobile: barra superior com
+   hambúrguer + a sidebar vira gaveta off-canvas sobre o conteúdo, que passa
+   a ocupar a largura cheia. O <main> é alvo via irmão da .mvt-prod-aside,
+   então não precisa de classe em cada página. */
+.mvt-prod-topbar   { display: none; }
+.mvt-prod-backdrop { display: none; }
 @media (max-width: 768px) {
-  .portal-sidebar { display: none !important; }
-  .portal-main    { margin-left: 0 !important; padding: 20px 16px !important; }
+  .mvt-prod-topbar { display: flex; }
+  .mvt-prod-aside  { transform: translateX(-100%); transition: transform 0.25s ease; z-index: 80; }
+  .mvt-prod-aside.is-open { transform: translateX(0); box-shadow: 0 12px 48px rgba(0,0,0,0.45); }
+  .mvt-prod-aside ~ main  { margin-left: 0 !important; padding: 72px 18px 32px !important; }
+  .mvt-prod-backdrop { display: block; }
+}
+@media (min-width: 769px) {
+  .mvt-prod-backdrop { display: none !important; }
+}
+.mvt-prod-close { display: none; }
+@media (max-width: 768px) {
+  .mvt-prod-close { display: inline-flex; }
 }
 
 /* Tabelas admin → scroll horizontal */

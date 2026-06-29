@@ -114,7 +114,8 @@ export default function PosterUpload({ eventId, currentUrl, onUploaded }: Props)
           <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text, marginBottom: 4 }}>
             {uploading ? 'Enviando…' : 'Clique ou arraste uma imagem aqui'}
           </p>
-          <p style={{ fontSize: '0.75rem', color: C.muted }}>JPG, PNG ou WebP · Máx. 5 MB · Proporção ideal 3:2 ou 16:9</p>
+          <p style={{ fontSize: '0.75rem', color: C.muted }}>JPG · 1600×900 px (16:9) recomendado · até ~1 MB</p>
+          <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 4 }}>Cartaz vertical ou quadrado também funciona — mostramos a arte inteira, sem cortar.</p>
         </div>
       )}
 

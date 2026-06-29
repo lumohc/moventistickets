@@ -95,7 +95,8 @@ export default function NovoEventoPage() {
         .eq('user_id', user.id)
         .single()
 
-      if (!prod || prod.status !== 'approved') {
+      // Sem aprovação de cadastro: só conta suspensa não cria evento.
+      if (!prod || prod.status === 'suspended') {
         router.push('/produtor/dashboard')
         return
       }

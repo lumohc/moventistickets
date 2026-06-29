@@ -31,9 +31,9 @@ export default function SiteFooter() {
             <span style={head}>Para você</span>
             <a href="/privacidade" style={link}>Política de Privacidade</a>
             <a href="/termos" style={link}>Termos de Uso</a>
-            <a href="/termos" style={link}>Reembolso e Troca</a>
-            <a href="/privacidade" style={link}>Cookies</a>
-            <a href="/termos" style={link}>Meia-entrada</a>
+            <a href="/termos#reembolso" style={link}>Reembolso e Troca</a>
+            <a href="/privacidade#cookies" style={link}>Cookies</a>
+            <a href="/termos#meia-entrada" style={link}>Meia-entrada</a>
           </div>
 
           <div style={col}>
