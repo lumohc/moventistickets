@@ -5,6 +5,7 @@ import { getVenueData } from '@/lib/venue-map'
 import SeatPickerWidget from '@/components/mapa/SeatPickerWidget'
 import TicketGeralWidget from '@/components/evento/TicketGeralWidget'
 import StickyBuyBar from '@/components/evento/StickyBuyBar'
+import SiteHeader from '@/components/SiteHeader'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -109,13 +110,8 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
       )}
 
       <main style={{ minHeight: '100vh', background: C.bg }}>
-        {/* Header */}
-        <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
-          </a>
-          <a href="/eventos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>← Todos os eventos</a>
-        </header>
+        {/* Header unificado (sem busca na hora de escolher poltrona) */}
+        <SiteHeader search={false} />
 
         <div className="mvt-evento-content" style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px' }}>
           {/* Arte do evento (banner/hero) — arte inteira sobre fundo borrado,

@@ -1,7 +1,7 @@
 'use client'
 
 /** Botão "Salvar/Imprimir PDF" — o próprio navegador gera o PDF (window.print). */
-export default function PrintButton() {
+export default function PrintButton({ label = 'Salvar / Imprimir PDF' }: { label?: string }) {
   return (
     <button
       type="button"
@@ -14,7 +14,7 @@ export default function PrintButton() {
         fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer',
       }}
     >
-      Salvar / Imprimir PDF
+      {label}
     </button>
   )
 }

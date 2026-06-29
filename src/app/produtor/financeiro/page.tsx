@@ -45,7 +45,6 @@ export default async function FinanceiroPage() {
     : { data: [] }
 
   const totalRepasse = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.face_total), 0)
-  const totalTaxas   = (paidOrders ?? []).reduce((s: number, o: any) => s + Number(o.service_fee_total) + Number(o.payment_fee ?? 0), 0)
 
   // Série diária (repasse/dia) dos últimos 30 dias para o gráfico.
   const dayMap = new Map<string, number>()
@@ -77,7 +76,6 @@ export default async function FinanceiroPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
           {[
             { Icon: Banknote,    label: 'Você vai receber',   value: fmt(totalRepasse), highlight: true  },
-            { Icon: FileText,    label: 'Taxas Moventis',     value: fmt(totalTaxas),   highlight: false },
             { Icon: CircleCheck, label: 'Pedidos pagos',      value: paidOrders?.length ?? 0, highlight: false },
           ].map(card => (
             <div key={card.label} style={{

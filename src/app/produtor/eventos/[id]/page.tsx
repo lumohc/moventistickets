@@ -231,7 +231,13 @@ export default function EditarEventoPage() {
             <span>›</span>
             <span style={{ color: C.text, fontWeight: 600 }}>Editar evento</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <a
+              href={`/produtor/eventos/${id}/bordero`}
+              style={{ fontSize: '0.8rem', fontWeight: 600, color: C.green, textDecoration: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 12px', background: C.surface }}
+            >
+              Borderô (PDF)
+            </a>
             <span style={{
               display: 'inline-block', padding: '4px 12px', borderRadius: 100,
               fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.04em',

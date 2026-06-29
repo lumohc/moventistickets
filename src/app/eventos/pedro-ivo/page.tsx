@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import venueData from '@/data/venue-pedro-ivo.json'
 import StickyBuyBar from '@/components/evento/StickyBuyBar'
+import SiteHeader from '@/components/SiteHeader'
 
 const AREAS = ['mezanino', 'plateia', 'frisa_s', 'frisa_t', 'frisa_u', 'frisa_v']
 
@@ -159,12 +160,7 @@ export default function PedroIvoDemoPage() {
       />
 
       <main style={S.page}>
-        <header style={S.header}>
-          <a href="/" aria-label="Início" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
-          </a>
-          <span style={S.demoBadge}>Demo — mapa de assentos</span>
-        </header>
+        <SiteHeader search={false} />
 
         <div className="mvt-evento-content" style={S.wrap}>
           <div style={S.demoNote}>

@@ -114,6 +114,10 @@ body {
   .mvt-prod-close { display: inline-flex; }
 }
 
+/* ── Header do site: alterna itens desktop/mobile (só esconde no lado oposto) ── */
+@media (max-width: 680px) { .mvt-hd-desk { display: none !important; } }
+@media (min-width: 681px) { .mvt-hd-mob  { display: none !important; } }
+
 /* Tabelas admin → scroll horizontal */
 .resp-table-wrap {
   overflow-x: auto;

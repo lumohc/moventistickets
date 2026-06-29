@@ -91,7 +91,12 @@ export async function POST(req: NextRequest) {
   if (ev.venue_id) {
     const { data: v } = await admin.from('venues').select('name, city').eq('id', ev.venue_id).single()
     if (v) { venueName = v.name; city = v.city }
+  } else if (ev.venue_name_other) {
+    venueName = String(ev.venue_name_other).trim()   // "Outro" — Moventis configura o mapa
   }
+  const baseNotes = ev.producer_notes?.trim() || ''
+  const notes = baseNotes + (!ev.venue_id && ev.venue_name_other
+    ? `\n[Local a configurar pela Moventis: ${String(ev.venue_name_other).trim()}]` : '')
   const priceFace = ev.price_face != null ? Number(ev.price_face) : null
 
   const { data: created, error: evErr } = await admin
@@ -112,7 +117,7 @@ export async function POST(req: NextRequest) {
       duration_min:   ev.duration_min ? parseInt(String(ev.duration_min), 10) : null,
       price_face:     priceFace,
       half_price:     ev.half_price !== false,
-      producer_notes: ev.producer_notes?.trim() || null,
+      producer_notes: notes || null,
       status:         'pending_review',
       product_id:     ts,
       slug:           `ev-${ts}`,

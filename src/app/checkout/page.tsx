@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { CartItem } from '@/lib/supabase'
 import { priceOrder, formatBRL, type PaymentMethod, type CouponDiscount } from '@/lib/pricing'
+import SiteHeader from '@/components/SiteHeader'
 
 // ── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -357,13 +358,7 @@ function CheckoutContent() {
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg }}>
-      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
-        </a>
-        <a href="/" style={{ marginLeft: 8, fontSize: '0.8rem', color: C.muted, textDecoration: 'none' }}>← Início</a>
-        <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: C.muted }}>Checkout seguro</span>
-      </header>
+      <SiteHeader search={false} />
 
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px' }}>
 

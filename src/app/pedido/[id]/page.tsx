@@ -7,6 +7,7 @@ import { generateQRDataURL } from '@/lib/generate-qr'
 import PixPaymentCard from '@/components/PixPaymentCard'
 import TicketActions from '@/components/pedido/TicketActions'
 import CancelOrderButton from '@/components/pedido/CancelOrderButton'
+import SiteHeader from '@/components/SiteHeader'
 import { CheckCircle2, Clock, XCircle, Ticket, Calendar, MapPin, Lock } from 'lucide-react'
 
 const C = {
@@ -97,16 +98,7 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
-      {/* Header */}
-      <header style={{
-        background: C.surface, borderBottom: `1px solid ${C.border}`,
-        padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Início">
-          <img src="/moventis-wordmark.svg" alt="Moventis" style={{ height: 30 }} />
-        </a>
-        <a href="/ingressos" style={{ fontSize: '0.85rem', color: C.muted, textDecoration: 'none' }}>Meus ingressos</a>
-      </header>
+      <SiteHeader />
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px' }}>
 

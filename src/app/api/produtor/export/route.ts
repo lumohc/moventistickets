@@ -47,21 +47,23 @@ export async function GET(req: NextRequest) {
   let file: string
 
   if (type === 'bordero') {
-    const agg = new Map<string, { paid: number; face: number; service: number; proc: number; refunded: number }>()
+    // Borderô do produtor: só o que é dele (face/líquido). Sem taxa da Moventis.
+    const agg = new Map<string, { paid: number; face: number; refunded: number }>()
     for (const o of orders ?? []) {
-      const a = agg.get(o.event_id) ?? { paid: 0, face: 0, service: 0, proc: 0, refunded: 0 }
-      if (o.status === 'paid') { a.paid++; a.face += Number(o.face_total); a.service += Number(o.service_fee_total); a.proc += Number(o.payment_fee ?? 0) }
+      const a = agg.get(o.event_id) ?? { paid: 0, face: 0, refunded: 0 }
+      if (o.status === 'paid') { a.paid++; a.face += Number(o.face_total) }
       else if (o.status === 'cancelled' && o.cancelled_at) { a.refunded++ }
       agg.set(o.event_id, a)
     }
-    rows = [['Evento', 'Pedidos pagos', 'Face bruta (R$)', 'Taxa de servico (R$)', 'Taxa de processamento (R$)', 'Reembolsos/cancelados', 'Liquido do produtor (R$)']]
-    for (const [eid, a] of agg) rows.push([String(evName.get(eid) ?? eid), a.paid, brl(a.face), brl(a.service), brl(a.proc), a.refunded, brl(a.face)])
-    if (rows.length === 1) rows.push(['(sem vendas)', 0, '0,00', '0,00', '0,00', 0, '0,00'])
+    rows = [['Evento', 'Pedidos pagos', 'Valor de venda (R$)', 'Reembolsos/cancelados', 'Voce recebe (R$)']]
+    for (const [eid, a] of agg) rows.push([String(evName.get(eid) ?? eid), a.paid, brl(a.face), a.refunded, brl(a.face)])
+    if (rows.length === 1) rows.push(['(sem vendas)', 0, '0,00', 0, '0,00'])
     file = 'bordero-moventis'
   } else {
-    rows = [['Data', 'Evento', 'Comprador', 'E-mail', 'Metodo', 'Face (R$)', 'Taxa servico (R$)', 'Taxa proc. (R$)', 'Total (R$)', 'Status']]
+    // Vendas do produtor: face (o que ele recebe). Sem taxa da Moventis.
+    rows = [['Data', 'Evento', 'Comprador', 'E-mail', 'Metodo', 'Valor de venda (R$)', 'Status']]
     for (const o of orders ?? []) {
-      rows.push([dt(o.created_at), String(evName.get(o.event_id) ?? ''), o.buyer_name ?? '', o.buyer_email ?? '', o.payment_method ?? '', brl(Number(o.face_total)), brl(Number(o.service_fee_total)), brl(Number(o.payment_fee ?? 0)), brl(Number(o.total)), o.status])
+      rows.push([dt(o.created_at), String(evName.get(o.event_id) ?? ''), o.buyer_name ?? '', o.buyer_email ?? '', o.payment_method ?? '', brl(Number(o.face_total)), o.status])
     }
     file = 'vendas-moventis'
   }

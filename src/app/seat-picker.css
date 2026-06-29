@@ -118,6 +118,10 @@ body.lumo-seat-picker-active .product .summary span.price {
     margin-top: 0; border-top: none; padding-top: 0;
     margin-left: 4px; border-left: 1px solid #1e293b; padding-left: 12px;
   }
+  /* Em telas curtas o mapa pode encolher — o rodapé (botão Continuar) NUNCA some. */
+  .lumo-seat-picker-modal .lumo-seat-picker__map-container { min-height: 140px; }
+  /* Os chips das poltronas ficam numa faixa rolável (não empurram o botão). */
+  .lumo-seat-picker__chips { max-height: 64px; flex-wrap: wrap; overflow-y: auto; }
 }
 
 .lumo-seat-picker-modal header {

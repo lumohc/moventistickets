@@ -74,6 +74,7 @@ export default function NovoEventoPage() {
   const [category, setCategory]       = useState('teatro')
   const [ageRating, setAgeRating]     = useState('livre')
   const [venueId, setVenueId]         = useState('')
+  const [otherVenue, setOtherVenue]   = useState('')       // nome digitado quando "Outro"
   const [eventDatetime, setEventDatetime] = useState('')   // datetime-local → split em date+time
   const [doorsOpen, setDoorsOpen]     = useState('')       // timestamptz (coluna v3)
   const [salesOpenAt, setSalesOpenAt] = useState('')       // sales_open_at já existe no schema
@@ -104,9 +105,11 @@ export default function NovoEventoPage() {
       setProducerName(prod.legal_name || prod.name || '')
       setProducerDoc(prod.document || '')
 
+      // Só os venues marcados (listed) entram no dropdown do produtor (v17).
       const { data: vs } = await sb
         .from('venues')
         .select('id, name, city, salable_seats')
+        .eq('listed', true)
         .order('name')
       setVenues(vs ?? [])
     }
@@ -121,13 +124,19 @@ export default function NovoEventoPage() {
     const sb = createSupabaseBrowser()
     const { date: eventDate, time: eventTime } = splitDatetime(eventDatetime)
 
+    const isOther     = venueId === '__outro__'
+    const realVenueId = (!venueId || isOther) ? null : venueId
+    const venueName   = isOther ? (otherVenue.trim() || 'A definir') : (venues.find(v => v.id === venueId)?.name ?? 'A definir')
+    const venueCity   = isOther ? '' : (venues.find(v => v.id === venueId)?.city ?? '')
+    const notes       = (producerNotes.trim() || '') + (isOther && otherVenue.trim() ? `\n[Local a configurar pela Moventis: ${otherVenue.trim()}]` : '')
+
     const payload: Record<string, any> = {
       producer_id:    producerId,
       name:           name.trim(),
       description:    description.trim() || null,
       category,
       age_rating:     ageRating,
-      venue_id:       venueId || null,
+      venue_id:       realVenueId,
       event_date:     eventDate || null,
       event_time:     eventTime || null,
       doors_open:     doorsOpen || null,
@@ -136,13 +145,13 @@ export default function NovoEventoPage() {
       duration_min:   duration ? parseInt(duration) : null,
       price_face:     priceFace ? parseFloat(priceFace.replace(',', '.')) : null,
       half_price:     halfPrice,
-      producer_notes: producerNotes.trim() || null,
+      producer_notes: notes || null,
       status:         asDraft ? 'draft' : 'pending_review',
       // Legado — obrigatório no schema v1 (provisório)
       product_id:     Date.now(),
       slug:           `ev-${Date.now()}`,
-      venue_name:     venues.find(v => v.id === venueId)?.name ?? 'A definir',
-      city:           venues.find(v => v.id === venueId)?.city ?? '',
+      venue_name:     venueName,
+      city:           venueCity,
       prices:         priceFace
         ? {
             [`plateia|inteira`]: parseFloat(priceFace.replace(',', '.')),
@@ -186,7 +195,9 @@ export default function NovoEventoPage() {
         contract_model: 'B', accept: accepted, own_team: ownTeam,
         event: {
           name: name.trim(), description: description.trim() || null,
-          category, age_rating: ageRating, venue_id: venueId || null,
+          category, age_rating: ageRating,
+          venue_id: (venueId && venueId !== '__outro__') ? venueId : null,
+          venue_name_other: venueId === '__outro__' ? otherVenue.trim() : null,
           event_date: eventDate || null, event_time: eventTime || null,
           doors_open: doorsOpen || null, sales_open_at: salesOpenAt || null,
           sale_end: saleEnd || null,
@@ -288,13 +299,26 @@ export default function NovoEventoPage() {
                 <option value="">— Selecionar espaço —</option>
                 {venues.map(v => (
                   <option key={v.id} value={v.id}>
-                    {v.name} ({v.salable_seats} lugares vendáveis)
+                    {v.name}{v.salable_seats > 0 ? ` (${v.salable_seats} lugares)` : ' (mapa em breve)'}
                   </option>
                 ))}
+                <option value="__outro__">Outro (digite o nome)</option>
               </select>
-              <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 6 }}>
-                Espaço não listado? Fale com a equipe Moventis.
-              </p>
+              {venueId === '__outro__' ? (
+                <>
+                  <input
+                    value={otherVenue} onChange={e => setOtherVenue(e.target.value)}
+                    style={{ ...inputStyle, marginTop: 10 }} placeholder="Nome do teatro / espaço"
+                  />
+                  <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 6 }}>
+                    A equipe Moventis vai configurar o mapa deste espaço antes da venda por assento.
+                  </p>
+                </>
+              ) : (
+                <p style={{ fontSize: '0.75rem', color: C.muted, marginTop: 6 }}>
+                  Cada teatro já traz seu mapa de assentos. Espaço novo? Escolha “Outro”.
+                </p>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 18 }}>
@@ -331,7 +355,7 @@ export default function NovoEventoPage() {
           <section style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 700, color: C.text, marginBottom: 6 }}>3. Ingressos e vendas</h2>
             <p style={{ fontSize: '0.8rem', color: C.muted, marginBottom: 20 }}>
-              Taxa de serviço calculada automaticamente: mín. R$ 5,00 ou 10% do valor do ingresso.
+              Defina o valor do ingresso. Você recebe o valor de face — o repasse é feito após o evento.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 18 }}>

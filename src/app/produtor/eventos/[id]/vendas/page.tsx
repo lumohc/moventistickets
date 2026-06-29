@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
-import { Ticket, Banknote, FileText, Clock, Lightbulb } from 'lucide-react'
+import { Ticket, Banknote, Clock, Lightbulb } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -45,7 +45,7 @@ export default async function VendasPage({ params }: { params: { id: string } })
 
   const { data: event } = await admin
     .from('events')
-    .select('id, name, event_date, status, price_face, half_price')
+    .select('id, name, event_date, status, price_face, half_price, venue_id, venues(salable_seats)')
     .eq('id', params.id)
     .eq('producer_id', producer.id)
     .single()
@@ -62,7 +62,21 @@ export default async function VendasPage({ params }: { params: { id: string } })
   const paid            = (orders ?? []).filter((o: any) => o.status === 'paid')
   const totalRepasse    = paid.reduce((s: number, o: any) => s + Number(o.face_total), 0)
   const totalIngressos  = paid.reduce((s: number, o: any) => s + (o.seats as any[]).length, 0)
-  const totalTaxas      = paid.reduce((s: number, o: any) => s + Number(o.service_fee_total) + Number(o.payment_fee ?? 0), 0)
+
+  // Dashboard: vendas por tipo + vendidos vs disponíveis.
+  const TYPE_LABEL: Record<string, string> = { 'inteira': 'Inteira', 'meia-entrada': 'Meia', 'bonus': 'Bônus', 'solidario': 'Solidário' }
+  const TYPE_COLOR: Record<string, string> = { 'inteira': '#1F6B4E', 'meia-entrada': '#C29A74', 'bonus': '#3a7bd5', 'solidario': '#8C3CFF' }
+  const typeCounts = new Map<string, number>()
+  for (const o of paid) for (const s of (o.seats as any[])) {
+    const k = s.ticket_type || 'inteira'
+    typeCounts.set(k, (typeCounts.get(k) ?? 0) + 1)
+  }
+  const typeRows = Array.from(typeCounts.entries()).map(([k, n]) => ({ label: TYPE_LABEL[k] ?? k, color: TYPE_COLOR[k] ?? '#1F6B4E', count: n }))
+  const maxType  = Math.max(1, ...typeRows.map(r => r.count))
+  const venueRel = (event as any).venues
+  const capacity = (Array.isArray(venueRel) ? venueRel[0]?.salable_seats : venueRel?.salable_seats) ?? 0
+  const available = capacity > 0 ? Math.max(0, capacity - totalIngressos) : null
+  const pctSold   = capacity > 0 ? Math.min(100, Math.round((totalIngressos / capacity) * 100)) : 0
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg }}>
@@ -90,7 +104,6 @@ export default async function VendasPage({ params }: { params: { id: string } })
           {[
             { Icon: Ticket,   value: totalIngressos,          label: 'Ingressos vendidos',   highlight: false },
             { Icon: Banknote, value: fmt(totalRepasse),        label: 'Você vai receber',      highlight: true  },
-            { Icon: FileText, value: fmt(totalTaxas),          label: 'Taxas Moventis',        highlight: false },
             { Icon: Clock,    value: (orders ?? []).filter((o: any) => o.status === 'pending_payment').length, label: 'Aguardando pagto', highlight: false },
           ].map(card => (
             <div key={card.label} style={{
@@ -104,6 +117,48 @@ export default async function VendasPage({ params }: { params: { id: string } })
               <p style={{ fontSize: '0.78rem', color: card.highlight ? 'rgba(255,255,255,0.75)' : C.muted, marginTop: 2 }}>{card.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Dashboard visual: vendas por tipo + vendidos vs disponíveis */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 36 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: C.text, marginBottom: 16 }}>Vendas por tipo</h2>
+            {typeRows.length === 0 ? (
+              <p style={{ fontSize: '0.85rem', color: C.muted }}>Nenhuma venda ainda.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {typeRows.map(r => (
+                  <div key={r.label}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                      <span style={{ color: C.text, fontWeight: 600 }}>{r.label}</span>
+                      <span style={{ color: C.muted }}>{r.count}</span>
+                    </div>
+                    <div style={{ height: 10, background: '#EDEAE0', borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.round((r.count / maxType) * 100)}%`, height: '100%', background: r.color, borderRadius: 999 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: C.text, marginBottom: 16 }}>Ocupação</h2>
+            {capacity > 0 ? (
+              <>
+                <div style={{ height: 16, background: '#EDEAE0', borderRadius: 999, overflow: 'hidden', marginBottom: 12 }}>
+                  <div style={{ width: `${pctSold}%`, height: '100%', background: C.green, borderRadius: 999 }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <span style={{ color: C.green, fontWeight: 700 }}>{totalIngressos} vendidos</span>
+                  <span style={{ color: C.muted }}>{available} disponíveis</span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: C.muted, marginTop: 8 }}>{pctSold}% da capacidade ({capacity} lugares)</p>
+              </>
+            ) : (
+              <p style={{ fontSize: '0.85rem', color: C.muted }}>{totalIngressos} ingressos vendidos. A capacidade por assento aparece quando o mapa do teatro estiver configurado.</p>
+            )}
+          </div>
         </div>
 
         {/* Tabela de pedidos */}
@@ -152,9 +207,6 @@ export default async function VendasPage({ params }: { params: { id: string } })
                     <p style={{ fontSize: '0.875rem', color: C.text }}>{nSeats} ingresso{nSeats !== 1 ? 's' : ''}</p>
                     <div>
                       <p style={{ fontSize: '0.875rem', color: C.text }}>{fmt(Number(o.total))}</p>
-                      <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 1 }}>
-                        taxa {fmt(Number(o.service_fee_total) + Number(o.payment_fee ?? 0))}
-                      </p>
                     </div>
                     <p style={{ fontSize: '0.875rem', fontWeight: 700, color: C.green }}>{fmt(Number(o.face_total))}</p>
                     <span style={{
