@@ -27,14 +27,36 @@ export default function RedefinirSenhaPage() {
   const [ready, setReady]         = useState(false)
 
   useEffect(() => {
-    // O Supabase processa o hash do URL automaticamente
-    // Espera um tick para ter a sessão disponível
     const sb = createSupabaseBrowser()
-    sb.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true)
-    })
-    // Fallback: tenta logo
-    setTimeout(() => setReady(true), 500)
+    const url = new URL(window.location.href)
+
+    async function run() {
+      // Link expirado/já usado (vem como query no fluxo PKCE)
+      if (url.searchParams.get('error_code') === 'otp_expired' || url.searchParams.get('error')) {
+        setError('Este link expirou ou já foi usado. Peça um novo em “Esqueci minha senha”.')
+        return
+      }
+      // Fluxo PKCE: troca o ?code= por uma sessão de recuperação
+      const code = url.searchParams.get('code')
+      if (code) {
+        const { error: exErr } = await sb.auth.exchangeCodeForSession(code)
+        if (exErr) { setError('Link inválido ou expirado. Peça um novo em “Esqueci minha senha”.'); return }
+        setReady(true)
+        return
+      }
+      // Sem code: pode já ter sessão (veio do callback) ou fluxo por hash
+      const { data } = await sb.auth.getSession()
+      if (data.session) { setReady(true); return }
+      sb.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true)
+      })
+      setTimeout(async () => {
+        const { data: d2 } = await sb.auth.getSession()
+        if (d2.session) setReady(true)
+        else setError('Abra esta página pelo link do e-mail de redefinição.')
+      }, 1200)
+    }
+    run()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -51,7 +73,7 @@ export default function RedefinirSenhaPage() {
       setLoading(false)
     } else {
       setSuccess(true)
-      setTimeout(() => router.push('/produtor/dashboard'), 2000)
+      setTimeout(() => router.push('/auth/pos-login'), 1500)
     }
   }
 
