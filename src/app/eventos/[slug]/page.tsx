@@ -177,10 +177,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
               media query) — no mobile o .resp-cols-2 empilha (1 coluna). */}
           <div
             id="comprar"
-            className={hasMap ? 'resp-cols-2' : ''}
-            style={hasMap
-              ? { scrollMarginTop: 16 }
-              : { display: 'grid', gridTemplateColumns: '1fr', gap: 24, alignItems: 'start', scrollMarginTop: 16 }}
+            style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24, maxWidth: 600, margin: '0 auto', width: '100%', scrollMarginTop: 16 }}
           >
             {/* Mapa de assentos ou ingresso geral */}
             {hasMap ? (
@@ -213,7 +210,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
             )}
 
             {/* Preços */}
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '24px', position: 'sticky', top: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: C.text, marginBottom: 16 }}>Valores</h2>
 
               {prices.length > 0 ? (
