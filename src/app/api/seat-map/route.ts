@@ -27,13 +27,16 @@ type EventRow = {
   venue_id: string | null
   venues: { slug: string } | null
 }
-type Reserved  = { seat_id: string; ticket_type: string }
+type Reserved  = { seat_id: string; ticket_type: string; token: string | null }
 type Sold      = { seat_id: string; ticket_type: string; group_id: string; group_name: string }
 type Pending   = { seats: { seat_id: string }[] | null }
 type Blocked   = { seat_id: string }
 
 export async function GET(request: NextRequest) {
   const productId = request.nextUrl.searchParams.get('product_id')
+  // Token do cliente: reservas com este token são DELE (não mostrar como "reservada
+  // por outro" pra ele mesmo). Habilita a trava ao vivo sem confundir o próprio hold.
+  const myToken = request.nextUrl.searchParams.get('reservation_token')
   if (!productId) {
     return NextResponse.json({ status: 'error', message: 'product_id obrigatório' }, { status: 400 })
   }
@@ -62,7 +65,7 @@ export async function GET(request: NextRequest) {
         { data: Reserved[] | null }, { data: Sold[] | null }, { data: Pending[] | null }, { data: Blocked[] | null }
       ]>(
         Promise.all([
-          db.from('reservations').select('seat_id, ticket_type')
+          db.from('reservations').select('seat_id, ticket_type, token')
             .eq('event_id', event.id).gt('expires_at', now) as unknown as PromiseLike<{ data: Reserved[] | null }>,
           db.from('tickets').select('seat_id, ticket_type, group_id, group_name')
             .eq('event_id', event.id).is('cancelled_at', null) as unknown as PromiseLike<{ data: Sold[] | null }>,
@@ -130,7 +133,9 @@ export async function GET(request: NextRequest) {
   const reservedSeats = reserved.map(r => ({
     id: r.seat_id, group_id: '', group_name: '',
     price_full: 0, price_half: 0, variation_full_id: 0, variation_half_id: 0,
-    status: 'reserved', reserved_by: 'lumo',
+    // 'me' = hold do próprio cliente (fica selecionável/laranja pra ele);
+    // 'lumo' = reservada por outro cliente (amarelo, travada).
+    status: 'reserved', reserved_by: (myToken && r.token === myToken) ? 'me' : 'lumo',
   }))
 
   const pendingSeats = pending.flatMap(o => (o.seats ?? []).map(s => ({

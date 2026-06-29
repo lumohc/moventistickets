@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="/svg-pan-zoom.min.js" defer />
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script src="/seat-picker-lumo.js?v=14" defer />
+        <script src="/seat-picker-lumo.js?v=15" defer />
       </body>
     </html>
   )

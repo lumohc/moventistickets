@@ -38,13 +38,19 @@
       venue: null,
       seatMap: null,
       variationIndex: {},
-      seatStatus: {},
+      seatStatus: {},   // id -> 'sold' | 'reserved'  (reservada de OUTRO; exclui as minhas)
+      mySet: {},        // id -> true                 (holds do PRÓPRIO cliente)
+      seatEls: {},      // id -> { seat, g }          (pra recolorir ao vivo sem rebuild)
       layout: null,
       selection: new Map(),
       panZoom: null,
-      reservationToken: null,
+      // Token da sessão: gerado UMA vez. O hold no clique e o carrinho usam o mesmo.
+      reservationToken: generateUuid(),
       modalByArea: null,
       modalQty: new Map(),
+      pollTimer: null,  // intervalo do mapa ao vivo
+      polling: false,   // evita polls sobrepostos
+      submitting: false,// não liberar holds no unload durante o submit
     };
 
     self.dom = {};
@@ -77,6 +83,11 @@
     self.dom.summary = summary;
 
     trigger.addEventListener('click', function () { self._openModal(); });
+
+    // Sair da página sem comprar → libera os holds pros outros (best-effort).
+    window.addEventListener('pagehide', function () {
+      if (!self.state.submitting) self._releaseAll(true);
+    });
   };
 
   LumoSeatPicker.prototype._buildModal = function () {
@@ -173,7 +184,8 @@
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var fetchTimer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
 
-    fetch(self.config.restBase + '/seat-map?product_id=' + self.config.productId, {
+    fetch(self.config.restBase + '/seat-map?product_id=' + self.config.productId
+          + '&reservation_token=' + encodeURIComponent(self.state.reservationToken), {
       credentials: 'same-origin',
       headers: { 'Accept': 'application/json' },
       signal: ctrl ? ctrl.signal : undefined,
@@ -237,9 +249,13 @@
     });
 
     self.state.seatStatus = {};
+    self.state.mySet = {};
     (self.state.seatMap.seats || []).forEach(function (s) {
       var key = String(s.id || '').toLowerCase();
       var st  = String(s.status || '').toLowerCase();
+      // Hold do PRÓPRIO cliente (token bate no backend): não é "reservada por outro"
+      // — fica como minha (laranja/selecionável), não entra no seatStatus.
+      if (st === 'reserved' && s.reserved_by === 'me') { self.state.mySet[key] = true; return; }
       if (st === 'sold' || st === 'reserved') self.state.seatStatus[key] = st;
     });
   };
@@ -251,10 +267,22 @@
     self._renderMap();
     self.dom.modal.classList.add('is-open');
     document.body.style.overflow = 'hidden';
+    self._startPolling();   // mapa ao vivo enquanto o cliente escolhe
   };
 
   LumoSeatPicker.prototype._closeModal = function () {
-    if (this.dom.modal) this.dom.modal.classList.remove('is-open');
+    var self = this;
+    self._stopPolling();
+    // Fechou sem comprar (abandonou) → libera os holds na hora e limpa a seleção.
+    if (self.state.selection.size > 0) {
+      self._releaseAll(false);
+      self.state.selection.forEach(function (seat) {
+        if (seat._gEl) seat._gEl.classList.remove('lumo-seat-picker__seat-group--selected');
+      });
+      self.state.selection.clear();
+      if (self.dom.continueBtn) self._updateBottomBar();
+    }
+    if (self.dom.modal) self.dom.modal.classList.remove('is-open');
     document.body.style.overflow = '';
   };
 
@@ -327,6 +355,7 @@
     // SVG
     var svg = self.dom.svg;
     svg.innerHTML = '';
+    self.state.seatEls = {};   // registro id->elemento, refeito a cada render
     svg.setAttribute('viewBox', '0 0 ' + layout.width + ' ' + layout.height);
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     var root = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -402,10 +431,12 @@
     if (self.state.selection.has(seat.key)) {
       self.state.selection.delete(seat.key);
       gEl.classList.remove('lumo-seat-picker__seat-group--selected');
+      self._releaseSeat(seat);                  // desmarcou → libera o hold na hora
     } else {
       seat._gEl = gEl;                          // guarda o grupo SVG pra remover pelo X no resumo
       self.state.selection.set(seat.key, seat);
       gEl.classList.add('lumo-seat-picker__seat-group--selected');
+      self._holdSeat(seat, gEl);                // clicou → trava o hold na hora (atômico)
     }
     self._updateBottomBar();
   };
@@ -417,7 +448,156 @@
     if (!seat) return;
     if (seat._gEl) seat._gEl.classList.remove('lumo-seat-picker__seat-group--selected');
     self.state.selection.delete(key);
+    self._releaseSeat(seat);                     // libera o hold na hora
     self._updateBottomBar();
+  };
+
+  /* ---------- Trava (hold) / liberação ao vivo --------------------------------- */
+
+  /** Hold ATÔMICO no clique via reserve_seat. Se perder a corrida (409), reverte. */
+  LumoSeatPicker.prototype._holdSeat = function (seat, gEl) {
+    var self = this;
+    fetch(self.config.restBase + '/seat-reserve', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_id:        self.config.productId,
+        seat_id:           seat.db_seat_id,
+        seat_name:         (seat.row_label || '') + (seat.num != null ? seat.num : ''),
+        group_id:          seat.pricing ? seat.pricing.group_id : seat.area_id,
+        ticket_type:       'inteira',   // tipo final (meia/inteira) é definido no carrinho
+        reservation_token: self.state.reservationToken,
+        ttl_seconds:       900,
+      }),
+    }).then(function (r) {
+      return r.json().then(function (body) {
+        if (r.status === 409 || (body && body.status === 'error')) {
+          // Outro cliente travou primeiro entre o desenho e o clique.
+          self.state.selection.delete(seat.key);
+          if (seat._gEl) seat._gEl.classList.remove('lumo-seat-picker__seat-group--selected');
+          self.state.seatStatus[seat.db_seat_id] = 'reserved';
+          if (gEl) gEl.classList.add('lumo-seat-picker__seat-group--reserved', 'lumo-seat-picker__seat-group--unavailable');
+          self._updateBottomBar();
+          self._showToast('Essa poltrona acabou de ser reservada. Escolha outra.', 2800);
+        } else {
+          self.state.mySet[seat.db_seat_id] = true;   // confirmada como minha
+        }
+      });
+    }).catch(function () { /* rede instável: mantém otimista, revalida no checkout */ });
+  };
+
+  /** Libera UMA poltrona (desmarcar / X). Best-effort. */
+  LumoSeatPicker.prototype._releaseSeat = function (seat) {
+    var self = this;
+    delete self.state.mySet[seat.db_seat_id];
+    try {
+      fetch(self.config.restBase + '/seat-release', {
+        method: 'POST', credentials: 'same-origin', keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id:        self.config.productId,
+          seat_id:           seat.db_seat_id,
+          reservation_token: self.state.reservationToken,
+        }),
+      });
+    } catch (e) {}
+  };
+
+  /** Libera TODAS as poltronas do token (fechar mapa / sair da página). */
+  LumoSeatPicker.prototype._releaseAll = function (useBeacon) {
+    var self = this;
+    if (!self.state.reservationToken) return;
+    var url = self.config.restBase + '/seat-release';
+    var payload = JSON.stringify({ product_id: self.config.productId, reservation_token: self.state.reservationToken });
+    try {
+      if (useBeacon && navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
+      } else {
+        fetch(url, { method: 'POST', credentials: 'same-origin', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: payload });
+      }
+    } catch (e) {}
+  };
+
+  /* ---------- Mapa ao vivo (polling) ------------------------------------------ */
+
+  LumoSeatPicker.prototype._startPolling = function () {
+    var self = this;
+    self._stopPolling();
+    self.state.pollTimer = setInterval(function () { self._pollMap(); }, 3000);
+  };
+  LumoSeatPicker.prototype._stopPolling = function () {
+    if (this.state.pollTimer) { clearInterval(this.state.pollTimer); this.state.pollTimer = null; }
+  };
+
+  LumoSeatPicker.prototype._pollMap = function () {
+    var self = this;
+    if (self.state.polling) return;
+    self.state.polling = true;
+    fetch(self.config.restBase + '/seat-map?product_id=' + self.config.productId
+          + '&reservation_token=' + encodeURIComponent(self.state.reservationToken), {
+      credentials: 'same-origin', headers: { 'Accept': 'application/json' },
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (json) {
+        self.state.polling = false;
+        if (!json || json.status !== 'success' || !json.data) return;
+        self.state.seatMap = json.data;
+        self._indexBackendData();    // recomputa seatStatus + mySet
+        self._reconcileSelection();  // detecta poltronas perdidas pra outro
+        self._applyStatuses();       // recolore o mapa (sem rebuild → não perde zoom)
+      })
+      .catch(function () { self.state.polling = false; });
+  };
+
+  /** Detecta poltronas que eu tinha mas perdi pra outro (hold expirou e foi tomado). */
+  LumoSeatPicker.prototype._reconcileSelection = function () {
+    var self = this;
+    var lost = [];
+    self.state.selection.forEach(function (seat) {
+      var id = seat.db_seat_id;
+      if (self.state.mySet[id]) return;                  // backend confirma: ainda é minha
+      var st = self.state.seatStatus[id];
+      if (st === 'sold' || st === 'reserved') lost.push(seat);
+      // 'available' → meu hold pode estar em voo; mantém
+    });
+    if (!lost.length) return;
+    lost.forEach(function (seat) {
+      if (seat._gEl) seat._gEl.classList.remove('lumo-seat-picker__seat-group--selected');
+      self.state.selection.delete(seat.key);
+    });
+    self._updateBottomBar();
+    self._showToast(lost.length === 1
+      ? 'Uma poltrona que você tinha foi reservada por outra pessoa.'
+      : lost.length + ' poltronas suas foram reservadas por outras pessoas.', 3400);
+  };
+
+  /** Recolore as poltronas conforme o último mapa, sem reconstruir o SVG. */
+  LumoSeatPicker.prototype._applyStatuses = function () {
+    var self = this;
+    var els = self.state.seatEls || {};
+    Object.keys(els).forEach(function (id) {
+      var entry = els[id]; var seat = entry.seat; var g = entry.g;
+      if (seat.blocked || seat.hold) return;             // estados permanentes — não mexe
+      g.classList.remove('lumo-seat-picker__seat-group--sold', 'lumo-seat-picker__seat-group--reserved');
+      if (self.state.selection.has(seat.key)) {          // minha seleção tem prioridade
+        g.classList.add('lumo-seat-picker__seat-group--selected');
+        g.classList.remove('lumo-seat-picker__seat-group--unavailable');
+        seat.status = 'available';
+        return;
+      }
+      g.classList.remove('lumo-seat-picker__seat-group--selected');
+      var st = self.state.seatStatus[id];
+      if (st === 'sold') {
+        g.classList.add('lumo-seat-picker__seat-group--sold', 'lumo-seat-picker__seat-group--unavailable');
+        seat.status = 'sold';
+      } else if (st === 'reserved') {
+        g.classList.add('lumo-seat-picker__seat-group--reserved', 'lumo-seat-picker__seat-group--unavailable');
+        seat.status = 'reserved';
+      } else {
+        g.classList.remove('lumo-seat-picker__seat-group--unavailable');
+        seat.status = 'available';
+      }
+    });
   };
 
   LumoSeatPicker.prototype._seatLabel = function (seat) {
@@ -548,36 +728,37 @@
       });
     });
 
-    var token = generateUuid();
-    self.state.reservationToken = token;
+    var token = self.state.reservationToken;   // já travado no clique (hold ao vivo)
+    self.state.submitting = true;              // não liberar holds no unload durante o submit
+    self._stopPolling();
     self.dom.sheet.classList.remove('is-open');
-    self._showSubmitting('Reservando poltronas (1/' + seatsPayload.length + ')…');
+    self._showSubmitting('Confirmando suas poltronas…');
 
-    var i = 0;
+    // Poltronas já confirmadas no clique (mySet) NÃO são re-reservadas — o
+    // reserve_seat recusaria o próprio hold ativo. Só garante o hold das que não
+    // confirmaram (ex.: rede caiu no clique); se alguma foi tomada, aborta claro.
+    var toReserve = seatsPayload.filter(function (it) { return !self.state.mySet[it.seat.db_seat_id]; });
     var chain = Promise.resolve();
-    seatsPayload.forEach(function (item) {
+    toReserve.forEach(function (item) {
       chain = chain.then(function () {
-        i++;
-        self._updateSubmittingMsg('Reservando poltronas (' + i + '/' + seatsPayload.length + ')…');
         return fetch(self.config.restBase + '/seat-reserve', {
-          method: 'POST',
-          credentials: 'same-origin',
+          method: 'POST', credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             product_id:        self.config.productId,
             seat_id:           item.seat.db_seat_id,
             seat_name:         (item.seat.row_label || '') + item.seat.num,
             group_id:          item.seat.pricing.group_id,
-            ticket_type:       item.ticket_type,
+            ticket_type:       'inteira',
             reservation_token: token,
-            ttl_seconds:       600,
+            ttl_seconds:       900,
           }),
         }).then(function (r) {
           return r.json().then(function (body) {
-            if (r.status === 409 || body.status === 'error') {
-              throw new Error('Poltrona ' + (item.seat.row_label || '') + item.seat.num + ' indisponível: ' + (body.message || ''));
+            if (r.status === 409 || (body && body.status === 'error')) {
+              throw new Error('Poltrona ' + (item.seat.row_label || '') + item.seat.num + ' indisponível. Alguém reservou antes.');
             }
-            if (!r.ok) throw new Error('HTTP ' + r.status);
+            self.state.mySet[item.seat.db_seat_id] = true;
           });
         });
       });
@@ -627,6 +808,8 @@
         });
       })
       .catch(function (e) {
+        self.state.submitting = false;
+        self._startPolling();                 // volta o mapa ao vivo; holds seguem ativos
         self._hideSubmitting();
         self._showToast(e.message || 'Erro ao processar', 4000);
       });
@@ -1034,16 +1217,18 @@
       g.appendChild(t);
     }
 
+    // Registro pra recolorir ao vivo (polling) sem reconstruir o SVG.
+    instance.state.seatEls[seat.db_seat_id] = { seat: seat, g: g };
+
     g.addEventListener('click', function (ev) {
       ev.stopPropagation();
-      if (isUnavail) {
-        var msg = isHold ? (seat.hold_reason || 'Reservada (cortesia)') :
-                  seat.blocked ? (seat.blocked_reason || 'Bloqueada') :
-                  isSold ? 'Vendida' :
-                  isReserved ? 'Reservada por outro cliente' : 'Indisponível';
-        instance._showToast(msg, 1600);
-        return;
-      }
+      // Lê o estado AO VIVO (o polling pode ter mudado desde o desenho).
+      var liveStatus = instance.state.seatStatus[seat.db_seat_id];   // 'sold'|'reserved'|undefined (exclui as minhas)
+      var mineSelected = instance.state.selection.has(seat.key);
+      if (seat.blocked) { instance._showToast(seat.blocked_reason || 'Bloqueada', 1600); return; }
+      if (seat.hold)    { instance._showToast(seat.hold_reason || 'Reservada (cortesia)', 1600); return; }
+      if (liveStatus === 'sold') { instance._showToast('Vendida', 1600); return; }
+      if (liveStatus === 'reserved' && !mineSelected) { instance._showToast('Reservada por outro cliente', 1800); return; }
       instance._toggleSeat(seat, g);
     });
 
