@@ -60,6 +60,18 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: P
   const s = summarizeSales((paidOrders ?? []) as SalesOrder[], capacity || null)
   const repasse = ev ? addBusinessDays(ev.event_date, 3) : null
 
+  // Consolidado ("Todos os eventos"): total a receber + total POR EVENTO.
+  const perEvent = ev ? [] : (() => {
+    const m = new Map<string, { id: string; name: string; vendidos: number; face: number; date: string | null }>()
+    for (const e of events as any[]) m.set(e.id, { id: e.id, name: e.name, vendidos: 0, face: 0, date: e.event_date })
+    for (const o of (paidOrders ?? []) as any[]) {
+      const x = m.get(o.event_id); if (!x) continue
+      const real = ((o.seats as any[]) || []).filter((seat: any) => Number(seat.price) > 0 && !/cortesia/i.test(String(seat.ticket_type || ''))).length
+      x.vendidos += real; x.face += Number(o.face_total || 0)
+    }
+    return Array.from(m.values())
+  })()
+
   // Por tipo: evento específico => Inteira/Meia configurados (mesmo com 0); "all" => o que vendeu.
   let typeRows: TypeRow[]
   if (ev) {
@@ -103,6 +115,22 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: P
             <p style={{ color: C.muted, fontSize: '0.74rem', marginTop: 4 }}>em {s.compras} compra{s.compras !== 1 ? 's' : ''}{s.pctOcup !== null ? ` · ${s.pctOcup}% de ocupação` : ''}</p>
           </div>
         </div>
+
+        {/* Por evento (só na visão consolidada) — total a receber por evento */}
+        {!ev && perEvent.length > 0 && (
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 22 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 0.8fr 1fr', padding: '9px 16px', fontSize: '0.72rem', color: C.muted, background: C.surface2, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <span>Por evento</span><span style={{ textAlign: 'right' }}>Vendidos</span><span style={{ textAlign: 'right' }}>A receber</span>
+            </div>
+            {perEvent.map(pe => (
+              <a key={pe.id} href={`/produtor/financeiro?event=${pe.id}`} style={{ display: 'grid', gridTemplateColumns: '1.8fr 0.8fr 1fr', padding: '11px 16px', fontSize: '0.875rem', color: C.text, borderTop: `1px solid ${C.border}`, background: C.surface, textDecoration: 'none' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pe.name}<span style={{ color: C.muted, fontSize: '0.75rem' }}>{pe.date ? ` · ${fmtEvDate(pe.date)}` : ''}</span></span>
+                <span style={{ textAlign: 'right' }}>{pe.vendidos}</span>
+                <span style={{ textAlign: 'right', fontWeight: 700, color: C.green }}>{fmt(pe.face)}</span>
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Por tipo */}
         <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 22 }}>
