@@ -3,6 +3,7 @@ import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-
 import Sidebar from '@/components/produtor/Sidebar'
 import { summarizeSales, sectorOccupancy, addBusinessDays, type SalesOrder } from '@/lib/sales-summary'
 import { getVenueData } from '@/lib/venue-map'
+import SalesAccumChart from '@/components/produtor/SalesAccumChart'
 import { Ticket, Banknote, CalendarClock, Armchair, Gift, Lightbulb, Lock, FileText } from 'lucide-react'
 
 const C = {
@@ -85,6 +86,9 @@ export default async function VendasPage({ params }: { params: Promise<{ id: str
             </div>
           ))}
         </div>
+
+        {/* Gráfico de vendas com filtro Total/dia/mês */}
+        <SalesAccumChart daily={s.dailySold} />
 
         {/* Por tipo de ingresso */}
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden', marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>

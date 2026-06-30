@@ -44,6 +44,7 @@ export interface SalesSummary {
   realOrders: SalesOrder[]    // pedidos reais (face > 0) — feed do dinheiro
   disponiveis: number | null  // capacidade - vendidos
   pctOcup: number | null      // % de ocupação sobre a capacidade vendável
+  dailySold: { day: string; count: number }[]  // ingressos reais vendidos por dia (asc)
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -59,20 +60,24 @@ const isCortesiaSeat = (s: OrderSeat) =>
 export function summarizeSales(orders: SalesOrder[], capacity: number | null): SalesSummary {
   const paid = (orders ?? []).filter(o => o.status === 'paid')
   const typeMap = new Map<string, TypeRow>()
+  const dayMap = new Map<string, number>()
   let vendidos = 0, cortesias = 0, receitaFace = 0
 
   for (const o of paid) {
+    const day = o.created_at ? String(o.created_at).slice(0, 10) : null
     for (const s of (o.seats ?? [])) {
       if (isCortesiaSeat(s)) { cortesias++; continue }
       const price = Number(s.price ?? 0)
       vendidos++
       receitaFace += price
+      if (day) dayMap.set(day, (dayMap.get(day) ?? 0) + 1)
       const k = String(s.ticket_type ?? 'inteira')
       const row = typeMap.get(k) ?? { key: k, label: TYPE_LABEL[k] ?? cap(k), count: 0, face: price, total: 0, isCortesia: false }
       row.count++; row.total += price; row.face = price
       typeMap.set(k, row)
     }
   }
+  const dailySold = Array.from(dayMap.entries()).sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([day, count]) => ({ day, count }))
 
   const byType = Array.from(typeMap.values()).sort((a, b) => b.count - a.count)
   if (cortesias > 0) byType.push({ key: 'cortesia', label: 'Cortesia FCC', count: cortesias, face: 0, total: 0, isCortesia: true })
@@ -81,7 +86,7 @@ export function summarizeSales(orders: SalesOrder[], capacity: number | null): S
   const disponiveis = capacity && capacity > 0 ? Math.max(0, capacity - vendidos) : null
   const pctOcup = capacity && capacity > 0 ? Math.min(100, Math.round((vendidos / capacity) * 100)) : null
 
-  return { vendidos, cortesias, receitaFace, compras: realOrders.length, byType, realOrders, disponiveis, pctOcup }
+  return { vendidos, cortesias, receitaFace, compras: realOrders.length, byType, realOrders, disponiveis, pctOcup, dailySold }
 }
 
 export interface SectorRow {
