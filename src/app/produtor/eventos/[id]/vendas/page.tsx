@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient, createSupabaseAdmin } from '@/lib/supabase-server'
 import Sidebar from '@/components/produtor/Sidebar'
-import { summarizeSales, addBusinessDays, type SalesOrder } from '@/lib/sales-summary'
-import { Ticket, Banknote, CalendarClock, Armchair, Gift, Lightbulb, Lock } from 'lucide-react'
+import { summarizeSales, sectorOccupancy, addBusinessDays, type SalesOrder } from '@/lib/sales-summary'
+import { getVenueData } from '@/lib/venue-map'
+import { Ticket, Banknote, CalendarClock, Armchair, Gift, Lightbulb, Lock, FileText } from 'lucide-react'
 
 const C = {
   bg: '#F4F3EC', surface: '#FFFFFF', border: '#D8DACF',
@@ -25,7 +26,7 @@ export default async function VendasPage({ params }: { params: Promise<{ id: str
 
   const { data: event } = await admin
     .from('events')
-    .select('id, name, event_date, status, price_face, half_price, venue_id, venues(salable_seats)')
+    .select('id, name, event_date, status, sale_end, price_face, half_price, venue_id, venues(salable_seats, slug, venue_data)')
     .eq('id', id)
     .eq('producer_id', producer.id)
     .single()
@@ -42,6 +43,12 @@ export default async function VendasPage({ params }: { params: Promise<{ id: str
   const s = summarizeSales((orders ?? []) as SalesOrder[], capacity || null)
   const repasse = addBusinessDays(event.event_date, 3)
   const pendentes = (orders ?? []).filter((o: any) => o.status === 'pending_payment').length
+
+  const venueRow = Array.isArray(venueRel) ? venueRel[0] : venueRel
+  const dbVenueData = venueRow?.venue_data && Object.keys(venueRow.venue_data).length > 0 ? venueRow.venue_data : null
+  const venueData = dbVenueData ?? (venueRow?.slug ? getVenueData(venueRow.slug) : null)
+  const sectors = sectorOccupancy((orders ?? []) as SalesOrder[], venueData)
+  const salesClosed = !!(event as any).sale_end && new Date((event as any).sale_end).getTime() < Date.now()
 
   const cards = [
     { Icon: Ticket, label: 'Ingressos vendidos', value: capacity ? `${s.vendidos} / ${capacity}` : String(s.vendidos), sub: s.pctOcup !== null ? `${s.pctOcup}% de ocupação` : 'vendidos', highlight: false },
@@ -104,17 +111,36 @@ export default async function VendasPage({ params }: { params: Promise<{ id: str
           </div>
         )}
 
-        {/* Ocupação */}
+        {/* Ocupação geral + por setor */}
         {capacity > 0 && (
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', marginBottom: 28, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
             <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: C.text, marginBottom: 14 }}>Ocupação</h2>
             <div style={{ height: 16, background: '#EDEAE0', borderRadius: 999, overflow: 'hidden', marginBottom: 10 }}>
               <div style={{ width: `${s.pctOcup ?? 0}%`, height: '100%', background: C.green, borderRadius: 999 }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: sectors.length ? 18 : 0 }}>
               <span style={{ color: C.green, fontWeight: 700 }}>{s.vendidos} vendidos</span>
               <span style={{ color: C.muted }}>{s.disponiveis} disponíveis · {s.pctOcup}%</span>
             </div>
+
+            {sectors.length > 0 && (
+              <>
+                <p style={{ fontSize: '0.78rem', color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Por setor</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {sectors.map(sec => (
+                    <div key={sec.key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: '0.82rem', color: C.text, width: 90, flexShrink: 0 }}>{sec.label}</span>
+                      <span style={{ flex: 1, height: 8, background: '#EDEAE0', borderRadius: 999, overflow: 'hidden' }}>
+                        <span style={{ display: 'block', width: sec.cortesias > 0 ? '100%' : `${sec.pct ?? 0}%`, height: '100%', background: sec.cortesias > 0 ? '#9FC7B6' : C.green }} />
+                      </span>
+                      <span style={{ fontSize: '0.78rem', color: C.muted, width: 96, textAlign: 'right', flexShrink: 0 }}>
+                        {sec.cortesias > 0 ? `${sec.cortesias} cortesias` : `${sec.sold} · ${sec.pct}%`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -162,9 +188,20 @@ export default async function VendasPage({ params }: { params: Promise<{ id: str
           </div>
         )}
 
-        {/* Borderô travado */}
-        <div style={{ marginTop: 16, padding: '12px 18px', background: 'rgba(31,107,78,0.06)', border: '1px solid rgba(31,107,78,0.15)', borderRadius: 10, fontSize: '0.8rem', color: C.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Lock size={15} strokeWidth={1.6} /> O borderô fica disponível após o encerramento das vendas — até lá os números mudam.
+        {/* Borderô — travado até fechar as vendas */}
+        <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.8rem', color: C.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Lock size={15} strokeWidth={1.6} /> {salesClosed ? 'Vendas encerradas — borderô disponível.' : 'O borderô fica disponível após o encerramento das vendas — até lá os números mudam.'}
+          </span>
+          {salesClosed ? (
+            <a href={`/produtor/eventos/${id}/bordero`} style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff', background: C.green, textDecoration: 'none', padding: '9px 18px', borderRadius: 9, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <FileText size={15} strokeWidth={1.8} /> Baixar borderô (PDF)
+            </a>
+          ) : (
+            <span aria-disabled style={{ fontSize: '0.82rem', fontWeight: 600, color: C.muted, background: C.surface, border: `1px solid ${C.border}`, padding: '9px 18px', borderRadius: 9, display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'not-allowed' }}>
+              <Lock size={14} strokeWidth={1.8} /> Borderô (PDF) — após fechar
+            </span>
+          )}
         </div>
 
         <div style={{ marginTop: 12, fontSize: '0.78rem', color: C.muted, display: 'flex', alignItems: 'center', gap: 8 }}>

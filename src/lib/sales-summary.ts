@@ -11,6 +11,7 @@ export interface OrderSeat {
   seat_name?: string
   ticket_type?: string
   price?: number | string
+  group_id?: string
   group_name?: string
 }
 
@@ -81,6 +82,58 @@ export function summarizeSales(orders: SalesOrder[], capacity: number | null): S
   const pctOcup = capacity && capacity > 0 ? Math.min(100, Math.round((vendidos / capacity) * 100)) : null
 
   return { vendidos, cortesias, receitaFace, compras: realOrders.length, byType, realOrders, disponiveis, pctOcup }
+}
+
+export interface SectorRow {
+  key: string
+  label: string
+  sold: number
+  capacity: number
+  pct: number | null
+  cortesias: number   // > 0 => setor de cortesia (mostra "N cortesias", sem %)
+}
+
+// area.id do venue_data -> setor agregado exibido
+const SECTOR_OF: Record<string, string> = { plateia: 'plateia', balcao: 'balcao', frisa_fe: 'frisa', frisa_fd: 'frisa' }
+const SECTOR_LABEL: Record<string, string> = { plateia: 'Plateia', frisa: 'Frisas', balcao: 'Balcão' }
+const SECTOR_ORDER = ['plateia', 'frisa', 'balcao']
+
+/** Conta poltronas vendáveis de uma área do venue_data (exclui bloqueadas). */
+function countAreaSeats(area: any): number {
+  if (!area) return 0
+  if (area.layout === 'single_column') return (area.seats || []).filter((s: any) => !s.blocked).length
+  let n = 0
+  for (const row of (area.rows || [])) {
+    for (const b of (row.blocks || [])) n += Number(b.to) - Number(b.from) + 1
+    n -= (row.overrides || []).filter((o: any) => o.blocked).length
+  }
+  return n
+}
+
+/** Ocupação por setor: vendidos/capacidade por setor + linha de cortesia (camarotes). */
+export function sectorOccupancy(orders: SalesOrder[], venueData: unknown): SectorRow[] {
+  const cap: Record<string, number> = {}
+  for (const a of ((venueData as any)?.areas || [])) {
+    const sec = SECTOR_OF[a.id]
+    if (sec) cap[sec] = (cap[sec] || 0) + countAreaSeats(a)
+  }
+  const soldBy: Record<string, number> = {}
+  let cortesias = 0
+  for (const o of (orders ?? []).filter(o => o.status === 'paid')) {
+    for (const s of (o.seats ?? [])) {
+      if (isCortesiaSeat(s)) { cortesias++; continue }
+      const sec = SECTOR_OF[String(s.group_id ?? '')]
+      if (sec) soldBy[sec] = (soldBy[sec] || 0) + 1
+    }
+  }
+  const out: SectorRow[] = []
+  for (const sec of SECTOR_ORDER) {
+    if (!(sec in cap)) continue
+    const sold = soldBy[sec] || 0, capacity = cap[sec]
+    out.push({ key: sec, label: SECTOR_LABEL[sec], sold, capacity, pct: capacity > 0 ? Math.round((sold / capacity) * 100) : null, cortesias: 0 })
+  }
+  if (cortesias > 0) out.push({ key: 'camarote', label: 'Camarotes', sold: 0, capacity: 0, pct: null, cortesias })
+  return out
 }
 
 /** Data + N dias úteis (pula sábado/domingo). Retorna DD/MM/AAAA. */
